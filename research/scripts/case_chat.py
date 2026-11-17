@@ -106,24 +106,40 @@ def context_for(case_id: str, model: str | None = None,
     Отдельная функция, а не сборка внутри запроса: это то, что покидает
     машину, и смотреть на это надо глазами (`--dry-run`).
 
-    `complaints` — жалобы пациента словами врача. Параметром, а не из базы:
-    в модели данных их пока нет вовсе (проверено, ни в `patients.py`, ни в
-    API), а сводка без них отвечает не на тот вопрос, с которым пришёл
-    человек. Передаёт фронт; появится поле в карточке — возьмём оттуда.
+    `complaints` — жалобы пациента словами врача; без них сводка отвечает не
+    на тот вопрос, с которым пришёл человек. Параметром, а не чтением базы
+    изнутри: этот модуль не должен знать про карточку пациента, он работает
+    и на кейсе без визита (фикстура, разбор из командной строки). Жалобы
+    достаёт вызывающая сторона — `demo_server.complaints_for_case` по
+    привязке кейса к визиту.
     """
     c = cb.get_case(case_id)
     model = model or c.get("model") or cb.DEFAULT_MODEL
     res = cb.findings_for(c, model)
+    # Через отметки врача, а не мимо них: уровень мог быть изменён руками, и
+    # чат обязан говорить то же, что стоит в карточке и уйдёт в отчёт. Иначе
+    # врач читает «критичная» на экране и «важная» в ответе на свой вопрос.
+    res = cb.apply_review(res, cb.review_for(c), drop_rejected=False)
+
+    # Слово уровня берём из одного справочника с интерфейсом и PDF
+    # (`clinic_routes.LEVELS`): «alert» в ответе пациенту не объяснишь, а
+    # собственный перевод в этом модуле был бы четвёртой копией таблицы.
+    decision = {"confirmed": "подтверждена врачом",
+                "rejected": "отклонена врачом"}
 
     findings = []
     for f in (res.get("findings") or []):
         teeth = f.get("teeth") or ([f["tooth"]] if f.get("tooth") else [])
         findings.append({
-            "ключ": cb.finding_key(f),
+            "ключ": f.get("key") or cb.finding_key(f),
             "что": f.get("text"),
             "зубы": teeth,
-            "важность": f.get("severity"),
-            "достоверность": f.get("confidence"),
+            "важность": (f.get("level") or {}).get("label"),
+            "надёжность_измерения": (f.get("trust") or {}).get("label"),
+            # Решение врача — без его комментария и без имени. Комментарий
+            # это его собственные слова о пациенте: модели они для ответа не
+            # нужны, а пересказать их как находку она может.
+            "решение_врача": decision.get(f.get("review")),
             "кому": f.get("action"),
             # Основание — сердце ответа: именно по нему чат объясняет
             # «почему так», а не по собственным представлениям.
@@ -167,8 +183,9 @@ def context_for(case_id: str, model: str | None = None,
     # данных, и модели остаётся их пересказать.
     by_sev: dict[str, int] = {}
     for f in findings:
-        s = f.get("важность") or "info"
+        s = f.get("важность") or "Уровень не определён"
         by_sev[s] = by_sev.get(s, 0) + 1
+    rv = res.get("review") or {}
 
     ctx = {
         "кейс": case_id,
@@ -177,6 +194,10 @@ def context_for(case_id: str, model: str | None = None,
         "зубы_отсутствуют": res.get("teeth_missing") or [],
         "счётчики": {"находок_всего": len(findings),
                      "по_важности": by_sev,
+                     # Ход проверки тоже числом из кода: на вопрос «сколько
+                     # осталось» модель иначе ответит на глаз.
+                     "проверено_врачом": rv.get("reviewed", 0),
+                     "осталось_проверить": rv.get("pending", len(findings)),
                      "ручная_проверка": len(quality)},
         "находки": findings,
         "требует_ручной_проверки": quality,
@@ -184,7 +205,8 @@ def context_for(case_id: str, model: str | None = None,
         "черновик": bool(res.get("draft", True)),
     }
     if complaints:
-        ctx["жалобы_пациента"] = str(complaints)[:400]
+        import patients as pat          # за пределом жалобы: один на проект
+        ctx["жалобы_пациента"] = str(complaints)[:pat.COMPLAINTS_MAX]
     return ctx
 
 
