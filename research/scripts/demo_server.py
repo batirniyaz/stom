@@ -29,7 +29,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from fastapi import Body, FastAPI, File, Query, Request, UploadFile
+from fastapi import Body, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageFont
@@ -92,12 +92,45 @@ CLASS_COLORS = {
 
 MAX_WIDTH = 1600  # аннотации рисуем поверх уменьшенной копии
 
-# все веса грузим один раз при старте (GPU хватает на три модели)
+# Все веса грузим один раз при старте (GPU хватает на три модели).
+#
+# БЕЗ ВЕСОВ СЕРВЕР ОБЯЗАН ПОДНИМАТЬСЯ. Веса в репозиторий не кладутся: четыре
+# файла по 119 МБ превышают жёсткий лимит GitHub в 100 МБ. Значит у
+# разработчика, взявшего проект из git, моделей нет — и если падать на
+# импорте, ему закрыт весь фронт: карточки пациентов, 3D, находки, план и
+# PDF. Ничего из этого моделей не требует, всё считается по уже сохранённым
+# кейсам. Поэтому берём те веса, что есть, а отсутствие отдаём честной
+# ошибкой в момент запроса инференса (`require_models`).
 yolo_models = {
     mid: YOLO(str(info["weights"]))
-    for mid, info in MODELS_INFO.items() if "weights" in info
+    for mid, info in MODELS_INFO.items()
+    if "weights" in info and Path(info["weights"]).is_file()
 }
-CLASS_NAMES = yolo_models["yolo12x"].names
+MODELS_READY = "yolo12x" in yolo_models
+
+# Порядок классов задан разметкой DENTEX и совпадает с порядком CLASS_RU.
+# При живых весах имена берём у модели, иначе из справочника: без этого не
+# собрался бы даже ответ со списком классов.
+CLASS_NAMES = (yolo_models["yolo12x"].names if MODELS_READY
+               else dict(enumerate(CLASS_RU)))
+
+
+def require_models() -> None:
+    """Инференс без весов невозможен — говорим об этом прямо, а не 500-й.
+
+    Сообщение называет и причину, и то, что всё-таки работает: иначе
+    разработчик без моделей видит трассировку и думает, что сломал код.
+    """
+    if not MODELS_READY:
+        raise HTTPException(
+            503,
+            "Веса моделей не найдены в research/output/runs/. В репозитории "
+            "их нет: файлы больше лимита GitHub в 100 МБ. Разделы, которым "
+            "модели не нужны, работают — кейсы КЛКТ, находки, план, PDF, "
+            "карточки пациентов.",
+        )
+
+
 app = FastAPI(title="Stomadent Demo", docs_url=None, redoc_url=None)
 
 
@@ -346,6 +379,7 @@ def wbf(dets: list, n_models: int, iou_thr: float = WBF_IOU) -> list:
 
 
 def run_inference(img_path: str, conf: float, model_id: str = DEFAULT_MODEL) -> dict:
+    require_models()
     conf = float(min(max(conf, 0.05), 0.9))
     if model_id not in MODELS_INFO:
         model_id = DEFAULT_MODEL

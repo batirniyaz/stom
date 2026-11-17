@@ -1,0 +1,1729 @@
+{
+ "case_id": "pair001_cbct",
+ "name": "Демонстрационный кейс (публичный набор, CC BY 4.0)",
+ "volume": null,
+ "masks": {
+  "ours": null,
+  "pretrained": null,
+  "sp": "mask_sp.mha"
+ },
+ "model": "sp",
+ "example": false,
+ "shape": [
+  412,
+  604,
+  604
+ ],
+ "spacing": [
+  0.25,
+  0.24899999797344208,
+  0.24899999797344208
+ ],
+ "info": {
+  "name": "Пара 001: КЛКТ",
+  "model": "sp",
+  "model_label": "Единая (пульпа одним классом)",
+  "shape": [
+   412,
+   604,
+   604
+  ],
+  "spacing": [
+   0.25,
+   0.249,
+   0.249
+  ],
+  "groups": [
+   {
+    "group": "mandible",
+    "label_ru": "Нижняя челюсть",
+    "color": "#e8e2d5",
+    "opacity": 0.35,
+    "voxel_count": 3156371
+   },
+   {
+    "group": "maxilla",
+    "label_ru": "Верхняя челюсть",
+    "color": "#d9d2c2",
+    "opacity": 0.35,
+    "voxel_count": 829211
+   },
+   {
+    "group": "teeth",
+    "label_ru": "Зубы",
+    "color": "#f5f0e6",
+    "opacity": 1.0,
+    "voxel_count": 973679
+   },
+   {
+    "group": "nerve",
+    "label_ru": "Нижний альвеолярный нерв",
+    "color": "#ef4444",
+    "opacity": 1.0,
+    "voxel_count": 53398
+   },
+   {
+    "group": "sinus",
+    "label_ru": "Гайморовы пазухи",
+    "color": "#7dd3fc",
+    "opacity": 0.5,
+    "voxel_count": 96011
+   },
+   {
+    "group": "prosthetics",
+    "label_ru": "Коронки / мосты / импланты",
+    "color": "#cbd5e1",
+    "opacity": 1.0,
+    "voxel_count": 11111
+   },
+   {
+    "group": "pharynx",
+    "label_ru": "Дыхательные пути",
+    "color": "#4ade80",
+    "opacity": 0.25,
+    "voxel_count": 1352177
+   },
+   {
+    "group": "incisive",
+    "label_ru": "Резцовый канал",
+    "color": "#fb923c",
+    "opacity": 1.0,
+    "voxel_count": 1609
+   },
+   {
+    "group": "lingual",
+    "label_ru": "Язычный канал",
+    "color": "#fbbf24",
+    "opacity": 1.0,
+    "voxel_count": 218
+   },
+   {
+    "group": "pulp",
+    "label_ru": "Пульпа и каналы зуба",
+    "color": "#f43f5e",
+    "opacity": 1.0,
+    "voxel_count": 74900
+   }
+  ],
+  "teeth_present": [
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48
+  ],
+  "nerve_left": true,
+  "nerve_right": true,
+  "z_up": true,
+  "postproc": 21
+ },
+ "findings": {
+  "case_id": "pair001_cbct",
+  "model": "sp",
+  "perio": {
+   "teeth": [
+    {
+     "tooth": 11,
+     "root_len_mm": 18.1,
+     "sites": {
+      "mesial": {
+       "mm": 8.5,
+       "root_fraction": 0.471,
+       "percentile": 98,
+       "severity": "заметно выше нормы"
+      },
+      "distal": {
+       "mm": 7.7,
+       "root_fraction": 0.425,
+       "percentile": 96,
+       "severity": "заметно выше нормы"
+      }
+     }
+    },
+    {
+     "tooth": 12,
+     "root_len_mm": 18.5,
+     "sites": {
+      "mesial": {
+       "mm": 8.9,
+       "root_fraction": 0.481,
+       "percentile": 99,
+       "severity": "заметно выше нормы"
+      },
+      "distal": {
+       "mm": 9.1,
+       "root_fraction": 0.492,
+       "percentile": 100,
+       "severity": "резко выше нормы"
+      }
+     }
+    },
+    {
+     "tooth": 13,
+     "root_len_mm": 18.7,
+     "sites": {
+      "mesial": {
+       "mm": 3.8,
+       "root_fraction": 0.202,
+       "percentile": 46,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.2,
+       "root_fraction": 0.173,
+       "percentile": 31,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 14,
+     "root_len_mm": 13.7,
+     "sites": {
+      "mesial": {
+       "mm": 2.6,
+       "root_fraction": 0.189,
+       "percentile": 17,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.8,
+       "root_fraction": 0.281,
+       "percentile": 48,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 16,
+     "root_len_mm": 12.8,
+     "sites": {
+      "mesial": {
+       "mm": 5.2,
+       "root_fraction": 0.402,
+       "percentile": 77,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 5.5,
+       "root_fraction": 0.428,
+       "percentile": 81,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 17,
+     "root_len_mm": 12.3,
+     "sites": {
+      "mesial": {
+       "mm": 4.0,
+       "root_fraction": 0.323,
+       "percentile": 51,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 4.3,
+       "root_fraction": 0.348,
+       "percentile": 58,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 21,
+     "root_len_mm": 17.1,
+     "sites": {
+      "mesial": {
+       "mm": 7.2,
+       "root_fraction": 0.42,
+       "percentile": 94,
+       "severity": "выше нормы"
+      },
+      "distal": {
+       "mm": 7.7,
+       "root_fraction": 0.452,
+       "percentile": 96,
+       "severity": "заметно выше нормы"
+      }
+     }
+    },
+    {
+     "tooth": 22,
+     "root_len_mm": 15.5,
+     "sites": {
+      "mesial": {
+       "mm": 5.4,
+       "root_fraction": 0.348,
+       "percentile": 80,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 5.5,
+       "root_fraction": 0.357,
+       "percentile": 82,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 23,
+     "root_len_mm": 21.8,
+     "sites": {
+      "mesial": {
+       "mm": 6.4,
+       "root_fraction": 0.294,
+       "percentile": 89,
+       "severity": "выше нормы"
+      },
+      "distal": {
+       "mm": 6.8,
+       "root_fraction": 0.314,
+       "percentile": 92,
+       "severity": "выше нормы"
+      }
+     }
+    },
+    {
+     "tooth": 24,
+     "root_len_mm": 14.7,
+     "sites": {
+      "mesial": {
+       "mm": 2.8,
+       "root_fraction": 0.194,
+       "percentile": 22,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 2.8,
+       "root_fraction": 0.193,
+       "percentile": 22,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 25,
+     "root_len_mm": 13.4,
+     "sites": {
+      "mesial": {
+       "mm": 3.6,
+       "root_fraction": 0.266,
+       "percentile": 41,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.2,
+       "root_fraction": 0.241,
+       "percentile": 31,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 26,
+     "root_len_mm": 13.8,
+     "sites": {
+      "mesial": {
+       "mm": 2.8,
+       "root_fraction": 0.2,
+       "percentile": 21,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 4.4,
+       "root_fraction": 0.317,
+       "percentile": 61,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 27,
+     "root_len_mm": 12.9,
+     "sites": {
+      "mesial": {
+       "mm": 2.7,
+       "root_fraction": 0.212,
+       "percentile": 20,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 5.1,
+       "root_fraction": 0.398,
+       "percentile": 76,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 31,
+     "root_len_mm": 15.6,
+     "sites": {
+      "mesial": {
+       "mm": 5.1,
+       "root_fraction": 0.33,
+       "percentile": 77,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 5.7,
+       "root_fraction": 0.368,
+       "percentile": 84,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 32,
+     "root_len_mm": 14.5,
+     "sites": {
+      "mesial": {
+       "mm": 2.7,
+       "root_fraction": 0.183,
+       "percentile": 19,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.6,
+       "root_fraction": 0.249,
+       "percentile": 42,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 35,
+     "root_len_mm": 15.2,
+     "sites": {
+      "mesial": {
+       "mm": 2.4,
+       "root_fraction": 0.157,
+       "percentile": 14,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 2.6,
+       "root_fraction": 0.175,
+       "percentile": 19,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 36,
+     "root_len_mm": 15.3,
+     "sites": {
+      "mesial": {
+       "mm": 3.7,
+       "root_fraction": 0.242,
+       "percentile": 44,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 4.6,
+       "root_fraction": 0.302,
+       "percentile": 66,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 37,
+     "root_len_mm": 14.3,
+     "sites": {
+      "mesial": {
+       "mm": 3.7,
+       "root_fraction": 0.255,
+       "percentile": 43,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.5,
+       "root_fraction": 0.242,
+       "percentile": 38,
+       "severity": "норма"
+      }
+     }
+    },
+    {
+     "tooth": 47,
+     "root_len_mm": 12.8,
+     "sites": {
+      "mesial": {
+       "mm": 2.4,
+       "root_fraction": 0.189,
+       "percentile": 15,
+       "severity": "норма"
+      },
+      "distal": {
+       "mm": 3.3,
+       "root_fraction": 0.261,
+       "percentile": 35,
+       "severity": "норма"
+      }
+     }
+    }
+   ],
+   "not_measured": [
+    15,
+    28,
+    33,
+    34,
+    38,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    48
+   ],
+   "reference": {
+    "n_sites": 2528,
+    "n_patients": 60,
+    "median_mm": 3.9,
+    "pctl": [
+     5,
+     25,
+     50,
+     75,
+     85,
+     90,
+     95,
+     99
+    ],
+    "mm": [
+     1.9,
+     3.0,
+     3.9,
+     5.0,
+     5.8,
+     6.5,
+     7.3,
+     9.0
+    ]
+   },
+   "cutoffs_pctl": {
+    "mild": 85.0,
+    "moderate": 95.0,
+    "severe": 99.0
+   },
+   "draft": true
+  },
+  "endo": {
+   "case": null,
+   "model": "sp",
+   "teeth": [
+    {
+     "tooth": 11,
+     "pulp_hu": 749,
+     "dentin_hu": 1769,
+     "diff_hu": -1020,
+     "pulp_vox": 1850,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 35.7,
+     "pulp_gap_mm": 0.7,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 12,
+     "pulp_hu": 815,
+     "dentin_hu": 1579,
+     "diff_hu": -764,
+     "pulp_vox": 1445,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 35.8,
+     "pulp_gap_mm": 1.4,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 13,
+     "pulp_hu": 615,
+     "dentin_hu": 1582,
+     "diff_hu": -967,
+     "pulp_vox": 2340,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 29.3,
+     "pulp_gap_mm": 2.3,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 14,
+     "pulp_hu": 538,
+     "dentin_hu": 1350,
+     "diff_hu": -812,
+     "pulp_vox": 1761,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 34.1,
+     "pulp_gap_mm": 1.9,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 15,
+     "pulp_hu": 350,
+     "dentin_hu": 1254,
+     "diff_hu": -904,
+     "pulp_vox": 1876,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 35.3,
+     "pulp_gap_mm": 0.8,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 16,
+     "pulp_hu": 519,
+     "dentin_hu": 1309,
+     "diff_hu": -790,
+     "pulp_vox": 4177,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 39.4,
+     "pulp_gap_mm": 1.4,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 17,
+     "pulp_hu": 627,
+     "dentin_hu": 1444,
+     "diff_hu": -817,
+     "pulp_vox": 4291,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 39.5,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 21,
+     "pulp_hu": 830,
+     "dentin_hu": 1884,
+     "diff_hu": -1054,
+     "pulp_vox": 1902,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 33.9,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 22,
+     "pulp_hu": 808,
+     "dentin_hu": 1831,
+     "diff_hu": -1023,
+     "pulp_vox": 1159,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 28.3,
+     "pulp_gap_mm": 1.8,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 23,
+     "pulp_hu": 880,
+     "dentin_hu": 1816,
+     "diff_hu": -936,
+     "pulp_vox": 2093,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 21.8,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 24,
+     "pulp_hu": 812,
+     "dentin_hu": 1617,
+     "diff_hu": -805,
+     "pulp_vox": 1669,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 15.3,
+     "pulp_gap_mm": 2.9,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 25,
+     "pulp_hu": 621,
+     "dentin_hu": 1571,
+     "diff_hu": -950,
+     "pulp_vox": 1803,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 8.5,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 26,
+     "pulp_hu": 736,
+     "dentin_hu": 1601,
+     "diff_hu": -864,
+     "pulp_vox": 4058,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 0.2,
+     "pulp_gap_mm": 0.5,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 27,
+     "pulp_hu": 729,
+     "dentin_hu": 1728,
+     "diff_hu": -999,
+     "pulp_vox": 3887,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 3.3,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 28,
+     "pulp_hu": 343,
+     "dentin_hu": 1047,
+     "diff_hu": -704,
+     "pulp_vox": 980,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 6.1,
+     "pulp_gap_mm": 2.2,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 31,
+     "pulp_hu": 1236,
+     "dentin_hu": 1776,
+     "diff_hu": -540,
+     "pulp_vox": 968,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 34.6,
+     "pulp_gap_mm": 0.8,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 32,
+     "pulp_hu": 971,
+     "dentin_hu": 1736,
+     "diff_hu": -765,
+     "pulp_vox": 1365,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 30.1,
+     "pulp_gap_mm": 1.4,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 33,
+     "pulp_hu": 932,
+     "dentin_hu": 1796,
+     "diff_hu": -864,
+     "pulp_vox": 2316,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 24.0,
+     "pulp_gap_mm": 1.3,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 34,
+     "pulp_hu": 816,
+     "dentin_hu": 1649,
+     "diff_hu": -833,
+     "pulp_vox": 1616,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 19.1,
+     "pulp_gap_mm": 3.8,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 35,
+     "pulp_hu": 690,
+     "dentin_hu": 1550,
+     "diff_hu": -860,
+     "pulp_vox": 1773,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 15.0,
+     "pulp_gap_mm": 0.5,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 36,
+     "pulp_hu": 611,
+     "dentin_hu": 1491,
+     "diff_hu": -880,
+     "pulp_vox": 4274,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 10.0,
+     "pulp_gap_mm": 1.1,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 37,
+     "pulp_hu": 293,
+     "dentin_hu": 1357,
+     "diff_hu": -1064,
+     "pulp_vox": 4091,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 11.6,
+     "pulp_gap_mm": 0.7,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 38,
+     "pulp_hu": 290,
+     "dentin_hu": 1310,
+     "diff_hu": -1020,
+     "pulp_vox": 2501,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 20.7,
+     "pulp_gap_mm": 2.5,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 41,
+     "pulp_hu": 1147,
+     "dentin_hu": 1753,
+     "diff_hu": -606,
+     "pulp_vox": 1065,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 38.6,
+     "pulp_gap_mm": 1.8,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 42,
+     "pulp_hu": 976,
+     "dentin_hu": 1654,
+     "diff_hu": -678,
+     "pulp_vox": 1610,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 41.7,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 43,
+     "pulp_hu": 594,
+     "dentin_hu": 1642,
+     "diff_hu": -1048,
+     "pulp_vox": 2102,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 43.7,
+     "pulp_gap_mm": 0.5,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 44,
+     "pulp_hu": 383,
+     "dentin_hu": 1426,
+     "diff_hu": -1043,
+     "pulp_vox": 1642,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 43.9,
+     "pulp_gap_mm": 2.0,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 45,
+     "pulp_hu": 310,
+     "dentin_hu": 1340,
+     "diff_hu": -1030,
+     "pulp_vox": 1777,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 44.8,
+     "pulp_gap_mm": 1.4,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 46,
+     "pulp_hu": 501,
+     "dentin_hu": 1274,
+     "diff_hu": -773,
+     "pulp_vox": 4514,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 45.9,
+     "pulp_gap_mm": 1.5,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 47,
+     "pulp_hu": 353,
+     "dentin_hu": 1205,
+     "diff_hu": -852,
+     "pulp_vox": 4239,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 48.4,
+     "pulp_gap_mm": 0.7,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 48,
+     "pulp_hu": 386,
+     "dentin_hu": 1320,
+     "diff_hu": -934,
+     "pulp_vox": 3756,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 55.4,
+     "pulp_gap_mm": 3.6,
+     "fill_gap_mm": null
+    }
+   ],
+   "no_pulp": [],
+   "filled": [],
+   "draft": true
+  },
+  "model_label": "Единая (пульпа одним классом)",
+  "draft": true,
+  "teeth_present": [
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48
+  ],
+  "teeth_missing": [
+   18
+  ],
+  "findings": [
+   {
+    "code": "tooth_missing",
+    "tooth": 18,
+    "value": 0.82,
+    "unit": "доля кости",
+    "severity": "warning",
+    "text": "Зуб 18 отсутствует; доля костной ткани 0.82 — выше обычного для этой зоны (ориентир 0.72, боковой отдел верхней челюсти)",
+    "action": "ортопед: оценить показания к имплантации/протезированию",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "зуб в маске",
+      "value": 0,
+      "unit": "вокс.",
+      "rule": "порог присутствия 100 вокс."
+     },
+     {
+      "label": "доля костной ткани в ложе",
+      "value": 0.82,
+      "unit": "",
+      "rule": "ориентир зоны 0.72 (боковой отдел верхней челюсти), проба радиусом 6 мм",
+      "note": "порог кости взят от дентина ЭТОГО снимка; классы D1-D4 не выдаём — они определены через единицы Хаунсфилда, которых КЛКТ не даёт"
+     }
+    ]
+   },
+   {
+    "code": "canal_close",
+    "tooth": 38,
+    "value": 1.6,
+    "unit": "мм",
+    "severity": "warning",
+    "text": "Корень 38 близко к нижнечелюстному каналу (1.6 мм)",
+    "action": "хирург: планировать удаление/имплантацию по КЛКТ",
+    "route": "surgery",
+    "confidence": "high",
+    "basis": [
+     {
+      "label": "расстояние корень → канал",
+      "value": 1.6,
+      "unit": "мм",
+      "rule": "контакт ≤0.5, близко ≤2.0",
+      "note": "воксель 0.25 мм"
+     },
+     {
+      "label": "кортикальная стенка канала со стороны зуба",
+      "value": 60,
+      "unit": "%",
+      "rule": "считаем стенку утраченной ниже 35%",
+      "note": "стенка 0.68-1.10 мм это 2-3 вокселя при нашем 0.25 — признак на пределе разрешения; риск при её отсутствии 15.7% против 0.39% (метаанализ 18 работ)"
+     }
+    ]
+   },
+   {
+    "code": "canal_close",
+    "tooth": 48,
+    "value": 1.34,
+    "unit": "мм",
+    "severity": "warning",
+    "text": "Корень 48 близко к нижнечелюстному каналу (1.3 мм)",
+    "action": "хирург: планировать удаление/имплантацию по КЛКТ",
+    "route": "surgery",
+    "confidence": "high",
+    "basis": [
+     {
+      "label": "расстояние корень → канал",
+      "value": 1.34,
+      "unit": "мм",
+      "rule": "контакт ≤0.5, близко ≤2.0",
+      "note": "воксель 0.25 мм"
+     },
+     {
+      "label": "кортикальная стенка канала со стороны зуба",
+      "value": 67,
+      "unit": "%",
+      "rule": "считаем стенку утраченной ниже 35%",
+      "note": "стенка 0.68-1.10 мм это 2-3 вокселя при нашем 0.25 — признак на пределе разрешения; риск при её отсутствии 15.7% против 0.39% (метаанализ 18 работ)"
+     }
+    ]
+   },
+   {
+    "code": "sinus_close",
+    "tooth": 25,
+    "value": 0.56,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Корень 25 у дна гайморовой пазухи: 0.6 мм (ближе, чем у 38% зубов выборки). Близость к пазухе типична и сама по себе патологией не является",
+    "action": "учесть при планировании удаления или имплантации в этой позиции",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "расстояние корень → дно пазухи",
+      "value": 0.56,
+      "unit": "мм",
+      "rule": "ближе, чем у 38% зубов выборки",
+      "note": "воксель 0.25 мм"
+     },
+     {
+      "label": "медиана выборки",
+      "value": 0.8,
+      "unit": "мм",
+      "rule": "341 верхних жевательных зубов, 42 томов",
+      "note": "близость к пазухе — норма: две трети зубов лежат ближе 2 мм, поэтому отдаём перцентиль, а не тревогу"
+     },
+     {
+      "label": "охват маски пазухи",
+      "value": 1.5,
+      "unit": "см³",
+      "rule": "размечено дно полости, не пазуха целиком",
+      "note": "анатомическая норма около 15 см³ на пазуху; измеряется расстояние до дна, объём пазухи и состояние слизистой по этой маске не оцениваются"
+     }
+    ]
+   },
+   {
+    "code": "sinus_close",
+    "tooth": 26,
+    "value": 0.25,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Корень 26 у дна гайморовой пазухи: 0.2 мм (ближе, чем у 8% зубов выборки). Близость к пазухе типична и сама по себе патологией не является",
+    "action": "учесть при планировании удаления или имплантации в этой позиции",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "расстояние корень → дно пазухи",
+      "value": 0.25,
+      "unit": "мм",
+      "rule": "ближе, чем у 8% зубов выборки",
+      "note": "воксель 0.25 мм"
+     },
+     {
+      "label": "медиана выборки",
+      "value": 0.8,
+      "unit": "мм",
+      "rule": "341 верхних жевательных зубов, 42 томов",
+      "note": "близость к пазухе — норма: две трети зубов лежат ближе 2 мм, поэтому отдаём перцентиль, а не тревогу"
+     },
+     {
+      "label": "охват маски пазухи",
+      "value": 1.5,
+      "unit": "см³",
+      "rule": "размечено дно полости, не пазуха целиком",
+      "note": "анатомическая норма около 15 см³ на пазуху; измеряется расстояние до дна, объём пазухи и состояние слизистой по этой маске не оцениваются"
+     }
+    ]
+   },
+   {
+    "code": "sinus_close",
+    "tooth": 27,
+    "value": 0.35,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Корень 27 у дна гайморовой пазухи: 0.4 мм (ближе, чем у 28% зубов выборки). Близость к пазухе типична и сама по себе патологией не является",
+    "action": "учесть при планировании удаления или имплантации в этой позиции",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "расстояние корень → дно пазухи",
+      "value": 0.35,
+      "unit": "мм",
+      "rule": "ближе, чем у 28% зубов выборки",
+      "note": "воксель 0.25 мм"
+     },
+     {
+      "label": "медиана выборки",
+      "value": 0.8,
+      "unit": "мм",
+      "rule": "341 верхних жевательных зубов, 42 томов",
+      "note": "близость к пазухе — норма: две трети зубов лежат ближе 2 мм, поэтому отдаём перцентиль, а не тревогу"
+     },
+     {
+      "label": "охват маски пазухи",
+      "value": 1.5,
+      "unit": "см³",
+      "rule": "размечено дно полости, не пазуха целиком",
+      "note": "анатомическая норма около 15 см³ на пазуху; измеряется расстояние до дна, объём пазухи и состояние слизистой по этой маске не оцениваются"
+     }
+    ]
+   },
+   {
+    "code": "tooth_impacted",
+    "tooth": 28,
+    "value": 0.102,
+    "unit": "доля",
+    "severity": "warning",
+    "text": "Зуб 28 — подозрение на ретенцию: не дошёл до зубного ряда на 41.4 мм",
+    "action": "хирург: оценить показания к удалению ретенированного зуба",
+    "route": "surgery",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "доля коронки, упирающейся в кость",
+      "value": 0.1,
+      "unit": "доля",
+      "rule": "порог ретенции ≥0.6",
+      "note": "порог по разрыву в распределении на client2/client4, врачом не подписан"
+     },
+     {
+      "label": "выше уровня зубного ряда",
+      "value": 41.4,
+      "unit": "мм",
+      "rule": "порог ≥8.0 мм"
+     }
+    ]
+   },
+   {
+    "code": "tooth_impacted",
+    "tooth": 48,
+    "value": 0.628,
+    "unit": "доля",
+    "severity": "warning",
+    "text": "Зуб 48 — подозрение на ретенцию: окружён костью на 63%",
+    "action": "хирург: оценить показания к удалению ретенированного зуба",
+    "route": "surgery",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "доля коронки, упирающейся в кость",
+      "value": 0.63,
+      "unit": "доля",
+      "rule": "порог ретенции ≥0.6",
+      "note": "порог по разрыву в распределении на client2/client4, врачом не подписан"
+     },
+     {
+      "label": "выше уровня зубного ряда",
+      "value": -5.1,
+      "unit": "мм",
+      "rule": "порог ≥8.0 мм"
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 26,
+    "value": 6.9,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Мост в области зуба 26",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 6.9,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 109,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 17.0,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 17.0,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 2565,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 11.3,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 11.3,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 138,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 12.1,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 12.1,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 376,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 12.4,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 12.4,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 109,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 15.3,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 15.3,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 319,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "restoration",
+    "tooth": 28,
+    "value": 18.1,
+    "unit": "мм",
+    "severity": "info",
+    "text": "Коронка в области зуба 28",
+    "action": "ортопед: оценить состояние реставрации",
+    "route": "prostho",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "до центра ближайшего зуба",
+      "value": 18.1,
+      "unit": "мм",
+      "rule": "дальше 25 мм — артефакт",
+      "note": "привязка к зубу по расстоянию центров: у моста она условна"
+     },
+     {
+      "label": "объём объекта",
+      "value": 80,
+      "unit": "вокс.",
+      "rule": "минимум 50 вокс."
+     }
+    ]
+   },
+   {
+    "code": "bone_loss",
+    "tooth": null,
+    "teeth": [
+     12
+    ],
+    "value": 9.1,
+    "unit": "мм",
+    "grade": "резко выше нормы",
+    "severity": "alert",
+    "text": "Уровень кости резко выше нормы: 12 дистально 9.1 мм (49% корня). Худший участок выше 100% участков в выборке из 60 пациентов (медиана выборки 3.9 мм — это база НАШЕГО измерения, не клиническая норма)",
+    "action": "пародонтолог: подтвердить зондированием; клиническую степень по КЛКТ мы не ставим — нужна его разметка",
+    "route": "hygiene",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "худший участок шейка → гребень",
+      "value": 9.1,
+      "unit": "мм",
+      "rule": "выше нормы с 85-го перцентиля выборки, заметно с 95-го, резко с 99-го",
+      "note": "медиана выборки 3.9 мм — база нашего измерения, не клиническая норма"
+     },
+     {
+      "label": "перцентиль в выборке",
+      "value": 100,
+      "unit": "%",
+      "rule": "выборка 2528 участков, 60 пациентов ToothFairy",
+      "note": "выборка из пациентов КЛКТ — она сама не здорова"
+     },
+     {
+      "label": "участков с превышением",
+      "value": 1,
+      "unit": "шт.",
+      "rule": "мезиально и дистально у каждого зуба"
+     }
+    ]
+   },
+   {
+    "code": "bone_loss",
+    "tooth": null,
+    "teeth": [
+     11,
+     12,
+     21
+    ],
+    "value": 8.9,
+    "unit": "мм",
+    "grade": "заметно выше нормы",
+    "severity": "warning",
+    "text": "Уровень кости заметно выше нормы: 11 дистально 7.7 мм (42% корня), 11 мезиально 8.5 мм (47% корня), 12 мезиально 8.9 мм (48% корня), 21 дистально 7.7 мм (45% корня). Худший участок выше 99% участков в выборке из 60 пациентов (медиана выборки 3.9 мм — это база НАШЕГО измерения, не клиническая норма)",
+    "action": "пародонтолог: подтвердить зондированием; клиническую степень по КЛКТ мы не ставим — нужна его разметка",
+    "route": "hygiene",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "худший участок шейка → гребень",
+      "value": 8.9,
+      "unit": "мм",
+      "rule": "выше нормы с 85-го перцентиля выборки, заметно с 95-го, резко с 99-го",
+      "note": "медиана выборки 3.9 мм — база нашего измерения, не клиническая норма"
+     },
+     {
+      "label": "перцентиль в выборке",
+      "value": 99,
+      "unit": "%",
+      "rule": "выборка 2528 участков, 60 пациентов ToothFairy",
+      "note": "выборка из пациентов КЛКТ — она сама не здорова"
+     },
+     {
+      "label": "участков с превышением",
+      "value": 4,
+      "unit": "шт.",
+      "rule": "мезиально и дистально у каждого зуба"
+     }
+    ]
+   },
+   {
+    "code": "bone_loss",
+    "tooth": null,
+    "teeth": [
+     21,
+     23
+    ],
+    "value": 7.2,
+    "unit": "мм",
+    "grade": "выше нормы",
+    "severity": "warning",
+    "text": "Уровень кости выше нормы: 21 мезиально 7.2 мм (42% корня), 23 дистально 6.8 мм (31% корня), 23 мезиально 6.4 мм (29% корня). Худший участок выше 94% участков в выборке из 60 пациентов (медиана выборки 3.9 мм — это база НАШЕГО измерения, не клиническая норма)",
+    "action": "пародонтолог: подтвердить зондированием; клиническую степень по КЛКТ мы не ставим — нужна его разметка",
+    "route": "hygiene",
+    "confidence": "medium",
+    "basis": [
+     {
+      "label": "худший участок шейка → гребень",
+      "value": 7.2,
+      "unit": "мм",
+      "rule": "выше нормы с 85-го перцентиля выборки, заметно с 95-го, резко с 99-го",
+      "note": "медиана выборки 3.9 мм — база нашего измерения, не клиническая норма"
+     },
+     {
+      "label": "перцентиль в выборке",
+      "value": 94,
+      "unit": "%",
+      "rule": "выборка 2528 участков, 60 пациентов ToothFairy",
+      "note": "выборка из пациентов КЛКТ — она сама не здорова"
+     },
+     {
+      "label": "участков с превышением",
+      "value": 3,
+      "unit": "шт.",
+      "rule": "мезиально и дистально у каждого зуба"
+     }
+    ]
+   }
+  ],
+  "quality": [
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «мост» в 46 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «мост» в 64 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 34 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 58 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 75 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 52 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 61 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 52 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 47 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 75 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 78 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 58 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "prosth_artifact",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Объект класса «коронка» в 62 мм от ближайшего зуба — это артефакт маски, а не реставрация",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": []
+   },
+   {
+    "code": "bone_not_measured",
+    "tooth": null,
+    "teeth": [
+     15,
+     28,
+     33,
+     34,
+     38,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     48
+    ],
+    "value": null,
+    "unit": null,
+    "severity": "info",
+    "text": "Уровень кости не измерен у зубов [15, 28, 33, 34, 38, 41, 42, 43, 44, 45, 46, 48]: не читается граница эмали (коронка, реставрация) либо рядом нет кости",
+    "action": "оценить по срезам вручную",
+    "route": "review",
+    "confidence": "high"
+   }
+  ],
+  "routes": [
+   {
+    "key": "urgent",
+    "label": "Неотложная помощь",
+    "order": 0
+   },
+   {
+    "key": "hygiene",
+    "label": "Гигиенист / пародонтолог",
+    "order": 1
+   },
+   {
+    "key": "surgery",
+    "label": "Хирург",
+    "order": 2
+   },
+   {
+    "key": "therapy",
+    "label": "Терапевт / эндодонт",
+    "order": 3
+   },
+   {
+    "key": "gnatho",
+    "label": "Гнатолог (диагностика окклюзии)",
+    "order": 4
+   },
+   {
+    "key": "ortho",
+    "label": "Ортодонт",
+    "order": 5
+   },
+   {
+    "key": "prostho",
+    "label": "Ортопед (протезирование, имплантация)",
+    "order": 6
+   },
+   {
+    "key": "review",
+    "label": "Ручная проверка",
+    "order": 9
+   }
+  ],
+  "v": 15
+ },
+ "review": null,
+ "panorama": null,
+ "meshes": {
+  "sp": 21
+ },
+ "scanner": null,
+ "sides_applied": false,
+ "sides_uncertain": null,
+ "sides_vote": null,
+ "created_at": "2026-08-31T15:16:11",
+ "fixture": true
+}
