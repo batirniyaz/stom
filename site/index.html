@@ -5,63 +5,167 @@
 <title>Stomadent — прототип</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* Раскладка: узкая шапка пациента, слева 3D-модель на тёмном фоне, справа один сайдбар с тремя вкладками. Данные находок выдуманные, модель челюсти настоящая (публичный набор). */
+/* Прототип: вход врача -> пациенты -> профиль -> загрузка -> разбор с 3D. Все данные выдуманные, модель челюсти настоящая (публичный набор). */
 :root{
   --bg:#f4f5f7; --surface:#ffffff; --surface2:#eef0f4; --text:#161a20; --muted:#5d6775; --line:#dfe3e9;
-  --accent:#1f5fd6; --accent-soft:#e3ecfb;
-  --crit:#d3342b; --crit-soft:#fbe6e4; --warn:#b7791f; --warn-soft:#fbf0d9; --info:#64707f; --info-soft:#e9ecf1; --ok:#1d8a52; --ok-soft:#dff3e8;
+  --accent:#1f5fd6; --accent-soft:#e3ecfb; --accent-ink:#fff;
+  --crit:#d3342b; --warn:#b7791f; --info:#64707f; --ok:#1d8a52; --ok-soft:#dff3e8;
   --viewer:#0e1218;
   --f-head:"Space Grotesk","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0c0f14; --surface:#161b22; --surface2:#1e242d; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a313b;
-  --accent:#6ea0ff; --accent-soft:#1b2a45;
-  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37; --ok:#59c98a; --ok-soft:#173326;
-  --viewer:#0a0d12; color-scheme:dark}}
+  --accent:#6ea0ff; --accent-soft:#1b2a45; --accent-ink:#0c0f14;
+  --crit:#ff7b72; --warn:#e3b34d; --info:#a3adba; --ok:#59c98a; --ok-soft:#173326; --viewer:#0a0d12; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0c0f14; --surface:#161b22; --surface2:#1e242d; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a313b;
-  --accent:#6ea0ff; --accent-soft:#1b2a45;
-  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37; --ok:#59c98a; --ok-soft:#173326;
-  --viewer:#0a0d12; color-scheme:dark}
+  --accent:#6ea0ff; --accent-soft:#1b2a45; --accent-ink:#0c0f14;
+  --crit:#ff7b72; --warn:#e3b34d; --info:#a3adba; --ok:#59c98a; --ok-soft:#173326; --viewer:#0a0d12; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body);min-height:100vh}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{max-width:1280px;margin:0 auto;padding-block:14px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
-.top h1{font:700 20px var(--f-head);margin:0}
-.pt{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px;flex:1;min-width:0}
-.pt b{font-weight:600}.pt .muted{color:var(--muted)}
-.demo-tag{font-size:12px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:999px;white-space:nowrap}
-.main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-items:start}
-@media (max-width:980px){.main{grid-template-columns:1fr}}
+h1,h2,h3{font-family:var(--f-head);margin:0}
+.muted{color:var(--muted)}
+.wrap{max-width:1280px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.btn{border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:10px;font-weight:600;white-space:nowrap}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.bad{color:var(--crit);border-color:var(--crit)}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:6px 12px;font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.lv{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;white-space:nowrap;color:#fff}
+.lv.k{background:var(--crit)}.lv.v{background:var(--warn)}.lv.n{background:var(--info)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.acc{background:var(--accent-soft);color:var(--accent)}.pill.wait{background:var(--surface2);color:var(--warn)}
+.view[hidden]{display:none}
 
-/* 3D */
-.stage{position:relative;background:radial-gradient(120% 120% at 50% 20%,#1a212b,var(--viewer));border-radius:16px;overflow:hidden;height:min(72vh,680px);min-height:380px;border:1px solid var(--line)}
+/* шапка */
+.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar .in{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.logo{display:flex;align-items:center;gap:8px;font:700 19px var(--f-head);cursor:pointer;border:0;background:none}
+.logo svg{width:26px;height:26px}
+.bar .sp{flex:1}
+.who{display:flex;align-items:center;gap:10px;font-size:14px}
+.ava{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:13px}
+.dev{font-size:12px;color:var(--muted)}
+@media (max-width:640px){.dev,.who .nm{display:none}}
+
+/* вход */
+.login{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+@media (max-width:860px){.login{grid-template-columns:1fr}.login .hero{display:none}}
+.hero{background:radial-gradient(90% 80% at 30% 30%,#1c2a44,#0b0f16);color:#e8ecf2;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:48px}
+.hero h2{font-size:34px;line-height:1.15;max-width:420px}
+.hero p{color:#aab5c5;max-width:420px}
+.hero .orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.55;animation:float 9s ease-in-out infinite}
+.hero .o1{width:240px;height:240px;background:#2f6bff;left:8%;top:10%}
+.hero .o2{width:180px;height:180px;background:#e5484d;right:12%;top:30%;animation-delay:-3s}
+.hero .o3{width:150px;height:150px;background:#e8a33d;left:42%;top:52%;animation-delay:-6s}
+@keyframes float{50%{transform:translate(18px,-22px) scale(1.08)}}
+.hero .tooth{position:absolute;left:50%;top:22%;width:150px;transform:translateX(-50%);animation:bob 5s ease-in-out infinite;filter:drop-shadow(0 12px 30px rgba(80,140,255,.5))}
+@keyframes bob{50%{transform:translateX(-50%) translateY(-10px) rotate(2deg)}}
+.lform{display:flex;align-items:center;justify-content:center;padding:32px max(16px,env(safe-area-inset-right,0px))}
+.lbox{width:100%;max-width:380px}
+.lbox h1{font-size:28px;margin:14px 0 6px}
+.lbox label{display:block;font-size:13px;color:var(--muted);margin:16px 0 5px}
+.lbox input[type=tel],.lbox input[type=text]{width:100%;font:inherit;font-size:18px;letter-spacing:.5px;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.lbox .btn{width:100%;margin-top:16px;padding:12px}
+.lbox .hintbox{margin-top:14px;font-size:13px;color:var(--muted);background:var(--surface2);padding:9px 12px;border-radius:10px}
+.chk{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:14px;color:var(--muted)}
+.err{color:var(--crit);font-size:13px;min-height:18px;margin-top:4px}
+
+/* пациенты */
+.hello h1{font-size:26px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.stat{padding:14px 16px}
+.stat b{display:block;font:700 28px var(--f-head)}
+.stat span{color:var(--muted);font-size:13px}
+.tools2{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.tools2 input{flex:1;min-width:180px;font:inherit;padding:9px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.plist{display:grid;gap:10px}
+.prow{display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;transition:border-color .15s,transform .15s}
+.prow:hover{border-color:var(--accent);transform:translateY(-1px)}
+.prow .ava{width:40px;height:40px;font-size:15px;background:var(--accent-soft);color:var(--accent)}
+.prow .m{flex:1;min-width:0}
+.prow .m b{display:block}
+.prow .m small{color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp 1s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* профиль */
+.crumb{display:flex;gap:8px;align-items:center;margin-bottom:12px;font-size:14px}
+.crumb button{border:0;background:none;color:var(--accent);padding:0;font-weight:600}
+.phead{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px;margin-bottom:14px}
+.phead .ava{width:56px;height:56px;font-size:20px}
+.phead h1{font-size:24px}
+.phead .sp{flex:1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow:auto}
+.tabs button{border:0;background:transparent;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs .n{display:inline-block;min-width:20px;font-size:12px;background:var(--surface2);border-radius:99px;padding:0 6px;margin-left:4px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.info{padding:14px 16px}
+.info small{display:block;color:var(--muted);font-size:12.5px;margin-bottom:2px}
+.info.flag{border-color:var(--warn)}
+.scan{display:flex;gap:14px;align-items:center;padding:14px 16px;margin-bottom:10px}
+.scan .thumb{width:64px;height:64px;border-radius:10px;background:radial-gradient(circle at 50% 40%,#2b3a55,#0b0f16);display:grid;place-items:center;font-size:12px;color:#9aa5b4;flex:none}
+.scan .m{flex:1;min-width:0}
+.tl{border-left:2px solid var(--line);margin-left:8px;padding-left:18px}
+.tl .it{position:relative;margin-bottom:16px}
+.tl .it::before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+textarea.note{width:100%;min-height:160px;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;resize:vertical}
+.empty{text-align:center;padding:32px;color:var(--muted)}
+.teaser{padding:14px 16px;margin-top:12px;display:flex;gap:12px;align-items:center;background:linear-gradient(120deg,var(--accent-soft),var(--surface))}
+
+/* модалка */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,8,12,.6);display:grid;place-items:center;padding:16px;backdrop-filter:blur(3px)}
+.modal[hidden]{display:none}
+.mbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:22px}
+.mbox.wide{max-width:900px}
+.mbox h2{font-size:21px;margin-bottom:4px}
+.mbox label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.mbox input[type=text],.mbox input[type=number],.mbox textarea,.mbox select{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);margin-top:12px;transition:.15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.demo-opt{display:flex;gap:12px;align-items:center;border:2px solid var(--accent);background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin-top:12px}
+.demo-opt .thumb{width:54px;height:54px;border-radius:10px;background:radial-gradient(circle at 50% 40%,#2b3a55,#0b0f16);flex:none}
+.steps{margin:14px 0}
+.steps li{list-style:none;display:flex;gap:10px;align-items:center;padding:6px 0;color:var(--muted)}
+.steps li.on{color:var(--text);font-weight:600}.steps li.done{color:var(--ok)}
+.prog{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:flex-end}
+
+/* разбор */
+.vtop{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:12px}
+.vtop .pt{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px;flex:1;min-width:0}
+.ring{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.ring svg{width:38px;height:38px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:14px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.stage{position:relative;background:radial-gradient(120% 120% at 50% 20%,#1a212b,var(--viewer));border-radius:16px;overflow:hidden;height:min(74vh,700px);min-height:380px;border:1px solid var(--line)}
 #gl{position:absolute;inset:0}
 #gl canvas{display:block;width:100%;height:100%}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:#9aa5b4;font-size:14px;text-align:center;padding:20px}
 .tools{position:absolute;left:12px;top:12px;display:flex;flex-wrap:wrap;gap:8px;max-width:calc(100% - 24px)}
 .tool{background:rgba(22,27,34,.82);color:#e8ecf2;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;font-size:13px;backdrop-filter:blur(6px)}
 .tool[aria-pressed="false"]{opacity:.55}
-.tool.acc{background:var(--accent);border-color:var(--accent);color:#fff}
-.legend{position:absolute;left:12px;bottom:12px;display:flex;gap:12px;font-size:12px;color:#c4ccd6;background:rgba(14,18,24,.7);padding:6px 12px;border-radius:10px}
+.tool.acc{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.legend{position:absolute;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#c4ccd6;background:rgba(14,18,24,.7);padding:6px 12px;border-radius:10px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.hint{position:absolute;right:12px;top:12px;font-size:12px;color:#9aa5b4;background:rgba(14,18,24,.7);padding:6px 12px;border-radius:10px}
 .cred{font-size:12px;color:var(--muted);margin-top:8px}
-
-/* сайдбар */
-.side{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;height:min(72vh,680px);min-height:420px}
+.side{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;height:min(74vh,700px);min-height:440px}
 @media (max-width:980px){.side{height:auto;min-height:0}}
-.tabs{display:flex;border-bottom:1px solid var(--line)}
-.tabs button{flex:1;border:0;background:transparent;padding:12px 6px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
-.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.tabs .n{display:inline-block;min-width:20px;font-size:12px;background:var(--surface2);border-radius:99px;padding:0 6px;margin-left:4px;color:var(--muted)}
+.side .tabs{margin:0}
+.side .tabs button{flex:1}
 .pane{padding:12px;overflow:auto;flex:1;min-height:0}
 .pane[hidden]{display:none}
-.lv{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;white-space:nowrap;color:#fff}
-.lv.k{background:var(--crit)}.lv.v{background:var(--warn)}.lv.n{background:var(--info)}
 .fcard{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .fcard.open{border-color:var(--accent)}
 .fhead{display:flex;gap:10px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:11px 12px}
@@ -76,45 +180,106 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .fbody label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 3px}
 .fbody select,.fbody textarea,.chatin input{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
 .fbody textarea{min-height:60px;resize:vertical}
-.err{color:var(--crit);font-size:13px;min-height:18px;margin-top:4px}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;font-weight:600}
-.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.bad{color:var(--crit);border-color:var(--crit)}
-.btn[disabled]{opacity:.45;cursor:not-allowed}
 .sum{background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:10px}
-.prog{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 12px}
-.prog i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
-.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
-.row:last-child{border-bottom:0}
+.chart{margin-bottom:12px}
+.chart .r{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;margin-bottom:3px}
+.chart .r.gap{margin-bottom:8px}
+.chart button{padding:3px 0;font-size:10px;border:1px solid var(--line);border-radius:5px;background:var(--surface2);color:var(--muted)}
+.chart button.k{background:var(--crit);color:#fff;border-color:var(--crit)}
+.chart button.v{background:var(--warn);color:#fff;border-color:var(--warn)}
+.chart button.n{background:var(--info);color:#fff;border-color:var(--info)}
+.chart button.sel{outline:2px solid var(--accent);outline-offset:1px}
+.chart small{color:var(--muted);font-size:11.5px}
+.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.row:last-of-type{border-bottom:0}
 .row .t{flex:1;min-width:0}
 .row .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:11px;color:#fff}
 .row .dot.ok{background:var(--ok);border-color:var(--ok)}.row .dot.rej{background:var(--info);border-color:var(--info)}
 .msgs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.b{background:var(--surface2);border-radius:12px;padding:9px 12px;font-size:14px;max-width:92%}
-.b.me{background:var(--accent-soft);align-self:flex-end}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.chips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.b{background:var(--surface2);border-radius:14px;padding:9px 12px;font-size:14px;max-width:94%}
+.b.me{background:var(--accent);color:var(--accent-ink);align-self:flex-end}
+.b .src{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.b .src button{font-size:12px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px;color:var(--accent)}
+.typing i{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:var(--muted);animation:bl 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{50%{opacity:.25}}
 .chatin{display:flex;gap:6px}
-.note{font-size:12px;color:var(--muted);margin-top:8px}
-.docs{display:none;margin-top:16px;gap:14px;grid-template-columns:1fr 1fr}
-.docs.show{display:grid}
-@media (max-width:760px){.docs.show{grid-template-columns:1fr}}
-.doc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
-.doc h3{font:700 17px var(--f-head);margin:0 0 4px}
+.note2{font-size:12px;color:var(--muted);margin-top:8px}
+kbd{font:600 11px var(--f-body);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--surface2)}
+.doc{font-size:14px}
+.doc h3{font-size:18px;margin-bottom:2px}
+.doc ul{padding-left:18px}
 .doc .m{color:var(--muted);font-size:13px;margin-bottom:10px}
-.doc ul{margin:6px 0;padding-left:18px}
 .doc .foot{margin-top:12px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.toasts{position:fixed;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:ti .25s}
+@keyframes ti{from{transform:translateY(10px);opacity:0}}
+@media print{.bar,.toasts,.modal .btns,.tabs{display:none!important}.modal{position:static;background:none}.mbox{border:0;max-height:none}body *{visibility:hidden}.mbox,.mbox *{visibility:visible}}
 </style>
-</head><body>
+</head>
+<body>
+<div class="bar" id="bar" hidden><div class="in">
+  <button class="logo" id="logoBtn" aria-label="К списку пациентов"><svg viewBox="0 0 32 32"><path d="M9 4c-3 0-5 2.5-5 6 0 4 2 6 2.5 10 .4 3 1.3 8 3.5 8 2 0 2-5 3-8 .4-1.3 1.4-1.3 1.8 0 1 3 1 8 3 8 2.2 0 3.1-5 3.5-8 .5-4 2.7-6 2.7-10 0-3.500-2-6-5-6-2 0-3 1-5.500 1S11 4 9 4z" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/></svg>Stomadent</button>
+  <span class="pill acc">прототип</span>
+  <div class="sp"></div>
+  <span class="dev" id="devTxt">Этот компьютер подтверждён</span>
+  <button class="btn sm ghost" id="themeBtn" title="Тема">◐</button>
+  <div class="who"><div class="ava" id="docAva">АК</div><span class="nm" id="docName"></span><button class="btn sm ghost" id="outBtn">Выйти</button></div>
+</div></div>
 
-<div class="app">
-  <div class="top">
-    <h1>Stomadent</h1>
-    <div class="pt"><b>Пациент #A-0142</b><span class="muted">34 года</span><span>Жалоба: боль слева снизу на холодное</span><span class="muted">КЛКТ от 17.11.2026</span></div>
-    <span class="demo-tag">Прототип · данные выдуманные</span>
+<!-- вход -->
+<section class="view login" id="v-login" hidden>
+  <div class="hero">
+    <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+    <svg class="tooth" viewBox="0 0 32 32"><path d="M9 4c-3 0-5 2.5-5 6 0 4 2 6 2.5 10 .4 3 1.3 8 3.5 8 2 0 2-5 3-8 .4-1.3 1.4-1.3 1.8 0 1 3 1 8 3 8 2.200 0 3.100-5 3.500-8 .5-4 2.700-6 2.700-10 0-3.500-2-6-5-6-2 0-3 1-5.500 1S11 4 9 4z" fill="#f4efe4" stroke="#9db8ff" stroke-width="1"/></svg>
+    <h2>Программа читает снимок. Решает врач.</h2>
+    <p>Stomadent строит 3D-модель по КЛКТ, показывает находки и объясняет, на чём они основаны. Заключение появляется только после вашей проверки.</p>
   </div>
+  <div class="lform"><div class="lbox">
+    <div class="logo" style="cursor:default"><span style="font:700 22px var(--f-head)">Stomadent</span></div>
+    <h1>Вход для врача</h1>
+    <p class="muted" style="margin:0">Аккаунт врача работает на ноутбуке или компьютере клиники.</p>
+    <div id="lstep1">
+      <label for="phone">Номер телефона</label>
+      <input id="phone" type="tel" inputmode="tel" value="+998 " autocomplete="tel">
+      <div class="err" id="lerr"></div>
+      <button class="btn pri" id="getCode">Получить код</button>
+    </div>
+    <div id="lstep2" hidden>
+      <label for="code">Код из SMS</label>
+      <input id="code" type="text" inputmode="numeric" maxlength="4" placeholder="••••">
+      <div class="err" id="lerr2"></div>
+      <label class="chk"><input type="checkbox" id="trust" checked> Запомнить этот компьютер</label>
+      <button class="btn pri" id="doLogin">Войти</button>
+      <button class="btn ghost" id="back1" style="margin-top:6px">Изменить номер</button>
+    </div>
+    <div class="hintbox">Демо: подойдёт любой номер, код <b>1234</b>. В настоящей версии код придёт по SMS, а вход с телефона будет закрыт.</div>
+  </div></div>
+</section>
 
+<!-- пациенты -->
+<section class="view" id="v-patients" hidden><div class="wrap">
+  <div class="hello"><h1 id="hello"></h1><p class="muted" id="hello2" style="margin:4px 0 0"></p></div>
+  <div class="stats" id="stats"></div>
+  <div class="tools2">
+    <input id="q" placeholder="Поиск по имени или номеру карты">
+    <div class="chips" id="flt"></div>
+    <button class="btn pri" id="newP">+ Новый пациент</button>
+  </div>
+  <div class="plist" id="plist"></div>
+</div></section>
+
+<!-- профиль -->
+<section class="view" id="v-patient" hidden><div class="wrap" id="pbody"></div></section>
+
+<!-- разбор -->
+<section class="view" id="v-case" hidden><div class="wrap">
+  <div class="vtop">
+    <button class="btn sm" id="vBack">← Пациент</button>
+    <div class="pt" id="vpt"></div>
+    <div class="ring" id="vring"></div>
+    <button class="btn pri sm" id="vDoc">Создать заключение</button>
+  </div>
   <div class="main">
     <div>
       <div class="stage">
@@ -127,11 +292,9 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
           <button class="tool acc" id="tReset">Вся челюсть</button>
         </div>
         <div class="legend"><span><i style="background:#e5484d"></i>Критичная</span><span><i style="background:#e8a33d"></i>Важная</span><span><i style="background:#8b96a5"></i>Незначительная</span></div>
-              </div>
-      <p class="cred">Вращать: мышь · приблизить: колесо · выбрать зуб: клик. Модель челюсти: публичный набор figshare 26965903, лицензия CC BY 4.0. Находки, пациент и тексты на странице придуманы.</p>
-      <div class="docs" id="docs"></div>
+      </div>
+      <p class="cred">Мышь: вращать, колесо: приблизить, клик по зубу: открыть находку. <kbd>↑</kbd> <kbd>↓</kbd> листают находки. Модель челюсти: публичный набор figshare 26965903, CC BY 4.0. Находки и пациент придуманы.</p>
     </div>
-
     <aside class="side">
       <div class="tabs" role="tablist">
         <button role="tab" data-t="find" aria-selected="true">Находки<span class="n" id="nFind">5</span></button>
@@ -143,7 +306,10 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
       <div class="pane" id="p-chat" hidden></div>
     </aside>
   </div>
-</div>
+</div></section>
+
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
+<div class="toasts" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -152,25 +318,194 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 (function(){
 var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
 function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function toast(t){var d=el('div','toast',esc(t));$('#toasts').appendChild(d);setTimeout(function(){d.remove()},3200)}
 var LV={k:'Критичная',v:'Важная',n:'Незначительная'};
 var COL={k:0xe5484d,v:0xe8a33d,n:0x8b96a5};
+var TODAY=new Date().toLocaleDateString('ru-RU');
 
-/* ---------- выдуманные находки ---------- */
+/* ---------- данные (выдуманные) ---------- */
 var F=[
- {id:'f36',tooth:36,t:'Периапикальный очаг',lv:'k',why:'На срезе через верхушку корня видна зона разрежения 4,2 мм. Порог для очага в исследованиях — 3 мм. Жалоба пациента «боль слева снизу» совпадает по месту.',ai:'Зона разрежения у верхушки корня',plan:'лечение канала, 2–3 визита'},
- {id:'f37',tooth:37,t:'Глубокий кариес',lv:'v',why:'Полость доходит до 0,8 мм от пульпы. Порог близости — 1 мм.',ai:'Полость близко к пульпе',plan:'пломбирование'},
- {id:'f46',tooth:46,t:'Кариес',lv:'v',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',ai:'Снижение плотности на контактной поверхности',plan:'пломбирование'},
- {id:'f48',tooth:48,t:'Ретенция зуба мудрости',lv:'n',why:'Коронка зуба 48 на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга'},
- {id:'f15',tooth:15,t:'Корень близко к дну пазухи',lv:'n',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних зубов и сама по себе не патология.',ai:'Корень близко к пазухе',plan:'учесть при планировании имплантации'}
+ {id:'f36',tooth:36,t:'Периапикальный очаг',lv:'k',why:'На срезе через верхушку корня видна зона разрежения 4,2 мм. Порог для очага в исследованиях — 3 мм. Жалоба «боль слева снизу» совпадает по месту.',ai:'Зона разрежения у верхушки корня',plan:'лечение канала, 2–3 визита',visits:3},
+ {id:'f37',tooth:37,t:'Глубокий кариес',lv:'v',why:'Полость доходит до 0,8 мм от пульпы. Порог близости — 1 мм.',ai:'Полость близко к пульпе',plan:'пломбирование',visits:1},
+ {id:'f46',tooth:46,t:'Кариес',lv:'v',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',ai:'Снижение плотности на контактной поверхности',plan:'пломбирование',visits:1},
+ {id:'f48',tooth:48,t:'Ретенция зуба мудрости',lv:'n',why:'Коронка зуба 48 на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:1},
+ {id:'f15',tooth:15,t:'Корень близко к дну пазухи',lv:'n',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних зубов и сама по себе не патология.',ai:'Корень близко к пазухе',plan:'учесть при планировании имплантации',visits:0}
 ];
-var sel=null, rev={}, lvOver={}, comm={};
-function lvOf(f){return lvOver[f.id]||f.lv}
-function byId(id){return F.filter(function(f){return f.id===id})[0]}
-function byTooth(n){return F.filter(function(f){return f.tooth===n})[0]}
+function findF(id){return F.filter(function(f){return f.id===id})[0]}
+function fByTooth(n){return F.filter(function(f){return f.tooth===n})[0]}
+
+var PAT0=[
+ {id:'A-0142',name:'Мадина Каримова',age:34,sex:'ж',blood:'II (A) Rh+',allergy:'Лидокаин: сыпь',meds:'Нет',chronic:'Нет',complaint:'Боль слева снизу на холодное, около двух недель',
+  visits:[{d:'17.11.2026',t:'КЛКТ. Жалоба на боль слева снизу.'},{d:'03.06.2026',t:'Профгигиена. Без жалоб.'},{d:'12.01.2026',t:'Пломбирование 46 (композит).'}],scans:[{id:'s1',type:'КЛКТ',date:'17.11.2026',status:'ready'}]},
+ {id:'A-0141',name:'Рустам Шарипов',age:52,sex:'м',blood:'I (0) Rh+',allergy:'Нет',meds:'Метформин',chronic:'Диабет 2 типа',complaint:'Планирует имплантацию на месте 36',
+  visits:[{d:'16.11.2026',t:'КЛКТ перед имплантацией.'},{d:'20.09.2026',t:'Удаление 36.'}],scans:[{id:'s2',type:'КЛКТ',date:'16.11.2026',status:'ready'}]},
+ {id:'A-0139',name:'Азиза Турсунова',age:28,sex:'ж',blood:'III (B) Rh−',allergy:'Пенициллин',meds:'Нет',chronic:'Нет',complaint:'Скученность зубов, хочет брекеты',
+  visits:[{d:'17.11.2026',t:'Первичный осмотр, КЛКТ загружена.'}],scans:[{id:'s3',type:'КЛКТ',date:'17.11.2026',status:'processing'}]},
+ {id:'A-0138',name:'Жасур Абдуллаев',age:45,sex:'м',blood:'IV (AB) Rh+',allergy:'Нет',meds:'Нет',chronic:'Гипертония',complaint:'Подозрение на киста в области 24',
+  visits:[{d:'14.11.2026',t:'КЛКТ, разбор проверен.'}],scans:[{id:'s4',type:'КЛКТ',date:'14.11.2026',status:'ready'}]},
+ {id:'A-0135',name:'Лола Назарова',age:61,sex:'ж',blood:'II (A) Rh+',allergy:'Нет',meds:'Бисопролол',chronic:'Гипертония',complaint:'Подвижность нижних резцов',
+  visits:[{d:'11.11.2026',t:'Осмотр. Назначена КЛКТ.'}],scans:[]}
+];
+var KEY='stomadent_proto_v2';
+var S=(function(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}})();
+S.cases=S.cases||{};S.extra=S.extra||[];S.scans=S.scans||{};S.notes=S.notes||{};S.msgs=S.msgs||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var late=false;
+function allP(){return PAT0.concat(S.extra).map(function(p){var q=Object.assign({},p);q.scans=(p.scans||[]).concat(S.scans[p.id]||[]).map(function(s){var r=Object.assign({},s);if(r.id==='s3'&&late)r.status='ready';return r});return q})}
+function getP(id){return allP().filter(function(p){return p.id===id})[0]}
+function cs(id){
+  if(!S.cases[id]){S.cases[id]={rev:{},comm:{},lv:{}};
+    if(id==='A-0141'||id==='A-0138'){F.forEach(function(f){S.cases[id].rev[f.id]='ok';S.cases[id].comm[f.id]='Подтверждаю по срезам, вижу то же'})}}
+  return S.cases[id]}
+function status(p){
+  var sc=p.scans[p.scans.length-1];if(!sc)return {k:'none',t:'Нет снимков',c:''};
+  if(sc.status==='processing')return {k:'proc',t:'Обрабатывается',c:'acc'};
+  var n=Object.keys(cs(p.id).rev).length;
+  if(n>=F.length)return {k:'done',t:'Проверен',c:'ok'};
+  if(n>0)return {k:'wait',t:'Проверено '+n+' из '+F.length,c:'wait'};
+  return {k:'wait',t:'Ждёт проверки',c:'wait'}}
+function initials(n){return n.split(' ').map(function(w){return w[0]}).slice(0,2).join('').toUpperCase()}
+
+/* ---------- роутер ---------- */
+var VIEWS=['login','patients','patient','case'];
+function go(h){if(location.hash===h)route();else location.hash=h}
+function route(){
+  var parts=location.hash.replace(/^#\/?/,'').split('/'),v=parts[0]||'';
+  if(!S.session){if(v!=='login'){location.hash='#/login';return}}
+  else if(v===''||v==='login'){location.hash='#/patients';return}
+  if(VIEWS.indexOf(v)<0){location.hash='#/patients';return}
+  VIEWS.forEach(function(x){$('#v-'+x).hidden=x!==v});
+  $('#bar').hidden=v==='login';
+  window.scrollTo(0,0);
+  if(v==='login')drawLogin();
+  if(v==='patients')drawPatients();
+  if(v==='patient'){if(!getP(parts[1])){go('#/patients');return}drawPatient(parts[1])}
+  if(v==='case'){if(!getP(parts[1])){go('#/patients');return}openCase(parts[1])}
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- вход ---------- */
+function drawLogin(){$('#lstep1').hidden=false;$('#lstep2').hidden=true}
+$('#phone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.indexOf('998')===0)d=d.slice(3);d=d.slice(0,9);var o='+998 ';if(d.length>0)o+=d.slice(0,2);if(d.length>2)o+=' '+d.slice(2,5);if(d.length>5)o+=' '+d.slice(5,7);if(d.length>7)o+=' '+d.slice(7,9);this.value=o});
+$('#getCode').addEventListener('click',function(){
+  if($('#phone').value.replace(/\D/g,'').length<12){$('#lerr').textContent='Введите номер полностью: +998 XX XXX XX XX';return}
+  $('#lerr').textContent='';$('#lstep1').hidden=true;$('#lstep2').hidden=false;$('#code').focus();toast('Код отправлен (в демо: 1234)')});
+$('#back1').addEventListener('click',drawLogin);
+function doLogin(){
+  if($('#code').value!=='1234'){$('#lerr2').textContent='Неверный код. В демо это 1234.';return}
+  S.session={name:'Алишер Каримов',phone:$('#phone').value,trust:$('#trust').checked,at:Date.now()};save();$('#code').value='';go('#/patients')}
+$('#doLogin').addEventListener('click',doLogin);
+$('#code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
+$('#phone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#getCode').click()});
+$('#outBtn').addEventListener('click',function(){S.session=null;save();go('#/login')});
+$('#logoBtn').addEventListener('click',function(){go('#/patients')});
+$('#themeBtn').addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme'),dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;var n=dark?'light':'dark';document.documentElement.setAttribute('data-theme',n);S.theme=n;save()});
+if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);
+
+/* ---------- список пациентов ---------- */
+var flt='all';
+function drawPatients(){
+  var s=S.session;$('#docName').textContent='Др. '+s.name;$('#docAva').textContent=initials(s.name);$('#devTxt').textContent=s.trust?'Этот компьютер подтверждён':'Сессия на этом компьютере';
+  var h=new Date().getHours(),g=h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
+  $('#hello').textContent=g+', доктор '+s.name.split(' ')[1];
+  var P=allP(),st={wait:0,proc:0,done:0};P.forEach(function(p){var k=status(p).k;if(k==='wait')st.wait++;if(k==='proc')st.proc++;if(k==='done')st.done++});
+  $('#hello2').textContent=st.wait?('Ждут вашей проверки: '+st.wait+'. Начните с самого раннего.'):'Все разборы проверены. Хорошая работа.';
+  $('#stats').innerHTML='<div class="card stat"><b>'+P.length+'</b><span>пациентов в списке</span></div><div class="card stat"><b>'+st.wait+'</b><span>ждут проверки</span></div><div class="card stat"><b>'+st.proc+'</b><span>в обработке</span></div><div class="card stat"><b>~'+(st.done+st.wait)*40+' мин</b><span>сэкономлено на черновой работе (оценка)</span></div>';
+  var fl=[['all','Все'],['wait','Ждут проверки'],['proc','В обработке'],['done','Проверены']];
+  $('#flt').innerHTML='';fl.forEach(function(x){var b=el('button',null,x[1]);b.type='button';b.setAttribute('aria-pressed',flt===x[0]);b.addEventListener('click',function(){flt=x[0];drawPatients()});$('#flt').appendChild(b)});
+  var q=$('#q').value.trim().toLowerCase(),L=$('#plist');L.innerHTML='';var n=0;
+  P.forEach(function(p){var s2=status(p);
+    if(flt!=='all'&&s2.k!==flt)return;if(q&&(p.name+' '+p.id).toLowerCase().indexOf(q)<0)return;n++;
+    var b=el('button','prow','<div class="ava">'+initials(p.name)+'</div><div class="m"><b>'+esc(p.name)+' <span class="muted" style="font-weight:400">· '+p.age+' · '+p.id+'</span></b><small>'+esc(p.complaint)+'</small></div><span class="pill '+s2.c+'">'+(s2.k==='proc'?'<i class="spin"></i>':'')+s2.t+'</span>');
+    b.type='button';b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
+  if(!n)L.innerHTML='<div class="empty">Никого не нашли. Попробуйте другой фильтр или добавьте пациента.</div>';
+}
+$('#q').addEventListener('input',drawPatients);
+$('#newP').addEventListener('click',function(){openUpload(null)});
+
+/* ---------- профиль пациента ---------- */
+var ptab='over';
+function drawPatient(id){
+  var p=getP(id),s2=status(p),b=$('#pbody');
+  b.innerHTML='<div class="crumb"><button id="cb">← Пациенты</button><span class="muted">/ '+esc(p.name)+'</span></div>'
+   +'<div class="card phead"><div class="ava">'+initials(p.name)+'</div><div><h1>'+esc(p.name)+'</h1><div class="muted">'+p.age+' лет · карта '+p.id+'</div></div><span class="pill '+s2.c+'">'+s2.t+'</span><div class="sp"></div><button class="btn" id="upB">Загрузить снимок</button>'+(p.scans.length&&p.scans[p.scans.length-1].status==='ready'?'<button class="btn pri" id="openB">Открыть разбор</button>':'')+'</div>'
+   +'<div class="tabs" id="ptabs"><button data-t="over">Обзор</button><button data-t="scans">Снимки<span class="n">'+p.scans.length+'</span></button><button data-t="hist">История</button><button data-t="note">Заметки</button></div><div id="pc"></div>';
+  $('#cb').addEventListener('click',function(){go('#/patients')});
+  $('#upB').addEventListener('click',function(){openUpload(id)});
+  if($('#openB'))$('#openB').addEventListener('click',function(){go('#/case/'+id)});
+  $$('#ptabs button').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===ptab);x.addEventListener('click',function(){ptab=x.dataset.t;drawPatient(id)})});
+  var c=$('#pc');
+  if(ptab==='over'){
+    var fl=p.allergy&&p.allergy!=='Нет';
+    c.innerHTML='<div class="card info" style="margin-bottom:12px"><small>Жалоба</small>'+esc(p.complaint)+'</div><div class="grid2">'
+     +'<div class="card info'+(fl?' flag':'')+'"><small>Аллергия'+(fl?' ⚠':'')+'</small>'+esc(p.allergy)+'</div>'
+     +'<div class="card info"><small>Группа крови</small>'+esc(p.blood)+'</div>'
+     +'<div class="card info"><small>Принимает</small>'+esc(p.meds)+'</div>'
+     +'<div class="card info"><small>Хронические заболевания</small>'+esc(p.chronic)+'</div></div>'
+     +'<div class="card teaser"><div style="font-size:26px">📱</div><div><b>Памятка пациенту в приложении</b><div class="muted" style="font-size:13px">После проверки врач отправляет простое объяснение и план. Приложение для пациента будет отдельной частью, позже.</div></div><span class="pill">скоро</span></div>';
+  }else if(ptab==='scans'){
+    if(!p.scans.length)c.innerHTML='<div class="card empty">Снимков пока нет.<br><br><button class="btn pri" id="up2">Загрузить первый снимок</button></div>';
+    else{c.innerHTML='';p.scans.slice().reverse().forEach(function(sc){var d=el('div','card scan','<div class="thumb">'+sc.type+'</div><div class="m"><b>'+sc.type+' · '+sc.date+'</b><div class="muted" style="font-size:13px">'+(sc.status==='ready'?'Разбор готов: 5 находок':'Идёт обработка')+'</div></div>'+(sc.status==='ready'?'<span class="pill '+s2.c+'">'+s2.t+'</span><button class="btn pri sm">Открыть</button>':'<span class="pill acc"><i class="spin"></i>обработка</span>'));
+      var bt=$('button',d);if(bt)bt.addEventListener('click',function(){go('#/case/'+id)});c.appendChild(d)})}
+    if($('#up2'))$('#up2').addEventListener('click',function(){openUpload(id)});
+  }else if(ptab==='hist'){
+    c.innerHTML='<div class="tl">'+p.visits.map(function(v){return '<div class="it"><b>'+v.d+'</b><div class="muted">'+esc(v.t)+'</div></div>'}).join('')+'</div>';
+  }else{
+    c.innerHTML='<textarea class="note" id="note" placeholder="Заметки врача по пациенту. Сохраняются автоматически."></textarea><div class="muted" style="font-size:12px;margin-top:6px" id="ns"></div>';
+    $('#note').value=S.notes[id]||'';
+    $('#note').addEventListener('input',function(){S.notes[id]=this.value;save();$('#ns').textContent='Сохранено'})}
+}
+
+/* ---------- загрузка снимка (модалка) ---------- */
+function openModal(html,wide){$('#mbox').className='mbox'+(wide?' wide':'');$('#mbox').innerHTML=html;$('#modal').hidden=false}
+function closeModal(){$('#modal').hidden=true;$('#mbox').innerHTML=''}
+$('#modal').addEventListener('mousedown',function(e){if(e.target===this&&!this.dataset.lock)closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
+var upFile=null;
+function openUpload(pid){
+  upFile=null;var np=!pid,p=pid?getP(pid):null;
+  openModal('<h2>'+(np?'Новый пациент и снимок':'Загрузка снимка')+'</h2><p class="muted" style="margin:0">'+(np?'Заполните карточку и добавьте КЛКТ.':'Пациент: '+esc(p.name))+'</p>'
+   +(np?'<label>Имя пациента</label><input type="text" id="nName" placeholder="Например, Нодира Юсупова"><div class="err" id="nErr"></div><div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><div><label>Возраст</label><input type="number" id="nAge" min="0" max="110" value="30"></div><div><label>Жалоба</label><input type="text" id="nCom" placeholder="Своими словами"></div></div>':'')
+   +'<div class="demo-opt"><div class="thumb"></div><div style="flex:1"><b>Демо-снимок: КЛКТ, нижняя и верхняя челюсть</b><div class="muted" style="font-size:13px">Публичный набор, воксель 0,25 мм. В демо доступен один снимок, он выбран.</div></div><span class="pill ok">выбран</span></div>'
+   +'<div class="drop" id="drop">Или перетащите свой файл (ZIP или DICOM)<br><button class="btn sm" id="pick" style="margin-top:8px">Выбрать файл</button><input type="file" id="fi" hidden><div id="fn" style="margin-top:8px;font-size:13px"></div></div>'
+   +'<div class="btns"><button class="btn" id="mc">Отмена</button><button class="btn pri" id="mgo">Загрузить и разобрать</button></div>');
+  $('#mc').addEventListener('click',closeModal);
+  $('#pick').addEventListener('click',function(){$('#fi').click()});
+  function setF(f){if(!f)return;upFile=f;$('#fn').innerHTML='Файл «'+esc(f.name)+'» ('+(f.size/1048576).toFixed(1)+' МБ) принят. <b>В демо будет разобран демо-снимок.</b> Загрузка настоящих файлов появится в рабочей версии.'}
+  $('#fi').addEventListener('change',function(){setF(this.files[0])});
+  var d=$('#drop');['dragenter','dragover'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('over')})});
+  ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('over')})});
+  d.addEventListener('drop',function(e){setF(e.dataTransfer.files[0])});
+  $('#mgo').addEventListener('click',function(){
+    var id=pid;
+    if(np){var nm=$('#nName').value.trim();if(nm.length<3){$('#nErr').textContent='Введите имя пациента';return}
+      id='A-0'+(143+S.extra.length);S.extra.push({id:id,name:nm,age:+$('#nAge').value||30,sex:'',blood:'не указано',allergy:'не указано',meds:'не указано',chronic:'не указано',complaint:$('#nCom').value.trim()||'Жалоба не указана',visits:[{d:TODAY,t:'Карта создана, КЛКТ загружена.'}],scans:[]});save()}
+    runProcess(id)})
+}
+var STAGES=['Загрузка файла','Чтение серии срезов','Сегментация зубов, кости и нервного канала','Поиск находок по измерениям','Сборка 3D-модели'];
+function runProcess(id){
+  $('#modal').dataset.lock='1';
+  openModal('<h2>Идёт разбор снимка</h2><p class="muted" style="margin:0">Можно закрыть окно: результат появится в карточке пациента.</p><ul class="steps" id="stl" style="padding:0">'+STAGES.map(function(s,i){return '<li id="st'+i+'"><span>○</span>'+s+'</li>'}).join('')+'</ul><div class="prog"><i id="pb"></i></div><div class="muted" id="pt" style="font-size:13px">0%</div><div class="btns" id="pbtn"></div>');
+  var i=0;
+  (function step(){
+    if(i>0){var o=$('#st'+(i-1));o.className='done';o.firstChild.textContent='✓'}
+    if(i>=STAGES.length){
+      $('#pb').style.width='100%';$('#pt').textContent='Готово: 5 находок, 3D-модель построена';
+      var sc={id:'u'+Date.now(),type:'КЛКТ',date:TODAY,status:'ready'};S.scans[id]=(S.scans[id]||[]).concat([sc]);save();
+      var bx=$('#pbtn');bx.innerHTML='<button class="btn" id="later">Позже</button><button class="btn pri" id="opn">Открыть разбор</button>';
+      delete $('#modal').dataset.lock;
+      $('#later').addEventListener('click',function(){closeModal();route()});$('#opn').addEventListener('click',function(){closeModal();go('#/case/'+id)});return}
+    var o=$('#st'+i);o.className='on';o.firstChild.textContent='●';
+    $('#pb').style.width=Math.round((i+0.5)/STAGES.length*100)+'%';$('#pt').textContent=Math.round((i+0.5)/STAGES.length*100)+'% · '+STAGES[i];
+    i++;setTimeout(step,1000+Math.random()*700)})();
+}
 
 /* ---------- 3D ---------- */
-var scene,camera,renderer,controls,model,teethMesh={},bone=[],nerve=[],others=[],origCam,origTarget,anim=null;
-(function init3d(){
+var scene,camera,renderer,controls,model,teethMesh={},bone=[],nerve=[],origCam,origTarget,anim=null,isolated=null,gl3d=false;
+var cur=null,sel=null;
+function ensure3d(){
+  if(gl3d)return;gl3d=true;
   var host=$('#gl');
   if(!window.THREE||!THREE.GLTFLoader){$('#loading').textContent='3D не загрузился: проверьте интернет.';return}
   scene=new THREE.Scene();
@@ -186,76 +521,62 @@ var scene,camera,renderer,controls,model,teethMesh={},bone=[],nerve=[],others=[]
   controls.addEventListener('start',function(){if($('#tRot').getAttribute('aria-pressed')==='true'){controls.autoRotate=false;$('#tRot').setAttribute('aria-pressed','false')}});
   function resize(){var r=host.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
   new ResizeObserver(resize).observe(host);resize();
-  var loader=new THREE.GLTFLoader();
   fetch('model.glb').then(function(r){if(!r.ok)throw new Error(r.status);return r.arrayBuffer()}).then(function(buf){
-    loader.parse(buf,'',function(g){
-      model=g.scene;scene.add(model);prepare();$('#loading').style.display='none';
-    },function(e){$('#loading').textContent='Не удалось разобрать модель.'});
-  }).catch(function(){$('#loading').textContent='Не удалось загрузить модель.'});
+    new THREE.GLTFLoader().parse(buf,'',function(g){model=g.scene;scene.add(model);prepare();$('#loading').style.display='none'},function(){$('#loading').textContent='Не удалось разобрать модель.'});
+  }).catch(function(){$('#loading').textContent='Не удалось загрузить модель. Запустите сайт через локальный сервер.'});
   var ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),down=null;
   renderer.domElement.addEventListener('pointerdown',function(e){down=[e.clientX,e.clientY]});
   renderer.domElement.addEventListener('pointerup',function(e){
     if(!down||Math.abs(e.clientX-down[0])+Math.abs(e.clientY-down[1])>5||!model)return;
     var r=renderer.domElement.getBoundingClientRect();
-    mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
-    ray.setFromCamera(mouse,camera);
-    var targets=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)targets.push(m)})});
-    var hit=ray.intersectObjects(targets,false)[0];
-    if(hit){var n=hit.object.userData.fdi,f=byTooth(n);if(f)select(f.id,true)}
-  });
+    mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);
+    var tg=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)tg.push(m)})});
+    var hit=ray.intersectObjects(tg,false)[0];
+    if(hit)pickTooth(hit.object.userData.fdi)});
   (function loop(){requestAnimationFrame(loop);
-    if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*(3-2*k);
-      camera.position.lerpVectors(anim.p0,anim.p1,e);controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
-    controls.update();renderer.render(scene,camera)})();
-})();
+    if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*(3-2*k);camera.position.lerpVectors(anim.p0,anim.p1,e);controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
+    if(!$('#v-case').hidden){controls.update();renderer.render(scene,camera)}})();
+}
 function prepare(){
-  var ivory=0xe9e4d8;
   model.traverse(function(o){
     var chain=[],p=o;while(p){chain.push(p.name);p=p.parent}
     var tooth=null,kind=null;
     chain.forEach(function(n){var m=/^tooth_(\d\d)$/.exec(n||'');if(m)tooth=+m[1];if(/^(mandible|maxilla)$/.test(n))kind='bone';if(n==='nerve')kind='nerve';if(/^(pulp|pharynx|incisive|lingual|sinus|prosthetics)$/.test(n))kind='hide'});
     if(!o.isMesh)return;
     if(o.geometry&&!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
-    if(tooth){
-      o.material=new THREE.MeshStandardMaterial({color:ivory,roughness:.45,metalness:0,side:THREE.DoubleSide});
-      o.userData.fdi=tooth;(teethMesh[tooth]=teethMesh[tooth]||[]).push(o);
-    }else if(kind==='bone'){
-      o.material=new THREE.MeshStandardMaterial({color:0xc9d1dc,transparent:true,opacity:.22,roughness:.8,depthWrite:false,side:THREE.DoubleSide});bone.push(o);
-    }else if(kind==='nerve'){
-      o.material=new THREE.MeshStandardMaterial({color:0xe5645c,roughness:.5});nerve.push(o);
-    }else{o.visible=false;others.push(o)}
-  });
-  var box=new THREE.Box3().setFromObject(model),c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());
-  var dist=Math.max(s.x/Math.min(camera.aspect,1.2),s.y,s.z)*2.0;
-  camera.position.set(c.x,c.y+s.y*.15,c.z+dist);controls.target.copy(c);camera.lookAt(c);
-  origCam=camera.position.clone();origTarget=c.clone();
-  colorTeeth();
+    if(tooth){o.material=new THREE.MeshStandardMaterial({color:0xe9e4d8,roughness:.45,metalness:0,side:THREE.DoubleSide});o.userData.fdi=tooth;(teethMesh[tooth]=teethMesh[tooth]||[]).push(o)}
+    else if(kind==='bone'){o.material=new THREE.MeshStandardMaterial({color:0xc9d1dc,transparent:true,opacity:.22,roughness:.8,depthWrite:false,side:THREE.DoubleSide});bone.push(o)}
+    else if(kind==='nerve'){o.material=new THREE.MeshStandardMaterial({color:0xe5645c,roughness:.5});nerve.push(o)}
+    else o.visible=false});
+  fit(true);colorTeeth();
 }
+function fit(apply){
+  if(!model)return;var box=new THREE.Box3();
+  Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){box.expandByObject(m)})});bone.forEach(function(m){box.expandByObject(m)});
+  var c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());
+  var dist=Math.max(s.x/Math.min(camera.aspect,1.6),s.y,s.z)*1.9;
+  origCam=new THREE.Vector3(c.x,c.y+s.y*.12,c.z+dist);origTarget=c.clone();
+  if(apply){camera.position.copy(origCam);controls.target.copy(c);camera.lookAt(c)}
+}
+function lvOf(f){return (cur&&cs(cur).lv[f.id])||f.lv}
 function colorTeeth(){
+  if(!model||!cur)return;var C=cs(cur);
   bone.forEach(function(m){m.material.opacity=sel?0.08:0.22});
-  Object.keys(teethMesh).forEach(function(k){
-    var f=byTooth(+k),base=new THREE.Color(0xe9e4d8);
-    teethMesh[k].forEach(function(m){
-      var c=base.clone();
-      if(f){var r=rev[f.id];c.lerp(new THREE.Color(COL[lvOf(f)]),r==='rej'?0.25:0.95)}
-      m.material.color.copy(c);
-      m.material.emissive=new THREE.Color(sel&&f&&f.id===sel?0x552211:0x000000);
-    });
-  });
+  Object.keys(teethMesh).forEach(function(k){var f=fByTooth(+k);
+    teethMesh[k].forEach(function(m){var c=new THREE.Color(0xe9e4d8);
+      if(f)c.lerp(new THREE.Color(COL[lvOf(f)]),C.rev[f.id]==='rej'?0.25:0.95);
+      m.material.color.copy(c);m.material.emissive=new THREE.Color(sel&&f&&f.id===sel?0x552211:0x000000)})});
 }
-function flyTo(toothNum){
-  var ms=teethMesh[toothNum];if(!ms||!camera)return;
+function flyTo(n){
+  var ms=teethMesh[n];if(!ms||!camera)return;
   var b=new THREE.Box3();ms.forEach(function(m){b.expandByObject(m)});
   var c=b.getCenter(new THREE.Vector3()),dir=c.clone().sub(origTarget);dir.y=0;if(dir.length()<1)dir.set(0,0,1);dir.normalize();
   anim={t:0,n:40,p0:camera.position.clone(),p1:c.clone().add(dir.multiplyScalar(60)).add(new THREE.Vector3(0,12,0)),c0:controls.target.clone(),c1:c};
 }
-function resetView(){if(!origCam)return;isolate(null);anim={t:0,n:40,p0:camera.position.clone(),p1:origCam.clone(),c0:controls.target.clone(),c1:origTarget.clone()}}
-var isolated=null;
+function resetView(){if(!origCam)return;fit(false);isolate(null);anim={t:0,n:40,p0:camera.position.clone(),p1:origCam.clone(),c0:controls.target.clone(),c1:origTarget.clone()}}
 function isolate(n){
-  isolated=n;
-  Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){m.visible=(n==null)||(+k===n)})});
-  var boneOn=$('#tBone').getAttribute('aria-pressed')==='true';
-  bone.forEach(function(m){m.visible=boneOn&&n==null});
+  isolated=n;Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){m.visible=(n==null)||(+k===n)})});
+  bone.forEach(function(m){m.visible=$('#tBone').getAttribute('aria-pressed')==='true'&&n==null});
   nerve.forEach(function(m){m.visible=$('#tNerve').getAttribute('aria-pressed')==='true'&&n==null});
 }
 $('#tBone').addEventListener('click',function(){var on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);bone.forEach(function(m){m.visible=on&&isolated==null})});
@@ -263,101 +584,137 @@ $('#tNerve').addEventListener('click',function(){var on=this.getAttribute('aria-
 $('#tRot').addEventListener('click',function(){var on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);if(controls)controls.autoRotate=on});
 $('#tReset').addEventListener('click',resetView);
 
-/* ---------- сайдбар ---------- */
-$$('.tabs button').forEach(function(b){b.addEventListener('click',function(){
-  $$('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
-  ['find','check','chat'].forEach(function(t){$('#p-'+t).hidden=t!==b.dataset.t});
-})});
-function goTab(t){var b=$('.tabs button[data-t="'+t+'"]');if(b)b.click()}
-
+/* ---------- разбор: сайдбар ---------- */
+function openCase(id){
+  cur=id;sel=null;isolated=null;var p=getP(id);
+  $('#vpt').innerHTML='<b>'+esc(p.name)+'</b><span class="muted">'+p.age+' лет</span><span>Жалоба: '+esc(p.complaint)+'</span><span class="muted">КЛКТ от '+p.scans[p.scans.length-1].date+'</span>';
+  $('#vBack').onclick=function(){go('#/patient/'+id)};
+  $('#vDoc').onclick=showDocs;
+  ensure3d();if(model){isolate(null);setTimeout(function(){fit(true)},60)}
+  goTab('find');drawFind();drawCheck();drawChat();colorTeeth();head();
+}
+function head(){
+  var C=cs(cur),n=Object.keys(C.rev).length,r=15,len=2*Math.PI*r;
+  $('#vring').innerHTML='<svg viewBox="0 0 38 38"><circle cx="19" cy="19" r="15" stroke="var(--line)"/><circle cx="19" cy="19" r="15" stroke="var(--ok)" stroke-dasharray="'+len+'" stroke-dashoffset="'+(len*(1-n/F.length))+'"/></svg><span><b>'+n+'/'+F.length+'</b> проверено</span>';
+  $('#vDoc').disabled=n<F.length;$('#nCheck').textContent=n+'/'+F.length;
+}
+$$('.side .tabs button').forEach(function(b){b.addEventListener('click',function(){goTab(b.dataset.t)})});
+function goTab(t){$$('.side .tabs button').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','check','chat'].forEach(function(k){$('#p-'+k).hidden=k!==t})}
+function pickTooth(n){
+  var f=fByTooth(n);
+  if(f){select(f.id)}else{toast('Зуб '+n+': находок нет');if(teethMesh[n]){flyTo(n)}}
+}
+function select(id){sel=id;colorTeeth();drawFind();goTab('find');var f=findF(id);if(f)flyTo(f.tooth);var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
+var UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+function chartHtml(){
+  function row(a,cl){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n);return '<button type="button" data-n="'+n+'" class="'+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+n+'</button>'}).join('')+'</div>'}
+  return '<div class="chart">'+row(UP,'gap')+row(LO,'')+'<small>Зубная карта: цвет показывает находку, клик открывает её</small></div>'}
 function drawFind(){
-  var p=$('#p-find');p.innerHTML='';
-  var done=Object.keys(rev).length;
-  p.appendChild(el('div','sum','Найдено 5 проблем: 1 критичная, 2 важные, 2 незначительные. Жалоба слева снизу — начните с зуба 36.'));
+  var p=$('#p-find'),C=cs(cur);p.innerHTML='';
+  var cnt={k:0,v:0,n:0};F.forEach(function(f){cnt[lvOf(f)]++});
+  p.appendChild(el('div','sum','Найдено '+F.length+' проблем: '+cnt.k+' критичная, '+cnt.v+' важные, '+cnt.n+' незначительные. '+(cur==='A-0142'?'Жалоба слева снизу — начните с зуба 36.':'Начните с критичной находки: зуб 36.')));
+  p.insertAdjacentHTML('beforeend',chartHtml());
+  $$('.chart button',p).forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
   F.forEach(function(f){
-    var open=sel===f.id,r=rev[f.id],lv=lvOf(f);
+    var open=sel===f.id,r=C.rev[f.id],lv=lvOf(f);
     var c=el('div','fcard'+(open?' open':'')+(r==='rej'?' rej':''));
     var h=el('button','fhead','<span class="lv '+lv+'">'+LV[lv]+'</span><span class="t">'+f.t+'<small>Зуб '+f.tooth+'</small></span>'+(r?'<span class="state">'+(r==='ok'?'✓ подтверждена':'отклонена')+'</span>':''));
-    h.type='button';h.addEventListener('click',function(){select(open?null:f.id,true)});c.appendChild(h);
+    h.type='button';h.addEventListener('click',function(){if(open){sel=null;colorTeeth();drawFind()}else select(f.id)});c.appendChild(h);
     if(open){
       var b=el('div','fbody');
       b.innerHTML='<details><summary>Почему программа так решила</summary><p style="margin:6px 0 0">'+f.why+'</p></details>'
        +'<label for="lvSel">Уровень</label><select id="lvSel"><option value="k">Критичная</option><option value="v">Важная</option><option value="n">Незначительная</option></select>'
        +'<label for="cmt">Ваш комментарий (от 10 символов)</label><textarea id="cmt" placeholder="Что вы увидели и почему согласны"></textarea>'
        +'<div class="err" id="err"></div>'
-       +'<div class="btns"><button class="btn pri" id="ok" type="button">Подтвердить</button><button class="btn bad" id="rej" type="button">Отклонить</button><button class="btn" id="iso" type="button">'+(isolated===f.tooth?'Показать все зубы':'Показать только этот зуб')+'</button></div>';
-      c.appendChild(b);
-    }
-    p.appendChild(c);
-  });
-  var ls=$('#lvSel');if(ls){var f=byId(sel);ls.value=lvOf(f);$('#cmt').value=comm[sel]||'';
-    ls.addEventListener('change',function(){lvOver[sel]=this.value;comm[sel]=$('#cmt').value;colorTeeth();drawFind();drawCheck()});
-    $('#cmt').addEventListener('input',function(){comm[sel]=this.value});
+       +'<div class="btns" style="justify-content:flex-start;margin-top:6px"><button class="btn pri" id="ok" type="button">Подтвердить</button><button class="btn bad" id="rej" type="button">Отклонить</button><button class="btn" id="iso" type="button">'+(isolated===f.tooth?'Показать все зубы':'Только этот зуб')+'</button></div>';
+      c.appendChild(b)}
+    p.appendChild(c)});
+  var ls=$('#lvSel');
+  if(ls){var f=findF(sel);ls.value=lvOf(f);$('#cmt').value=C.comm[sel]||'';
+    ls.addEventListener('change',function(){C.lv[sel]=this.value;C.comm[sel]=$('#cmt').value;save();colorTeeth();drawFind();drawCheck()});
+    $('#cmt').addEventListener('input',function(){C.comm[sel]=this.value;save()});
     function norm(s){return s.toLowerCase().replace(/[^a-zа-я0-9]/g,'')}
     function decide(kind){var t=$('#cmt').value.trim(),e=$('#err');
-      if(t.length<10){e.textContent='Напишите хотя бы пару слов своими словами (от 10 символов).';return}
+      if(t.length<10){e.textContent='Напишите пару слов своими словами (от 10 символов).';return}
       if(norm(t).indexOf(norm(f.ai))===0&&norm(t).length<norm(f.ai).length+8){e.textContent='Это повторяет текст программы. Опишите своими словами.';return}
-      comm[f.id]=t;rev[f.id]=kind;refresh()}
+      C.comm[f.id]=t;C.rev[f.id]=kind;save();toast(kind==='ok'?'Находка подтверждена':'Находка отклонена');
+      var nx=F.filter(function(x){return !C.rev[x.id]})[0];sel=nx?nx.id:null;colorTeeth();drawFind();drawCheck();head();if(nx)flyTo(nx.tooth);else{toast('Всё проверено. Можно создать заключение.');resetView()}}
     $('#ok').addEventListener('click',function(){decide('ok')});
     $('#rej').addEventListener('click',function(){decide('rej')});
-    $('#iso').addEventListener('click',function(){isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth);drawFind()});
-  }
+    $('#iso').addEventListener('click',function(){isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth);drawFind()})}
 }
 function drawCheck(){
-  var done=Object.keys(rev).length,p=$('#p-check');p.innerHTML='';
-  $('#nCheck').textContent=done+'/'+F.length;
+  var C=cs(cur),done=Object.keys(C.rev).length,p=$('#p-check');p.innerHTML='';
   p.appendChild(el('div',null,'<b>'+done+' из '+F.length+' проверено</b>'));
-  p.appendChild(el('div','prog','<i style="width:'+(done/F.length*100)+'%"></i>'));
-  F.forEach(function(f){
-    var r=rev[f.id],row=el('div','row','<span class="dot '+(r||'')+'">'+(r==='ok'?'✓':r==='rej'?'–':'')+'</span><span class="t">Зуб '+f.tooth+' · '+f.t+'</span><span class="lv '+lvOf(f)+'">'+LV[lvOf(f)]+'</span>');
-    row.style.cursor='pointer';row.addEventListener('click',function(){goTab('find');select(f.id,true)});p.appendChild(row);
-  });
-  var b=el('button','btn pri','Создать заключение');b.type='button';b.style.marginTop='14px';b.style.width='100%';b.disabled=done<F.length;
-  b.addEventListener('click',buildDocs);p.appendChild(b);
-  p.appendChild(el('p','note',done<F.length?'Заключение откроется, когда по всем находкам принято решение.':'Всё проверено. Заключение появится под 3D-моделью.'));
+  p.appendChild(el('div','prog','<i style="width:'+(done/F.length*100)+'%;background:var(--ok)"></i>'));
+  F.forEach(function(f){var r=C.rev[f.id],row=el('div','row','<span class="dot '+(r||'')+'">'+(r==='ok'?'✓':r==='rej'?'–':'')+'</span><span class="t">Зуб '+f.tooth+' · '+f.t+'</span><span class="lv '+lvOf(f)+'">'+LV[lvOf(f)]+'</span>');
+    row.addEventListener('click',function(){select(f.id)});p.appendChild(row)});
+  var b=el('button','btn pri','Создать заключение');b.type='button';b.style.cssText='width:100%;margin-top:14px';b.disabled=done<F.length;b.addEventListener('click',showDocs);p.appendChild(b);
+  p.appendChild(el('p','note2',done<F.length?'Заключение откроется, когда по всем находкам принято решение.':'Всё проверено, заключение готово к созданию.'));
+  head();
 }
-function select(id,fromUi){
-  sel=id;colorTeeth();drawFind();
-  if(id){var f=byId(id);flyTo(f.tooth);if(fromUi)goTab('find')}
-}
-function refresh(){colorTeeth();drawFind();drawCheck()}
+document.addEventListener('keydown',function(e){
+  if($('#v-case').hidden||!$('#modal').hidden||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName))return;
+  if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;e.preventDefault();
+  var i=F.map(function(f){return f.id}).indexOf(sel);i=e.key==='ArrowDown'?Math.min(F.length-1,i+1):Math.max(0,i<0?0:i-1);select(F[i].id)});
 
 /* ---------- заключение ---------- */
-function buildDocs(){
-  var ok=F.filter(function(f){return rev[f.id]==='ok'}),rj=F.filter(function(f){return rev[f.id]==='rej'});
+function showDocs(){
+  var p=getP(cur),C=cs(cur),ok=F.filter(function(f){return C.rev[f.id]==='ok'}),rj=F.filter(function(f){return C.rev[f.id]==='rej'});
   var cnt={k:0,v:0,n:0};ok.forEach(function(f){cnt[lvOf(f)]++});
-  var d=$('#docs');d.className='docs show';
-  var doc='<div class="doc"><h3>Заключение по КЛКТ — для врача</h3><div class="m">Пациент #A-0142 · снимок 17.11.2026</div>'
-   +'<div>Жалоба: боль слева снизу на холодное</div><div>Подтверждено: критичных '+cnt.k+' · важных '+cnt.v+' · незначительных '+cnt.n+'</div><ul>';
-  ok.forEach(function(f){doc+='<li><b>Зуб '+f.tooth+'</b>, '+f.t.toLowerCase()+' ('+LV[lvOf(f)].toLowerCase()+'). Комментарий врача: «'+comm[f.id]+'»</li>'});
-  doc+='</ul>'+(rj.length?'<div class="m">Отклонено врачом: '+rj.map(function(f){return 'зуб '+f.tooth}).join(', ')+'</div>':'')
-   +'<div class="foot">Предварительный разбор выполнен программой (nnU-Net, Claude Haiku) и проверен врачом: ФИО врача, '+new Date().toLocaleDateString('ru-RU')+'.</div></div>';
-  var pat='<div class="doc"><h3>Ваши зубы — простыми словами</h3><div class="m">Для пациента #A-0142</div>';
-  if(!ok.length)pat+='<div>Серьёзных проблем врач не подтвердил.</div>';
+  var visits=ok.reduce(function(a,f){return a+f.visits},0);
+  var doc='<div class="doc"><h3>Заключение по КЛКТ</h3><div class="m">'+esc(p.name)+', '+p.age+' лет · карта '+p.id+' · снимок '+p.scans[p.scans.length-1].date+'</div>'
+   +'<div>Жалоба: '+esc(p.complaint)+'</div><div>Подтверждено: критичных '+cnt.k+', важных '+cnt.v+', незначительных '+cnt.n+'</div><ul>'
+   +ok.map(function(f){return '<li><b>Зуб '+f.tooth+'</b>, '+f.t.toLowerCase()+' ('+LV[lvOf(f)].toLowerCase()+'). Основание: '+f.why+' <i>Комментарий врача: «'+esc(C.comm[f.id])+'»</i></li>'}).join('')+'</ul>'
+   +(rj.length?'<div class="m">Отклонено врачом: '+rj.map(function(f){return 'зуб '+f.tooth}).join(', ')+'</div>':'')
+   +'<div class="foot">Предварительный разбор выполнен программой и проверен врачом: Др. '+esc(S.session.name)+', '+TODAY+'.</div></div>';
+  var pat='<div class="doc"><h3>Ваши зубы простыми словами</h3><div class="m">'+esc(p.name)+'</div>';
+  if(!ok.length)pat+='<p>Серьёзных проблем врач не подтвердил.</p>';else pat+='<p>Врач внимательно посмотрел ваш снимок. Вот что важно:</p>';
   ok.forEach(function(f){pat+='<p><b>Зуб '+f.tooth+'.</b> '+f.t+'. Что делать: '+f.plan+'.</p>'});
-  pat+='<div class="foot">Сроки ориентировочные, их уточнит врач. Разбор подготовлен программой и проверен врачом.</div></div>';
-  d.innerHTML=doc+pat;d.scrollIntoView({behavior:'smooth',block:'start'});
+  if(visits)pat+='<p>Примерно визитов: '+visits+'. Точные сроки назовёт врач.</p>';
+  pat+='<div class="foot">Разбор подготовлен программой и проверен врачом. Это не замена консультации.</div></div>';
+  openModal('<h2>Заключение готово</h2><div class="tabs" id="dtabs" style="margin-top:10px"><button data-t="d" aria-selected="true">Для врача</button><button data-t="p" aria-selected="false">Для пациента</button></div><div id="dbody">'+doc+'</div><div class="btns"><button class="btn" id="dc">Закрыть</button><button class="btn" id="dpr">Печать / PDF</button><button class="btn pri" id="dsend">Отправить в приложение пациента</button></div>',true);
+  $$('#dtabs button').forEach(function(b){b.addEventListener('click',function(){$$('#dtabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});$('#dbody').innerHTML=b.dataset.t==='d'?doc:pat})});
+  $('#dc').addEventListener('click',closeModal);$('#dpr').addEventListener('click',function(){window.print()});
+  $('#dsend').addEventListener('click',function(){toast('В демо отправка условная: приложение для пациента будет позже')});
 }
 
 /* ---------- чат ---------- */
-var Q=[
- ['Сколько зубов с проблемами?','Находок 5 на 5 зубах: 1 критичная, 2 важные, 2 незначительные.'],
- ['Почему зуб 36 критичный?','У верхушки корня 36 зона разрежения 4,2 мм, порог — 3 мм, и пациент жалуется на боль слева снизу. Решение за вами: посмотрите срез через верхушку корня.'],
- ['Сколько визитов нужно?','По плану ориентировочно 4–6 визитов: лечение канала 36 (2–3), пломбирование 37 и 46, наблюдение за 48. Сроки уточнит врач.'],
- ['Какая у зуба 12 толщина эмали?','Это программа не измеряет, поэтому числа я не назову.']
-];
+function answer(q){
+  var t=q.toLowerCase(),C=cs(cur),m=/\b([1-4][1-8])\b/.exec(t),src=[];
+  if(m){var n=+m[1],f=fByTooth(n);
+    if(f){return {h:'Зуб '+n+': '+f.t.toLowerCase()+' ('+LV[lvOf(f)].toLowerCase()+'). '+f.why+' Решение за вами: подтвердите или отклоните находку.',s:[f.id]}}
+    return {h:'По зубу '+n+' программа находок не выдала. Это не заключение о здоровье зуба: проверьте срезы, если есть сомнения.',s:[]}}
+  if(/сколько/.test(t)&&/(проблем|находок)/.test(t))return {h:'Находок '+F.length+' на '+F.length+' зубах: '+F.map(function(f){return LV[lvOf(f)].toLowerCase()+' на зубе '+f.tooth}).join(', ')+'.',s:F.map(function(f){return f.id})};
+  if(/визит|сроки|долго/.test(t)){var v=F.filter(function(f){return C.rev[f.id]==='ok'||!C.rev[f.id]}).reduce(function(a,f){return a+f.visits},0);return {h:'По предварительному плану примерно '+v+' визитов: лечение канала 36 (до 3), пломбирование 37 и 46, наблюдение за 48. Сроки уточнит врач.',s:['f36','f37','f46','f48']}}
+  if(/критич|срочн|главн|с чего начать/.test(t))return {h:'Критичная одна: периапикальный очаг у зуба 36, 4,2 мм при пороге 3 мм. Он совпадает с жалобой пациента на боль слева снизу.',s:['f36']};
+  if(/пазух|гайм/.test(t))return {h:'Корень зуба 15 в 0,9 мм от дна пазухи. Такая близость бывает у большинства верхних зубов, это не патология, но важно при планировании имплантации. Объём пазухи и слизистую программа в этой версии не измеряет.',s:['f15']};
+  if(/мудрост|восьмерк|48/.test(t))return {h:'Зуб 48 не прорезался: коронка на 10,7 мм ниже уровня ряда при пороге 8 мм. Это наблюдение, а не срочная проблема.',s:['f48']};
+  if(/нерв|канал/.test(t))return {h:'Нижнечелюстной канал на модели показан красным. Расстояние от корней до канала у зубов с находками в норме; про безопасность вмешательства решает врач по срезам.',s:[]};
+  if(/эмал|толщин|рак|онколог|диагноз/.test(t))return {h:'Это программа не измеряет, поэтому числа и выводов я не назову. Я отвечаю только по данным этого снимка и найденным находкам.',s:[]};
+  return {h:'Я отвечаю только по данным этого снимка: по находкам, зубам и плану. Спросите, например, «почему 36 критичный» или «сколько визитов».',s:[]}}
 function drawChat(){
-  var p=$('#p-chat');
-  p.innerHTML='<div class="msgs" id="msgs"></div><div class="chips" id="chips"></div><form class="chatin" id="cf"><input id="ci" placeholder="Задайте вопрос по этому снимку" autocomplete="off"><button class="btn pri" type="submit">Спросить</button></form><p class="note">В прототипе ответы заготовлены. Настоящий чат отвечает только по данным этого снимка.</p>';
+  var p=$('#p-chat'),hist=S.msgs[cur]||[];
+  p.innerHTML='<div class="msgs" id="msgs"></div><div class="chips" id="cchips" style="margin-bottom:10px"></div><form class="chatin" id="cf"><input id="ci" placeholder="Спросите про этот снимок" autocomplete="off"><button class="btn pri" type="submit">Спросить</button></form><p class="note2">В прототипе ответы собираются по заготовкам. Настоящий чат отвечает только по данным снимка и называет находки, на которые опирается.</p>';
   var m=$('#msgs');
-  function add(w,t){m.appendChild(el('div','b'+(w==='me'?' me':''),t));p.scrollTop=p.scrollHeight}
-  add('bot','Нашёл 5 проблем: 1 критичная, 2 важные, 2 незначительные. Пациент жалуется на боль слева снизу — начните с зуба 36.');
-  Q.forEach(function(q){var b=el('button',null,q[0]);b.type='button';b.addEventListener('click',function(){add('me',q[0]);add('bot',q[1])});$('#chips').appendChild(b)});
-  $('#cf').addEventListener('submit',function(e){e.preventDefault();var v=$('#ci').value.trim();if(!v)return;add('me',v);
-    var hit=Q.filter(function(q){return q[0].toLowerCase().split(' ').filter(function(w){return w.length>4&&v.toLowerCase().indexOf(w.slice(0,5))>=0}).length>=2})[0];
-    add('bot',hit?hit[1]:'В прототипе я отвечаю только на готовые вопросы выше.');$('#ci').value=''});
+  function add(w,html,src,stream){
+    var d=el('div','b'+(w==='me'?' me':''),'');m.appendChild(d);
+    function done(){d.innerHTML=html+(src&&src.length?'<div class="src">'+src.map(function(id){var f=findF(id);return '<button type="button" data-id="'+id+'">Зуб '+f.tooth+' · '+f.t+'</button>'}).join('')+'</div>':'');$$('.src button',d).forEach(function(b){b.addEventListener('click',function(){select(b.dataset.id)})});p.scrollTop=p.scrollHeight}
+    if(!stream){done();return}
+    d.innerHTML='<span class="typing"><i></i><i></i><i></i></span>';p.scrollTop=p.scrollHeight;
+    setTimeout(function(){var words=html.split(' '),i=0;(function nx(){i+=2;d.textContent=words.slice(0,i).join(' ');p.scrollTop=p.scrollHeight;if(i<words.length)setTimeout(nx,35);else done()})()},600)}
+  var C=cs(cur),n=F.length;
+  add('bot','Нашёл '+n+' проблем на '+n+' зубах. '+(cur==='A-0142'?'Жалоба слева снизу: начните с зуба 36, там критичная находка.':'Начните с критичной находки на зубе 36.'),['f36'],false);
+  var cc=['Почему 36 критичный?','Сколько визитов?','Что с пазухой?','Что делать с зубом 48?'];
+  cc.forEach(function(q){var b=el('button',null,q);b.type='button';b.addEventListener('click',function(){ask(q)});$('#cchips').appendChild(b)});
+  function ask(q){add('me',esc(q),null,false);var a=answer(q);add('bot',a.h,a.s,true)}
+  $('#cf').addEventListener('submit',function(e){e.preventDefault();var v=$('#ci').value.trim();if(!v)return;$('#ci').value='';ask(v)});
 }
-drawFind();drawCheck();drawChat();
+
+/* ---------- старт ---------- */
+if(S.session)$('#docName').textContent='Др. '+S.session.name;
+setTimeout(function(){if(!late){late=true;if(S.session&&!$('#v-patients').hidden){drawPatients();toast('Готов разбор: Азиза Турсунова')}}},14000);
+route();
 })();
 </script>
 </body></html>
