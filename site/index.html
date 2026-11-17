@@ -409,6 +409,15 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .rst{display:flex;flex-wrap:wrap;gap:6px}.rst span{font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--muted)}
 .mrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}.mrow:last-child{border:0}
 .mrow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chpane{padding:0!important;display:flex;flex-direction:column;overflow:hidden!important}
+.chpane[hidden]{display:none}
+.chpane .chhead{padding:10px 14px}
+.chpane .chmsgs{padding:12px 14px;gap:12px}
+.chpane .cm{max-width:96%}
+.chpane .cm .bub{font-size:14px;padding:8px 12px}
+.chpane .chfoot{padding:8px 14px 12px}
+.chpane .chfoot .cin textarea{height:42px;font-size:14px;padding:9px 12px}
+@media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
 @media print{.toasts,.mbox .btns,.mtabs{display:none!important}.modal{position:static;background:none}.mbox{border:0;max-height:none;color:#000;background:#fff}body *{visibility:hidden}.mbox,.mbox *{visibility:visible}}
 </style>
 </head>
@@ -472,24 +481,6 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 <!-- профиль врача -->
 <section class="view" id="v-profile" hidden><div class="wrap" id="prbody"></div></section>
 
-<!-- чат с ИИ (отдельный экран) -->
-<section class="view chatv" id="v-chat" hidden>
-  <header class="ctop">
-    <button class="btn sm" id="chBack">← К разбору</button>
-    <div class="who2" id="chwho"></div>
-    <div class="cmpl" id="chcmp"></div>
-    <span class="mini">Actis</span>
-  </header>
-  <div class="chbody">
-    <aside class="chside" id="chside"></aside>
-    <main class="chmain">
-      <div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div>
-      <div class="chmsgs" id="chmsgs"></div>
-      <div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn pri" type="submit">Спросить</button></form></div>
-    </main>
-  </div>
-</section>
-
 <!-- разбор -->
 <section class="view case" id="v-case" hidden>
   <header class="ctop">
@@ -497,7 +488,6 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <div class="who2" id="vwho"></div>
     <div class="cmpl" id="vcmp"></div>
     <span class="ro-badge" id="roBadge" hidden>Только просмотр</span>
-    <button class="btn sm pri" id="toChat">✦ Actis</button>
     <button class="btn sm ghost" id="lang">РУС</button>
     <button class="btn sm" id="share">Поделиться ссылкой</button>
   </header>
@@ -542,11 +532,13 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <aside class="col" id="col">
       <div class="tabs" role="tablist">
         <button class="t" role="tab" data-t="find" aria-selected="true">Находки</button>
+        <button class="t" role="tab" data-t="chat" id="tabChat" aria-selected="false">✦ Actis</button>
         <button class="t" role="tab" data-t="plan" aria-selected="false">План</button>
         <button class="t" role="tab" data-t="info" aria-selected="false">Кейс</button>
         <button class="ex" id="expand" title="Развернуть колонку">⤢</button>
       </div>
       <div class="pane" id="p-find"></div>
+      <div class="pane chpane" id="p-chat" hidden><div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div><div class="chmsgs" id="chmsgs"></div><div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn pri sm" type="submit">Спросить</button></form></div></div>
       <div class="pane" id="p-plan" hidden></div>
       <div class="pane" id="p-info" hidden></div>
     </aside>
@@ -639,14 +631,15 @@ function pstatus(p){
   return {t:n>=F.length?'подписано, '+(C.signed||TODAY.slice(0,5)):n?'разобрано '+n+' из '+F.length:'не разобрано',dots:dots}}
 
 /* ---------- роутер ---------- */
-var VIEWS=['home','login','patients','patient','case','profile','chat'],ALLV=VIEWS.concat(['shared']),mode='home',after=null,ro=false,pendingSel=null;
+var VIEWS=['home','login','patients','patient','case','profile'],ALLV=VIEWS.concat(['shared','chat']),mode='home',after=null,ro=false,pendingSel=null;
 function go(h){if(location.hash===h)route();else location.hash=h}
 function route(){
   var parts=location.hash.replace(/^#\/?/,'').split('/'),v=parts[0]||'home',view;
   if(ALLV.indexOf(v)<0)v='home';
+  if(v==='chat'){location.replace('#/case/'+(parts[1]||''));return}
   view=v==='shared'?'case':v;ro=v==='shared';
   if(v==='login'&&S.session){var t=after||'#/patients';after=null;go(t);return}
-  if(['patients','patient','case','profile','chat'].indexOf(v)>=0&&!S.session){after=location.hash;location.hash='#/login';return}
+  if(['patients','patient','case','profile'].indexOf(v)>=0&&!S.session){after=location.hash;location.hash='#/login';return}
   VIEWS.forEach(function(x){$('#v-'+x).hidden=x!==view});
   $('#bar').hidden=!(view==='patients'||view==='patient'||view==='profile');
   $('#drawer').dataset.lock='';closeDrawer();window.scrollTo(0,0);
@@ -658,7 +651,6 @@ function route(){
   if(v==='profile')drawProfile();
   if(v==='case'){var p=getP(parts[1]);if(!p||!readyVisit(p)){toast('У этого пациента ещё нет готового разбора');go('#/patients');return}openCase(parts[1])}
   if(v==='shared'){var sid=parts[1];if(!getP(sid)||!readyVisit(getP(sid))){sid='DEMO-001'}openCase(sid)}
-  if(v==='chat'){var p2=getP(parts[1]);if(!p2||!readyVisit(p2)){toast('Чат доступен после готового разбора');go('#/patients');return}openChat(parts[1])}
 }
 window.addEventListener('hashchange',route);
 
@@ -926,15 +918,16 @@ function openCase(id){
   cur=id;sel=null;isolated=null;openForm=null;mode='case';var p=getP(id),v=readyVisit(p);
   $('#vwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
   $('#vcmp').textContent=v.cmp||'Жалоба не указана';
-  $('#roBadge').hidden=!ro;$('#toChat').hidden=ro;$('#share').hidden=ro;$('#vBack').textContent=ro?'← На главную':'← Пациенты';
+  $('#roBadge').hidden=!ro;$('#tabChat').hidden=ro;$('#share').hidden=ro;$('#vBack').textContent=ro?'← На главную':'← Пациенты';
   if(!ro&&!cs(id).opened){cs(id).opened=true;addLog(id,'Разбор открыт врачом')}
   ensure3d();mount($('#gl'));
   if(S.colw)$('#col').style.setProperty('--colw',S.colw+'px');
   findAnim=true;syncScene();tab('find');drawAll();applyMode();setTimeout(function(){resize();fit(true)},60);
   if(pendingSel){var ps=pendingSel;pendingSel=null;setTimeout(function(){select(ps)},700)}
 }
-function drawAll(){drawFind();drawPlan();drawInfo();drawMap()}
-function tab(t){$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t})}
+function drawAll(){drawFind();drawPlan();drawInfo();drawMap();initChat()}
+var curTab='find';
+function tab(t){curTab=t;$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','chat','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t});if(t==='chat'&&cur){renderMsgs(false)}}
 $$('.tabs .t').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.t)})});
 function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else{toast('Зуб '+n+': находок нет');if(teethMesh[n])flyTo(n)}}
 function select(id){sel=id;openForm=null;tab('find');applyMode();drawFind();drawMap();var f=findF(id);if(f)flyTo(f.tooth);var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
@@ -998,7 +991,6 @@ $$('#pnl [data-v]').forEach(function(b){b.addEventListener('click',function(){vi
 $('#scShot').addEventListener('click',function(){shotReq=true});
 $('#scReset').addEventListener('click',function(){V=Object.assign({},V0);syncScene();applyMode();resetView();toast('Сцена сброшена')});
 $('#vBack').addEventListener('click',function(){go(ro?'#/':'#/patient/'+cur)});
-$('#toChat').addEventListener('click',function(){go('#/chat/'+cur)});
 $('#share').addEventListener('click',function(){
   var u=location.origin+location.pathname+'#/shared/'+cur;
   function ok(){toast('Ссылка скопирована. Открывается без входа, только просмотр')}
@@ -1033,21 +1025,14 @@ function answer(q){
   return {h:'Не понял вопрос. Назовите зуб или находку.',s:[]}}
 var thinking=false,typeT=null;
 function hist(){if(!S.msgs[cur]||!S.msgs[cur].length){S.msgs[cur]=[firstMsg()];save()}return S.msgs[cur]}
-function openChat(id){
-  cur=id;thinking=false;clearInterval(typeT);var p=getP(id),v=readyVisit(p);
-  $('#chwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
-  $('#chcmp').textContent=v.cmp||'Жалоба не указана';
-  $('#chside').innerHTML='<div class="who3">'+avatar(p.id,p.name,44)+'<div><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div></div><div class="cmp2">'+esc(v.cmp||'')+'</div><div class="sect">Находки снимка</div><div class="fl" id="chfl"></div>';
-  F.slice().sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))}).forEach(function(f,i){
-    var b=el('button',null,'<span class="dot '+lvOf(f)+'" style="margin:0"></span><small>зуб '+f.tooth+'</small><span>'+esc(ftext(f))+'</span>');b.type='button';
-    b.style.animation='rise .5s both';b.style.animationDelay=(i*60)+'ms';
-    b.addEventListener('click',function(){ask('Расскажи про зуб '+f.tooth)});$('#chfl').appendChild(b)});
+function initChat(){
+  thinking=false;clearInterval(typeT);
   var sg=$('#chsug');sg.innerHTML='';
   ['Почему это критично?','Сколько визитов?','Что сказать пациенту?','Чего ты не видишь на этом снимке?'].forEach(function(q){var b=el('button',null,q);b.type='button';b.addEventListener('click',function(){ask(q)});sg.appendChild(b)});
-  renderMsgs(false);setTimeout(function(){$('#chta').focus()},300);
+  renderMsgs(false);
 }
 function srcHtml(x){return x.s&&x.s.length?'<div class="src">на основании: '+x.s.map(function(id){var f=findF(id);return '<button type="button" data-id="'+id+'">зуб '+f.tooth+' · '+esc(f.t)+'</button>'}).join('')+'</div>':''}
-function bindSrc(d){$$('.src button',d).forEach(function(b){b.addEventListener('click',function(){pendingSel=b.dataset.id;go('#/case/'+cur)})})}
+function bindSrc(d){$$('.src button',d).forEach(function(b){b.addEventListener('click',function(){select(b.dataset.id)})})}
 function typeInto(node,html,done,scroller){
   var w=html.split(' '),i=0;clearInterval(typeT);
   typeT=setInterval(function(){i=Math.min(w.length,i+2);node.innerHTML=w.slice(0,i).join(' ');scroller.scrollTop=scroller.scrollHeight;if(i>=w.length){clearInterval(typeT);done()}},45)}
@@ -1064,10 +1049,9 @@ function renderMsgs(animLast){
 }
 function ask(q){
   if(thinking)return;var id=cur;hist().push({w:'me',h:esc(q)});thinking=true;renderMsgs(false);
-  setTimeout(function(){var a=answer(q);S.msgs[id].push({w:'bot',h:esc(a.h),s:a.s});thinking=false;save();if(cur===id&&!$('#v-chat').hidden)renderMsgs(true)},900+Math.random()*600)}
+  setTimeout(function(){var a=answer(q);S.msgs[id].push({w:'bot',h:esc(a.h),s:a.s});thinking=false;save();if(cur===id&&curTab==='chat')renderMsgs(true)},900+Math.random()*600)}
 $('#chform').addEventListener('submit',function(e){e.preventDefault();var t=$('#chta'),v=t.value.trim();if(!v||thinking)return;t.value='';ask(v)});
 $('#chta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chform').requestSubmit()}});
-$('#chBack').addEventListener('click',function(){go('#/case/'+cur)});
 
 /* ---------- план (шаг за шагом, со стрелками) ---------- */
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
