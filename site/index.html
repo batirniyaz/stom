@@ -268,6 +268,11 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .ph-card h1{font-size:26px}
 .ph-card .sub{color:var(--muted);margin-top:2px}
 .ph-card .sp{flex:1}
+.pinfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px;align-items:stretch}
+.pinfo .pcard{margin:0}
+@media (max-width:1100px){.pinfo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.pinfo{grid-template-columns:1fr}}
+.pnote textarea.note{min-height:64px}
 .pgrid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:900px){.pgrid{grid-template-columns:1fr}}
 .pcard{padding:16px 18px;margin-bottom:12px}
@@ -601,8 +606,38 @@ function docName(){return S.doc.name}
 var TONES=[['#2fc4b2','#1b6f8f'],['#d6a327','#a0552a'],['#7d8cff','#4b3fa8'],['#e05252','#8d2f5a'],['#4cb782','#1f6f6a'],['#c77dff','#5b3ea8']];
 function hash(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
 function ini(n){return String(n).split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0]}).join('').toUpperCase()}
-function avatar(key,name,size,photo){var ph=photo||S.photos[key],t=TONES[hash(key)%TONES.length];
-  return '<span class="av" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.38)+'px;'+(ph?'background-image:url('+ph+')':'background:linear-gradient(135deg,'+t[0]+','+t[1]+')')+'">'+(ph?'':esc(ini(name)))+'</span>'}
+/* портрет-иллюстрация: свой для каждого пациента, пока нет загруженного фото */
+var SKIN=['#f2cfae','#e6b48c','#cf9468','#a87048'],HAIR=['#1c1512','#2c1e17','#43301f','#5d3d25'],CLOTH=['#2c4a6b','#6b2c3e','#2d5a4a','#4a3b6b','#7a5a2c','#394150'],BGS=[['#5fb7b0','#2a6f78'],['#9a8bd6','#5a4a9a'],['#e0b46a','#a8703a'],['#7fb98f','#3f7a60'],['#e58f8f','#a24a62'],['#7aa6e0','#3d62a8']],
+    PORT0={'DEMO-001':{sk:1,hc:1,cl:1,bg:4,st:0},'DEMO-002':{sk:2,hc:0,cl:0,bg:5,st:0,beard:1},'DEMO-003':{sk:0,hc:2,cl:3,bg:1,st:1},'DEMO-004':{sk:1,hc:0,cl:2,bg:3,st:2,beard:0},'DEMO-005':{sk:0,hc:3,cl:4,bg:2,st:2},doctor:{sk:1,hc:0,cl:5,bg:0,st:1,beard:0}};
+function portrait(key){
+  var p=key==='doctor'?{sex:'М',born:1980}:getP(key);if(!p)return null;
+  var h=hash(key+'#p'),male=p.sex==='М',age=2026-(p.born||1990),old=age>=55,
+      sk=SKIN[h%4],hc=old?'#b8b8bd':HAIR[(h>>3)%4],cl=CLOTH[(h>>5)%6],bg=BGS[(h>>7)%6],st=(h>>9)%3,beard=male&&(h>>11)%2===0,
+      o=PORT0[key];if(o){sk=SKIN[o.sk];hc=old?'#b8b8bd':HAIR[o.hc];cl=CLOTH[o.cl];bg=BGS[o.bg];st=o.st;beard=male&&!!o.beard}
+  var skd=sk,back='',front='',extra='';
+  if(!male){
+    if(st===0)back='<path d="M29 44Q26 82 34 92L66 92Q74 82 71 44Q50 6 29 44Z" fill="'+hc+'"/>';
+    else if(st===1)back='<circle cx="50" cy="15" r="8" fill="'+hc+'"/>';
+    else back='<path d="M30 44Q28 66 35 70L65 70Q72 66 70 44Q50 8 30 44Z" fill="'+hc+'"/>';
+    front='<path d="M32 40Q34 19 50 19Q66 19 68 40Q62 29 52 29Q38 30 32 40Z" fill="'+hc+'"/>';
+  }else{
+    front='<path d="M32 38Q33 18 50 18Q67 18 68 38Q64 27 50 27Q36 27 32 38Z" fill="'+hc+'"/>'+(st===1?'<path d="M32 38Q31 30 35 26L37 36Z" fill="'+hc+'"/><path d="M68 38Q69 30 65 26L63 36Z" fill="'+hc+'"/>':'');
+    if(beard)extra='<path d="M33 47Q35 70 50 70Q65 70 67 47Q62 59 50 59Q38 59 33 47Z" fill="'+hc+'"/>';
+  }
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+bg[0]+'"/><stop offset="1" stop-color="'+bg[1]+'"/></linearGradient></defs>'
+   +'<rect width="100" height="100" fill="url(#g)"/>'+back
+   +'<path d="M12 100Q14 76 38 72L62 72Q86 76 88 100Z" fill="'+cl+'"/><path d="M42 72L50 84L58 72Z" fill="'+sk+'"/>'
+   +'<rect x="43" y="56" width="14" height="19" rx="5" fill="'+skd+'" opacity=".92"/>'
+   +'<ellipse cx="32.5" cy="46" rx="3" ry="5" fill="'+sk+'"/><ellipse cx="67.5" cy="46" rx="3" ry="5" fill="'+sk+'"/>'
+   +'<ellipse cx="50" cy="42" rx="17" ry="21" fill="'+sk+'"/>'+extra+front
+   +'<ellipse cx="43.5" cy="42" rx="1.9" ry="1.5" fill="#241a16"/><ellipse cx="56.5" cy="42" rx="1.9" ry="1.5" fill="#241a16"/>'
+   +'<path d="M40 37.5Q43.5 35.5 47 37.5M53 37.5Q56.5 35.5 60 37.5" stroke="'+(old?'#8b8b90':'#2a1d17')+'" stroke-width="1.4" fill="none" stroke-linecap="round"/>'
+   +'<path d="M50 44Q52 49 49.5 50" stroke="#00000030" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
+   +'<path d="M44.5 54.5Q50 58 55.5 54.5" stroke="'+(beard?'#f0d8c8':'#9a4a44')+'" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>';
+  return 'data:image/svg+xml,'+encodeURIComponent(svg).replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/'/g,'%27');
+}
+function avatar(key,name,size,photo){var ph=photo||S.photos[key]||portrait(key),t=TONES[hash(key)%TONES.length];
+  return '<span class="av" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.38)+'px;'+(ph?'background-image:url(\''+ph+'\')':'background:linear-gradient(135deg,'+t[0]+','+t[1]+')')+'">'+(ph?'':esc(ini(name)))+'</span>'}
 function readPhoto(cb){
   var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
   fi.onchange=function(){var f=fi.files[0];if(!f)return;var r=new FileReader();
@@ -698,12 +733,13 @@ function drawPatient(id){
    +'<div><h1>'+esc(p.name)+'</h1><div class="sub"><span style="font-family:var(--mono)">'+p.id+'</span> · '+ageOf(p)+' лет · '+(p.sex==='М'?'мужчина':p.sex==='Ж'?'женщина':'пол не указан')+'</div>'
    +'<div class="chips" style="margin:10px 0 0"><span class="c'+(fl?' flag':'')+'"><small>Аллергия</small>'+esc(p.allergy||'не указано')+'</span><span class="c"><small>Кровь</small>'+esc(p.blood||'не указано')+'</span><span class="c"><small>Принимает</small>'+esc(p.meds||'не указано')+'</span></div></div>'
    +'<div class="sp"></div><button class="btn pri big" id="upB">+ Новый снимок</button></div>'
-   +'<div class="pgrid"><div>'
+   +'<div class="pinfo">'
    +'<div class="card pcard" style="--i:1"><h3>Контакты</h3>'+kv([['Телефон',p.phone],['Адрес',p.addr],['Род занятий',p.job],['Экстренный контакт',p.emerg]])+'</div>'
    +'<div class="card pcard" style="--i:2"><h3>Здоровье</h3>'+kv([['Дата рождения',p.dob||String(p.born)],['Группа крови',p.blood],['Аллергия',p.allergy,fl],['Хронические болезни',p.chronic],['Лекарства',p.meds],['Привычки',p.habit]])+'</div>'
    +'<div class="card pcard" style="--i:3"><h3>В клинике</h3>'+kv([['Карта открыта',p.since],['Как пришёл',p.ref],['Визитов',String(p.visits.length)],['Проф. чистка',p.cleaning]])+'</div>'
-   +'<div class="card pcard" style="--i:4"><h3>Заметки врача</h3><textarea class="note" id="note" placeholder="Заметка"></textarea></div>'
-   +'</div><div><div class="sect">Визиты и снимки</div><div id="feed"></div></div></div>';
+   +'</div>'
+   +'<div class="card pcard pnote" style="--i:4"><h3>Заметки врача</h3><textarea class="note" id="note" placeholder="Заметка"></textarea></div>'
+   +'<div class="sect">Визиты и снимки</div><div id="feed"></div>';
   $('#cb').addEventListener('click',function(){go('#/patients')});
   $('#upB').addEventListener('click',function(){openDrawer(id)});
   $('#camB').addEventListener('click',function(){readPhoto(function(d){S.photos[id]=d;save();$('#avw').firstChild.outerHTML=avatar(id,p.name,92);toast('Фото сохранено')})});
