@@ -43,7 +43,7 @@ import os
 import re
 import secrets
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -635,6 +635,90 @@ def seed_fixture_patient() -> str | None:
                      legacy_kind="cbct", complaints=FIXTURE_COMPLAINTS)
         return pid
     return None
+
+
+# Приём на показе идёт по списку, а список из одного человека не похож на
+# рабочий день клиники: не видно ни сортировки по свежести, ни того, что у
+# разных людей разное состояние разбора. Поэтому на ПУСТОЙ базе заводится
+# небольшой список-пример.
+#
+# Все записи помечены `is_example`, и в списке у них стоит значок «пример»:
+# выдавать выдуманных людей за пациентов клиники нельзя.
+#
+# Снимок привязан только к первому: у остальных исследование числится
+# загруженным и неразобранным — это честное состояние, которое не станет
+# ложью, если кто-то откроет карточку. Рисовать им находки было бы враньём:
+# находок у них нет.
+DEMO_ROSTER = [
+    # (фамилия, имя, год, пол, карта, тип снимка, жалоба)
+    ("Кутлымуратов", "Нурлан", 1968, "М", "NK-2045", "cbct",
+     "подвижность нижних резцов, десна кровит при чистке"),
+    ("Алламуратова", "Айгуль", 1999, "Ж", "NK-2044", "opg",
+     "скученность, направлена ортодонтом"),
+    ("Оразбаев", "Бахтияр", 1976, "М", "NK-2043", "cbct",
+     "тянет в верхней челюсти справа, отдаёт в висок"),
+    ("Жумабаева", "Гулнара", 1991, "Ж", "NK-2042", "cbct",
+     "планирует имплантацию на месте 36"),
+]
+
+# Кейс, который открывают на показе. Снимок клиники: сегментация на нём
+# заметно лучше, чем на публичной фикстуре, где у модели путаются зубы.
+SHOWCASE = ("Сейтмуратов", "Азамат", 1984, "М", "NK-2041", "client5",
+            "ноет слева снизу при накусывании, третий день")
+
+
+def seed_demo_patients() -> int:
+    """Список-пример для показа. Возвращает, сколько карточек завела.
+
+    СРАБАТЫВАЕТ ТОЛЬКО НА БАЗЕ БЕЗ НАСТОЯЩИХ ПАЦИЕНТОВ. У клиники свои
+    карточки, и подкладывать им выдуманных людей нельзя ни при каких
+    обстоятельствах — даже с пометкой «пример».
+    """
+    with connect() as con:
+        real = con.execute(
+            "SELECT 1 FROM patients WHERE is_example = 0 LIMIT 1").fetchone()
+        if real:
+            return 0
+        if con.execute("SELECT 1 FROM patients WHERE card_no LIKE 'NK-20%'"
+                       " LIMIT 1").fetchone():
+            return 0                       # уже заводили
+
+    def _backdate(sid: str, days: int) -> None:
+        """Отодвинуть исследование на `days` дней назад.
+
+        Список сортируется по времени последнего снимка. Заведённые подряд
+        записи получают одну и ту же секунду, порядок при равенстве
+        произвольный — показательный кейс оказывался в середине списка.
+        Заодно это правдоподобнее: пять снимков в одну секунду в клинике
+        не делают.
+
+        Время считаем в Python, а не функцией `datetime()` в SQL: она
+        отбрасывает часовой пояс и пишет «2026-11-16 21:45:44», тогда как
+        все остальные записи лежат в ISO со смещением. Два формата в одной
+        колонке — это разбор дат, который где-нибудь да сломается.
+        """
+        t = (datetime.now(timezone.utc) - timedelta(days=days))
+        iso = t.astimezone().isoformat(timespec="seconds")
+        with connect() as con:
+            con.execute("UPDATE studies SET uploaded_at = ?, taken_at = ?"
+                        " WHERE id = ?", (iso, iso, sid))
+
+    n = 0
+    for i, (last, first, year, sex, card, kind, cmp_) in enumerate(DEMO_ROSTER):
+        pid = create_patient(last, first, birth_year=year, sex=sex,
+                             card_no=card, is_example=True,
+                             note="пример для демонстрации, не пациент клиники")
+        sid = create_study(pid, kind, status="uploaded", complaints=cmp_)
+        _backdate(sid, len(DEMO_ROSTER) - i)
+        n += 1
+
+    last, first, year, sex, card, case_id, cmp_ = SHOWCASE
+    pid = create_patient(last, first, birth_year=year, sex=sex, card_no=card,
+                         is_example=True,
+                         note="пример для демонстрации, не пациент клиники")
+    create_study(pid, "cbct", status="ready", legacy_case=case_id,
+                 legacy_kind="cbct", complaints=cmp_)
+    return n + 1
 
 
 # -------------------------------------------------------------------- CLI

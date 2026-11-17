@@ -359,7 +359,9 @@
           <span class="page-col">{{ p.age ? p.age + " лет" : "—" }}</span>
           <span class="pwhen">
             <b>{{ fmtDate((p.last && p.last.at) || p.last_study_at) }}</b>
-            <template v-if="p.last"> · {{ p.last.kind_label }}</template>
+            <!-- Короткий ярлык: полный («Панорамный снимок (ОПТГ)») не
+                 влезает в колонку и наезжает на жалобу. -->
+            <template v-if="p.last"> · {{ kindShort(p.last.kind) }}</template>
           </span>
           <span class="pcmp" :title="(p.last && p.last.complaints) || ''"
             >{{ (p.last && p.last.complaints) || "" }}</span>

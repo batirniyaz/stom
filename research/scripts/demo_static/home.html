@@ -158,7 +158,8 @@
     <h1>Actina</h1>
     <p class="lead">Платформа разбора КЛКТ для стоматологов</p>
     <div class="facts" id="facts">
-      <div><b id="f-teeth">—</b> зубов распознано на демонстрационном снимке</div>
+      <div><b id="f-teeth">—</b> <span id="f-teeth-w">зубов</span>
+        распознано на демонстрационном снимке</div>
       <div id="f-acc">Точность распознавания зубов измерена на независимой выборке</div>
       <div>Каждая находка несёт основание: что измерено, сколько и при каком пороге</div>
     </div>
@@ -264,25 +265,47 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const $ = id => document.getElementById(id);
 
+/* «31 зубов» режет глаз на первом же экране. Правило русского счёта:
+   1 зуб, 2-4 зуба, 5-20 зубов, дальше по последней цифре. */
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
+
 /* Числа на главной — измеренные, а не рекламные. Количество зубов берём с
    того самого кейса, который открывает кнопка «Посмотреть демо-кейс», а
    строку про точность отдаёт сервер той же функцией, что печатает её в
    PDF. Если кейса нет, блок фактов молчит: выдумывать числа на первом
    экране нельзя, по ним судят обо всём остальном. */
+// Зубы, которые разбор считает пригодными. Заставка рисует только их.
+let usable = null;
+
 async function facts() {
   let ex;
   try {
     ex = await fetch("/api/cbct/examples").then(r => r.json());
   } catch (e) { return null; }
-  const first = (ex.examples || [])[0];
+  // Кейс для заставки выбирает СЕРВЕР (поле showcase): какой снимок лучше
+  // выглядит в 3D, знает он, а не фронт. Фикстура остаётся запасным
+  // вариантом — на машине без снимков клиники других кейсов нет.
+  const all = ex.examples || [];
+  const first = all.find(e => e.showcase) || all[0];
   if (!first) { $("facts").hidden = true; return null; }
   $("demo-link").href = `/cbct/${encodeURIComponent(first.case_id)}`;
   try {
     const info = await fetch(`/api/cbct/info/${encodeURIComponent(first.case_id)}`)
       .then(r => r.ok ? r.json() : null);
     if (info) {
-      const n = (info.teeth_present || []).length;
-      if (n) $("f-teeth").textContent = String(n);
+      // Берём то, с чем работает РАЗБОР: в маске может лежать зуб-огрызок,
+      // который слой находок исключает как недостоверный.
+      usable = info.teeth_usable || null;
+      const n = (usable || info.teeth_present || []).length;
+      if (n) {
+        $("f-teeth").textContent = String(n);
+        $("f-teeth-w").textContent = plural(n, "зуб", "зуба", "зубов");
+      }
       if (info.metrics_short) {
         $("f-acc").textContent = info.metrics_short.charAt(0).toUpperCase()
                                + info.metrics_short.slice(1);
@@ -330,8 +353,24 @@ async function hero(caseId) {
     return;
   }
   const root = gltf.scene;
+  /* На заставке показываем только зубы и кость. Остальные слои (нерв,
+     пазухи, реставрации, дыхательные пути) на таком масштабе превращаются
+     в крупинки, а среди них попадаются и артефакты маски: на этом снимке
+     наш же контроль качества нашёл «объект класса „мост“ в 79 мм от
+     ближайшего зуба» — он числится артефактом в разборе, но меш его всё
+     равно рисует. Во вьюере врач видит его вместе с пометкой; на первом
+     экране показывать мусор без пояснения нельзя. */
+  const SHOW = new Set(["mandible", "maxilla"]);
   root.traverse(o => {
     if (!o.isMesh) return;
+    const nm = o.name || "";
+    const isTooth = nm.startsWith("tooth_");
+    if (!isTooth && !SHOW.has(nm)) { o.visible = false; return; }
+    // Зуб, который разбор исключил (огрызок маски), на заставку не идёт:
+    // он висит отдельной крупинкой и читается как сбой.
+    if (isTooth && usable && !usable.includes(+nm.slice(6))) {
+      o.visible = false; return;
+    }
     /* У нашего GLB из вершинных атрибутов есть ТОЛЬКО позиции: меш строят
        marching cubes и упрощение, нормалей они не пишут (проверено
        разбором файла — атрибут один, POSITION). Без нормалей любой
@@ -339,7 +378,7 @@ async function hero(caseId) {
        силуэтом, а не снимком. Вьюер разбора считает их сам, здесь нужно
        то же самое. */
     if (o.geometry && !o.geometry.attributes.normal) o.geometry.computeVertexNormals();
-    const tooth = (o.name || "").startsWith("tooth_");
+    const tooth = isTooth;
     // Зубам здесь обычный стандартный материал, а не физический с
     // clearcoat, как во вьюере: на главной модель только позирует, зато
     // физический материал с clearcoat в этой сцене уходил в чёрное —

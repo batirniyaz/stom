@@ -654,9 +654,30 @@ class CbctSegmentRequest(BaseModel):
     model: str = "ours"  # ours | pretrained
 
 
+# Кейс для главной и для кнопки «Посмотреть демо-кейс».
+#
+# Почему не первый попавшийся. На публичной фикстуре (`pair001_cbct`,
+# figshare, CC BY 4.0) сегментация заметно хуже: модель путает зубы, а
+# позади черепа у неё вырастает лишний зуб — это видно невооружённым
+# глазом на заставке во весь экран. На снимке с аппарата клиники тех же
+# артефактов нет. Фикстура остаётся в примерах: она единственная, которую
+# можно класть в репозиторий.
+#
+# Порядок — предпочтение; берём первый зарегистрированный.
+SHOWCASE_CASES = ("client5", "client4", "client2")
+
+
 @app.get("/api/cbct/examples")
 def cbct_examples() -> dict:
-    return {"examples": cbct.list_examples()}
+    ex = cbct.list_examples()
+    have = {e["case_id"] for e in ex}
+    pick = next((cid for cid in SHOWCASE_CASES if cid in have), None)
+    if pick is None and ex:
+        pick = ex[0]["case_id"]
+    for e in ex:
+        if e["case_id"] == pick:
+            e["showcase"] = True
+    return {"examples": ex}
 
 
 @app.post("/api/cbct/upload")
@@ -719,6 +740,18 @@ def cbct_info(case_id: str):
     # цифра на экране и цифра в отчёте разойдутся, а разойтись им нельзя.
     # Для моделей, на которых точность не мерили, приходит null, и подвал
     # про точность молчит.
+    # Сколько зубов РАЗБОР реально считает своими. Маска может содержать
+    # зуб-огрызок: формально он распознан, но измерения по нему
+    # недостоверны, и слой находок его исключает. Показывать на главной
+    # число из маски, когда разбор работает с другим, — мелкая, но ложь.
+    # Только из кэша: пересчёт занимает минуты.
+    cached = _cached_findings(c)
+    if cached and cached.get("teeth_present"):
+        # Список, а не число: по нему заставка прячет исключённые зубы.
+        # Зуб-огрызок (маска в 7 мм³ вместо 140+) висит в 3D отдельной
+        # крупинкой — врачу во вьюере он показывается вместе с пометкой
+        # «измерения недостоверны», но на первом экране это просто мусор.
+        out["teeth_usable"] = list(cached["teeth_present"])
     import cbct_report
     out["metrics_line"] = cbct_report._metrics_line(out.get("model") or "")
     out["metrics_short"] = cbct_report.metrics_short(out.get("model") or "")
@@ -2298,6 +2331,12 @@ def main() -> None:
     # пациентов, хотя смотреть есть что.
     if pat.seed_fixture_patient():
         print("заведён пациент-пример для кейса из fixtures/")
+    # Список из одного человека не похож на рабочий день клиники: не видно
+    # ни сортировки по свежести, ни разного состояния разбора. Заводим
+    # небольшой список-пример — только на базе БЕЗ настоящих пациентов.
+    seeded = pat.seed_demo_patients()
+    if seeded:
+        print(f"заведён список-пример: {seeded} карточек")
     print(f"Пациенты: {len(pat.list_patients(limit=10000))} "
           f"(хранилище {pat.DATA_DIR})")
 
