@@ -714,6 +714,15 @@ def cbct_info(case_id: str):
     # панораму и карточку зуба, а не ловит 409 по факту клика: пустая
     # вкладка с ошибкой читается как поломка, хотя кейс исправен.
     out["has_voxels"] = _voxel_model(c) is not None
+    # Чем посчитано и с какой измеренной точностью — строкой в подвале
+    # экрана разбора. Берём ТУ ЖЕ функцию, что печатает это в PDF: иначе
+    # цифра на экране и цифра в отчёте разойдутся, а разойтись им нельзя.
+    # Для моделей, на которых точность не мерили, приходит null, и подвал
+    # про точность молчит.
+    import cbct_report
+    out["metrics_line"] = cbct_report._metrics_line(out.get("model") or "")
+    out["metrics_short"] = cbct_report.metrics_short(out.get("model") or "")
+    out["findings_version"] = cbct.FINDINGS_VERSION
     return out
 
 
