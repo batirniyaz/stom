@@ -150,7 +150,10 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .scn .pnl label{display:flex;justify-content:space-between;gap:8px;margin:6px 0;color:var(--text)}
 .scn .pnl input[type=range]{width:100%;accent-color:var(--accent)}
 .mm{position:absolute;right:12px;bottom:12px;background:rgba(17,21,27,.82);border:1px solid var(--line);border-radius:10px;padding:7px 8px;z-index:3}
-#lang b{color:var(--accent)}#lang i{font-style:normal;margin:0 4px;color:var(--muted)}#lang span{color:var(--muted)}
+.langBtn b{color:var(--accent)}.langBtn i{font-style:normal;margin:0 4px;color:var(--muted)}.langBtn span{color:var(--muted)}
+.me{padding:3px!important}
+.btn.out{color:var(--crit);border-color:rgba(224,82,82,.55);background:rgba(224,82,82,.1)}.btn.out:hover{background:rgba(224,82,82,.2)}
+.pout-row{margin:6px 0 24px;display:flex;justify-content:flex-start}
 .mm .r{display:grid;grid-template-columns:repeat(16,20px);gap:1px}
 .mm .r.g{margin-bottom:4px}
 .mm button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;cursor:pointer;--tf:#161b22;--ts:#3a4452;--tn:#6d7886}
@@ -443,7 +446,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 <div class="bar" id="bar" hidden><div class="in">
   <button class="wm" id="logoBtn"><i></i>Actina</button>
   <div class="sp"></div>
-  <div class="who"><button class="me" id="meBtn" title="Мой профиль"><span id="meAv"></span><span class="nm" id="docName"></span></button><button class="btn sm ghost" id="outBtn">Выйти</button></div>
+  <div class="who"><button class="btn sm ghost langBtn" aria-label="Язык"><b>RU</b><i>/</i><span>UZ</span></button><button class="me" id="meBtn" title="Мой профиль" aria-label="Мой профиль"><span id="meAv"></span><span class="nm" id="docName" hidden></span></button></div>
 </div></div>
 
 <!-- главная -->
@@ -504,7 +507,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <div class="who2" id="vwho"></div>
     <div class="cmpl" id="vcmp"></div>
     <span class="ro-badge" id="roBadge" hidden>Только просмотр</span>
-    <button class="btn sm ghost" id="lang" aria-label="Язык"><b>RU</b><i>/</i><span>UZ</span></button>
+    <button class="btn sm ghost langBtn" id="lang" aria-label="Язык"><b>RU</b><i>/</i><span>UZ</span></button>
     <button class="btn sm" id="share">Поделиться ссылкой</button>
   </header>
   <div class="cmain">
@@ -718,7 +721,6 @@ function doLogin(){
 $('#doLogin').addEventListener('click',doLogin);
 $('#code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
 $('#phone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#getCode').click()});
-$('#outBtn').addEventListener('click',function(){S.session=null;save();go('#/')});
 
 /* ---------- список пациентов ---------- */
 function drawPatients(){
@@ -1045,7 +1047,7 @@ $('#share').addEventListener('click',function(){
   var u=location.origin+location.pathname+'#/shared/'+cur;
   function ok(){toast('Ссылка скопирована. Открывается без входа, только просмотр')}
   try{navigator.clipboard.writeText(u).then(ok,function(){prompt('Скопируйте ссылку',u)})}catch(e){prompt('Скопируйте ссылку',u)}});
-$('#lang').addEventListener('click',function(){toast('Узбекский язык: в разработке')});
+$$('.langBtn').forEach(function(b){b.addEventListener('click',function(){toast('Узбекский язык: в разработке')})});
 $('#expand').addEventListener('click',function(){var c=$('#col');if(col0==null){col0=c.getBoundingClientRect().width;c.style.setProperty('--colw',Math.round(window.innerWidth*0.84)+'px');this.textContent='⤡'}else{c.style.setProperty('--colw',col0+'px');col0=null;this.textContent='⤢'}});
 (function(){var h=$('#handle'),drag=false;h.addEventListener('pointerdown',function(e){drag=true;h.setPointerCapture(e.pointerId)});
   h.addEventListener('pointermove',function(e){if(!drag)return;var w=Math.max(320,Math.min(window.innerWidth*0.86,window.innerWidth-e.clientX));$('#col').style.setProperty('--colw',w+'px');S.colw=Math.round(w)});
@@ -1162,7 +1164,7 @@ function drawProfile(){
   $('#prbody').innerHTML='<div class="crumb"><button id="pb">← Пациенты</button></div>'
    +'<div class="card prof-h rise"><span class="avw" id="pav">'+avatar('doctor',d.name,104)+'<button class="cam" id="pcam" aria-label="Загрузить фото">📷</button></span>'
    +'<div><h1>Др. '+esc(d.name)+'</h1><div class="muted">'+esc(d.spec)+'</div><div class="muted" style="margin-top:2px">'+esc(d.clinic)+'</div><div class="chips" style="margin:10px 0 0"><span class="c"><small>Стаж</small>'+esc(d.exp)+' лет</span><span class="c"><small>Лицензия</small>'+esc(d.license)+'</span></div></div>'
-   +'<div class="sp"></div><button class="btn" id="pout">Выйти из аккаунта</button></div>'
+   +'</div>'
    +'<div class="stats"><div class="card stat rise" style="--i:1"><b>'+cn+'</b><span>разборов в работе</span></div><div class="card stat rise" style="--i:2"><b>'+ok+'</b><span>находок подтверждено</span></div><div class="card stat rise" style="--i:3"><b>'+rj+'</b><span>находок отклонено</span></div><div class="card stat rise" style="--i:4"><b>'+sg+'</b><span>заключений подписано</span></div></div>'
    +'<div class="pgrid pf2"><div class="card pcard" style="--i:2"><h3>О враче</h3><div class="pf">'
    +'<div><label>Фамилия и имя</label><input id="dName" value="'+esc(d.name)+'"></div><div><label>Специальность</label><input id="dSpec" value="'+esc(d.spec)+'"></div>'
@@ -1172,7 +1174,8 @@ function drawProfile(){
    +'<div class="full"><label>О себе</label><textarea id="dAbout" rows="3">'+esc(d.about)+'</textarea></div></div>'
    +'<div class="btns"><button class="btn pri" id="dSave">Сохранить</button></div></div>'
    +'<div><div class="card pcard" style="--i:3"><h3>Вход и безопасность</h3>'+kv([['Вход','по номеру телефона и коду из SMS'],['Этот компьютер',S.session&&S.session.trust?'запомнен':'не запомнен']])+'</div>'
-   +'<div class="card pcard" style="--i:4"><h3>Последние действия</h3>'+(acts.length?acts.slice(0,8).map(function(a){return '<div class="act"><time>'+esc(a.t)+'</time><span>'+esc(a.x)+'</span></div>'}).join(''):'<div class="muted">Действий нет</div>')+'</div></div></div>';
+   +'<div class="card pcard" style="--i:4"><h3>Последние действия</h3>'+(acts.length?acts.slice(0,8).map(function(a){return '<div class="act"><time>'+esc(a.t)+'</time><span>'+esc(a.x)+'</span></div>'}).join(''):'<div class="muted">Действий нет</div>')+'</div></div></div>'
+   +'<div class="pout-row"><button class="btn out" id="pout">Выйти из аккаунта</button></div>';
   $('#pb').addEventListener('click',function(){go('#/patients')});
   $('#pout').addEventListener('click',function(){S.session=null;save();go('#/')});
   $('#pcam').addEventListener('click',function(){readPhoto(function(u){S.photos.doctor=u;save();$('#pav').firstChild.outerHTML=avatar('doctor',S.doc.name,104);$('#meAv').innerHTML=avatar('doctor',S.doc.name,30);toast('Фото сохранено')})});
