@@ -969,7 +969,7 @@ function drawAll(){drawFind();drawPlan();drawInfo();drawMap();initChat()}
 var curTab='find';
 function tab(t){curTab=t;$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','chat','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t});if(t==='chat'&&cur){renderMsgs(false)}}
 $$('.tabs .t').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.t)})});
-function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else{toast('Зуб '+n+': находок нет');if(teethMesh[n])flyTo(n)}}
+function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else if(teethMesh[n])flyTo(n)}
 function select(id){sel=id;openForm=null;tab('find');applyMode();drawFind();drawMap();var f=findF(id);if(f)flyTo(f.tooth);var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function drawFind(){
   var p=$('#p-find');if(!p||!cur)return;var C=cs(cur),n=reviewed(cur),all=n>=F.length,st=p.scrollTop;
