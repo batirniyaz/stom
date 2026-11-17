@@ -2171,6 +2171,17 @@ def _page(static_dir: Path, name: str = "index.html"):
                         headers=PAGE_HEADERS)
 
 
+@app.get("/")
+def page_home():
+    """Главная. Первый экран сценария показа.
+
+    Раньше корень отдавал экран анализа панорам с зоной перетаскивания —
+    вход в исследовательское демо, а не в продукт: врач сразу упирался в
+    форму загрузки вместо снимка.
+    """
+    return _page(STATIC_DIR, "home.html")
+
+
 @app.get("/2d")
 @app.get("/2d/{name}")
 def page_2d(name: str = ""):

@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Actina — разбор снимков</title>
 <link rel="stylesheet" href="/app.css">
+<!-- Проверка входа — до отрисовки: иначе на долю секунды виден
+     чужой экран, а на показе это читается как сбой. -->
+<script src="/auth.js"></script>
+<script>actinaAuth.guard();</script>
 <style>
   /* Палитра и шрифт приходят из /app.css — одни на все экраны. Своя копия
      здесь уже разошлась с копиями на других страницах: у вьюера был холодный
@@ -399,6 +403,10 @@
   .f-loc { font-size: 11.5px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
 
   /* ---- переключение 2D/3D ---- */
+  /* `hidden` у элемента со своим display не срабатывает: правило класса
+     перебивает служебный стиль браузера, и скрытый блок остаётся виден.
+     Эти вкладки так и «вернулись» в шапку после переноса. */
+  .view-tabs[hidden] { display: none; }
   .view-tabs {
     display: flex; gap: 3px; padding: 3px; margin-left: 20px;
     background: rgba(142,153,168,.07); border: 1px solid var(--border);
@@ -968,7 +976,14 @@
   body.case-mode .chat-pane #chat-log { flex: 1; min-height: 0; overflow: auto; }
 
   /* ---- подвал: чем посчитано ---- */
+  /* Режим просмотра по ссылке: отметки врача и подпись скрыты. Снимок
+     показать коллеге можно, подписать за врача — нет. */
+  body.guest .find-rev, body.guest .sign-box, body.guest #find-progress { display: none; }
+
   .cfoot {
+    /* Подвал страницы отцентрован, этот — нет: строка про метод читается
+       слева направо вместе с остальным интерфейсом. */
+    text-align: left; margin: 0;
     flex: none; padding: 5px 14px; border-top: 1px solid var(--line);
     background: var(--panel); color: var(--dim); font-size: 11.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1076,14 +1091,19 @@
 <script src="/i18n.js"></script>
 <script src="/patient-bar.js"></script>
 
+<!-- Шапка по макету: знак, путь к пациентам, врач. Вкладок модальностей
+     («2D ОПТГ», «3D скан») здесь больше нет — в показе один трек, КЛКТ, и
+     строка выбора снимка сбивала с него на первом же экране. Экраны никуда
+     не делись и открываются адресами /2d и /ios; переключатель видов в
+     разметке остался скрытым, на нём держится showView(). -->
 <header>
-  <a class="wm" href="/patients" title="К списку пациентов"><i></i>Actina</a>
-  <div class="view-tabs" id="view-tabs">
-    <a class="view-tab" href="/patients" data-i18n>Пациенты</a>
+  <a class="wm" href="/" title="На главную"><i></i>Actina</a>
+  <div class="view-tabs" id="view-tabs" hidden>
     <button class="view-tab active" data-view="2d" data-i18n>2D ОПТГ</button>
     <button class="view-tab" data-view="cbct" data-i18n>3D КЛКТ</button>
     <button class="view-tab" data-view="ios">3D скан (IOS)</button>
   </div>
+  <a class="hdr-nav" href="/patients" data-i18n>Пациенты</a>
   <div class="header-right">
     <div class="model-picker">
       <span class="model-picker-label" data-i18n>Модель</span>
@@ -1091,6 +1111,7 @@
     </div>
     <div id="lang-switch"></div>
     <div class="header-badge" id="header-badge"></div>
+    <div class="who" id="who"></div>
   </div>
 </header>
 
@@ -3951,6 +3972,24 @@ syncAllSliderFills();
 // когда-то её включил, не осталось следа в браузере.
 try { localStorage.removeItem("mirrorOverride"); localStorage.removeItem("swapSides"); } catch (e) {}
 
+/* Кто вошёл. Имени врача у нас нет: настоящей учётной записи не
+   существует, а в подпись под находками врач вводит имя сам. Поэтому в
+   шапке стоит номер, которым вошли, — он хотя бы правда. */
+(() => {
+  const box = $c("who");
+  if (!box) return;
+  const s = window.actinaAuth && actinaAuth.read();
+  if (window.actinaAuth && actinaAuth.isGuest() && !s) {
+    document.body.classList.add("guest");
+    box.innerHTML = '<span class="doc">Режим просмотра по ссылке</span>';
+    return;
+  }
+  if (!s) return;
+  box.innerHTML = `<span class="doc">${(s.phone || "Врач").replace(/[<>&]/g, "")}</span>`
+                + `<button class="out" type="button">Выйти</button>`;
+  box.querySelector(".out").onclick = () => { actinaAuth.end(); location.href = "/"; };
+})();
+
 /* ================= оболочка экрана разбора =================
    Перенос макета: панель сцены, ширина колонки, подвал с методом.
    Всё, что здесь, — только про раскладку; данные и 3D не трогаются. */
@@ -4007,8 +4046,13 @@ if (window.ResizeObserver) {
 /* Ссылка на кейс продублирована в верхней строке: на приёме ею пользуются
    чаще, чем вкладкой «Кейс», где она лежала. */
 $c("cbct-share-top").onclick = async function () {
+  // Ссылка уходит с пометкой «просмотр»: тот, кому её дали, видит находки
+  // и план, но не отмечает их за врача. Это подсказка интерфейса, а не
+  // ограничение доступа — настоящих прав здесь нет (см. auth.js).
+  const u = new URL(location.href);
+  u.searchParams.set("guest", "1");
   try {
-    await navigator.clipboard.writeText(location.href);
+    await navigator.clipboard.writeText(u.toString());
     this.textContent = "Ссылка скопирована";
   } catch (e) { this.textContent = location.href; }
   setTimeout(() => { this.textContent = "Поделиться ссылкой"; }, 2500);

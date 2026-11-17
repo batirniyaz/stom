@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actina — разбор КЛКТ</title>
+<link rel="stylesheet" href="/app.css">
+<style>
+  /* Главная. Первый экран сценария показа: врач видит снимок, а не форму
+     загрузки. Раньше корень отдавал экран анализа панорам с зоной
+     перетаскивания — вход в исследовательское демо, а не в продукт.
+
+     Вход живёт здесь же (как в макете): по кнопке текст уезжает влево и
+     гаснет, панель входа выезжает на его место, модель сдвигается вправо.
+     Отдельный экран входа разрывал бы первое впечатление пополам. */
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+
+  .home {
+    position: relative; height: 100vh; min-height: 520px; overflow: hidden;
+    background: radial-gradient(90% 90% at 70% 40%, #16202c, #080b0f);
+  }
+  #hero-gl {
+    position: absolute; inset: 0;
+    transition: transform .8s cubic-bezier(.2, .7, .2, 1);
+  }
+  #hero-gl canvas { display: block; width: 100%; height: 100%; }
+  .home.login-mode #hero-gl { transform: translateX(3.5vw); }
+
+  /* Затемнение слева: текст ложится на снимок, и без него заголовок тонет
+     в костной ткани. Справа модель остаётся открытой. */
+  .home::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(8,11,15,.94) 0%,
+                rgba(8,11,15,.72) 24%, rgba(8,11,15,.25) 44%, transparent 56%);
+  }
+
+  .hcopy {
+    position: absolute; z-index: 2; left: max(24px, 6vw); top: 50%;
+    transform: translateY(-52%); max-width: 540px;
+    transition: opacity .4s ease, transform .6s cubic-bezier(.2, .7, .2, 1);
+  }
+  .home.login-mode .hcopy {
+    opacity: 0; pointer-events: none; transform: translate(-32px, -52%);
+  }
+  .hcopy .tag {
+    font-size: 12.5px; color: var(--accent); letter-spacing: .18em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .hcopy h1 {
+    font-size: clamp(46px, 7vw, 84px); font-weight: 700; letter-spacing: -1.5px;
+    line-height: 1; margin: 10px 0 14px;
+  }
+  .hcopy .lead { font-size: clamp(16px, 1.6vw, 20px); color: #c1cad6; margin: 0 0 26px; }
+
+  .facts {
+    display: flex; flex-direction: column; gap: 9px;
+    margin-bottom: 28px; font-size: 13px; color: var(--muted); max-width: 490px;
+  }
+  .facts div { padding-left: 12px; border-left: 2px solid var(--line); }
+  .facts b { color: var(--text); font-family: var(--mono); font-weight: 500; }
+
+  .hbtns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn.big { padding: 13px 26px; font-size: 16px; border-radius: 11px; }
+  .btn-ghost.big { padding: 13px 24px; font-size: 15px; border-radius: 11px; }
+
+  /* ---- панель входа ---- */
+  .hlogin {
+    position: absolute; z-index: 3; left: max(24px, 6vw); top: 50%;
+    width: min(380px, calc(100% - 48px));
+    transform: translate(-24px, -50%); opacity: 0; visibility: hidden;
+    transition: opacity .35s ease, transform .5s cubic-bezier(.2, .7, .2, 1),
+                visibility 0s .5s;
+  }
+  .home.login-mode .hlogin {
+    opacity: 1; visibility: visible; transform: translate(0, -50%);
+    transition: opacity .5s ease .25s,
+                transform .7s cubic-bezier(.2, .7, .2, 1) .25s, visibility 0s;
+  }
+  .lback {
+    background: none; border: 0; color: var(--muted); padding: 0 0 12px;
+    font-size: 13px;
+  }
+  .lback:hover { color: var(--text); }
+  .hlogin h2 { font-size: 26px; margin: 10px 0 4px; font-weight: 600; }
+  .hlogin .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 4px; }
+  .hlogin label { display: block; font-size: 12.5px; color: var(--muted); margin: 16px 0 5px; }
+  .hlogin input[type=tel], .hlogin input[type=text] {
+    width: 100%; font: inherit; font-size: 18px; padding: 11px 13px;
+    border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text);
+  }
+  .hlogin input:focus { outline: none; border-color: rgba(47,196,178,.55); }
+  .hlogin .btn { width: 100%; margin-top: 16px; padding: 12px; }
+  .lerr { color: var(--bad); font-size: 12.5px; min-height: 18px; margin-top: 4px; }
+  .chk {
+    display: flex; gap: 8px; align-items: center; margin-top: 14px;
+    font-size: 13.5px; color: var(--muted); cursor: pointer;
+  }
+  .chk input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .hintbox {
+    margin-top: 14px; font-size: 12.5px; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 9px 12px; border-radius: 10px;
+  }
+
+  .hcred {
+    position: absolute; z-index: 2; left: max(24px, 6vw); bottom: 14px;
+    font-size: 11.5px; color: var(--dim);
+  }
+  .hbar {
+    position: absolute; z-index: 4; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 14px; padding: 16px max(24px, 6vw);
+  }
+  .hbar .sp { flex: 1; }
+  .hbar a.nav {
+    color: var(--muted); font-size: 13px; padding: 6px 12px;
+    border: 1px solid transparent; border-radius: 9px;
+  }
+  .hbar a.nav:hover { color: var(--text); border-color: var(--line); }
+
+  .hload {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--dim); font-size: 13px; pointer-events: none;
+  }
+  .hload[hidden] { display: none; }
+
+  @media (max-width: 760px) {
+    .home::after {
+      background: linear-gradient(180deg, rgba(8,11,15,.92),
+                  rgba(8,11,15,.5) 70%, transparent);
+    }
+    .hcopy { top: 84px; transform: none; }
+    .home.login-mode .hcopy { transform: translateX(-32px); }
+    .hlogin { top: 76px; transform: translate(-24px, 0); }
+    .home.login-mode .hlogin { transform: none; }
+    .home.login-mode #hero-gl { transform: none; }
+    .facts { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #hero-gl, .hcopy, .hlogin { transition: none; }
+  }
+</style>
+</head>
+<body>
+<section class="home" id="home">
+  <div id="hero-gl"></div>
+
+  <div class="hbar">
+    <span class="wm"><i></i>Actina</span>
+    <div class="sp"></div>
+    <a class="nav" href="/patients">Пациенты</a>
+    <div id="lang-switch"></div>
+  </div>
+
+  <div class="hcopy" id="hcopy">
+    <div class="tag">Разбор КЛКТ</div>
+    <h1>Actina</h1>
+    <p class="lead">Платформа разбора КЛКТ для стоматологов</p>
+    <div class="facts" id="facts">
+      <div><b id="f-teeth">—</b> зубов распознано на демонстрационном снимке</div>
+      <div id="f-acc">Точность распознавания зубов измерена на независимой выборке</div>
+      <div>Каждая находка несёт основание: что измерено, сколько и при каком пороге</div>
+    </div>
+    <div class="hbtns">
+      <button class="btn big" id="h-open">Открыть пациентов</button>
+      <a class="btn-ghost big" id="demo-link" href="/cbct">Посмотреть демо-кейс</a>
+    </div>
+  </div>
+
+  <div class="hlogin" id="hlogin">
+    <button class="lback" id="l-back" type="button">← Назад</button>
+    <h2>Вход для врача</h2>
+    <div class="sub">Пациенты и снимки видны только после входа</div>
+
+    <div id="l-step1">
+      <label for="phone">Номер телефона</label>
+      <input id="phone" type="tel" inputmode="tel" value="+998 " autocomplete="tel">
+      <div class="lerr" id="l-err1"></div>
+      <button class="btn" id="get-code">Получить код</button>
+    </div>
+
+    <div id="l-step2" hidden>
+      <label for="code">Код из SMS</label>
+      <input id="code" type="text" inputmode="numeric" maxlength="4" placeholder="••••"
+             autocomplete="one-time-code">
+      <div class="lerr" id="l-err2"></div>
+      <label class="chk"><input type="checkbox" id="trust" checked> Запомнить этот компьютер</label>
+      <button class="btn" id="do-login">Войти</button>
+    </div>
+
+    <div class="hintbox">Демонстрационный доступ: любой номер, код <b>1234</b>.
+      Настоящей проверки нет — она появится вместе с сервером клиники.</div>
+  </div>
+
+  <div class="hcred" id="cred">Демонстрационные данные</div>
+  <div class="hload" id="hload">Загрузка 3D-модели…</div>
+</section>
+
+<script src="/auth.js"></script>
+<script src="/i18n.js"></script>
+<script>
+/* ---- вход ---- */
+const $h = id => document.getElementById(id);
+const home = $h("home");
+
+function loginMode(on) {
+  home.classList.toggle("login-mode", on);
+  if (on) setTimeout(() => { if (home.classList.contains("login-mode")) $h("phone").focus(); }, 650);
+}
+
+$h("h-open").onclick = () => {
+  // Уже входил — не спрашиваем заново.
+  if (actinaAuth.read()) { location.href = "/patients"; return; }
+  loginMode(true);
+};
+$h("l-back").onclick = () => loginMode(false);
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && home.classList.contains("login-mode")) loginMode(false);
+});
+
+$h("get-code").onclick = () => {
+  const v = $h("phone").value.replace(/\D/g, "");
+  if (v.length < 9) { $h("l-err1").textContent = "Введите номер телефона целиком."; return; }
+  $h("l-err1").textContent = "";
+  $h("l-step1").hidden = true;
+  $h("l-step2").hidden = false;
+  $h("code").focus();
+};
+$h("phone").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); $h("get-code").click(); }
+});
+
+function doLogin() {
+  if ($h("code").value.trim() !== "1234") {
+    $h("l-err2").textContent = "Код не подошёл. В демонстрации это 1234.";
+    return;
+  }
+  actinaAuth.start($h("phone").value.trim(), $h("trust").checked);
+  location.href = actinaAuth.afterLogin();
+}
+$h("do-login").onclick = doLogin;
+$h("code").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); doLogin(); }
+});
+
+// На главную попадают и по редиректу с защищённого экрана — тогда панель
+// входа открыта сразу, иначе врач не понимает, почему его вернуло.
+if (new URLSearchParams(location.search).get("login") === "1") loginMode(true);
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const $ = id => document.getElementById(id);
+
+/* Числа на главной — измеренные, а не рекламные. Количество зубов берём с
+   того самого кейса, который открывает кнопка «Посмотреть демо-кейс», а
+   строку про точность отдаёт сервер той же функцией, что печатает её в
+   PDF. Если кейса нет, блок фактов молчит: выдумывать числа на первом
+   экране нельзя, по ним судят обо всём остальном. */
+async function facts() {
+  let ex;
+  try {
+    ex = await fetch("/api/cbct/examples").then(r => r.json());
+  } catch (e) { return null; }
+  const first = (ex.examples || [])[0];
+  if (!first) { $("facts").hidden = true; return null; }
+  $("demo-link").href = `/cbct/${encodeURIComponent(first.case_id)}`;
+  try {
+    const info = await fetch(`/api/cbct/info/${encodeURIComponent(first.case_id)}`)
+      .then(r => r.ok ? r.json() : null);
+    if (info) {
+      const n = (info.teeth_present || []).length;
+      if (n) $("f-teeth").textContent = String(n);
+      if (info.metrics_short) {
+        $("f-acc").textContent = info.metrics_short.charAt(0).toUpperCase()
+                               + info.metrics_short.slice(1);
+      }
+      if (info.model) $("demo-link").href += "/" + encodeURIComponent(info.model);
+    }
+  } catch (e) {}
+  return first.case_id;
+}
+
+/* Сцена. Тот же снимок, который врач откроет следующим кликом: главная
+   показывает продукт, а не картинку из интернета. */
+async function hero(caseId) {
+  const host = $("hero-gl");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(host.clientWidth, host.clientHeight, false);
+  // Те же настройки, что во вьюере разбора: физический материал без карты
+  // окружения отражать нечего, и кость выходит чёрным силуэтом. Первая
+  // версия главной была ровно такой — модель читалась как тень.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  host.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, host.clientWidth / host.clientHeight, 1, 4000);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.22));
+  const key = new THREE.DirectionalLight(0xffffff, 0.95);
+  key.position.set(1, 1.6, 1);
+  scene.add(key);
+  // Бирюзовый контровой — единственное место, где акцент лежит на самой
+  // модели: он отделяет её от фона, не перекрашивая ткани.
+  const rim = new THREE.DirectionalLight(0x2fc4b2, 0.55);
+  rim.position.set(-1.2, 0.2, -1);
+  scene.add(rim);
+
+  let gltf;
+  try {
+    gltf = await new GLTFLoader().loadAsync(`/api/cbct/mesh/${encodeURIComponent(caseId)}`);
+  } catch (e) {
+    $("hload").textContent = "3D-модель недоступна";
+    return;
+  }
+  const root = gltf.scene;
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    /* У нашего GLB из вершинных атрибутов есть ТОЛЬКО позиции: меш строят
+       marching cubes и упрощение, нормалей они не пишут (проверено
+       разбором файла — атрибут один, POSITION). Без нормалей любой
+       освещённый материал заливает модель ровным цветом, и она читается
+       силуэтом, а не снимком. Вьюер разбора считает их сам, здесь нужно
+       то же самое. */
+    if (o.geometry && !o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+    const tooth = (o.name || "").startsWith("tooth_");
+    // Зубам здесь обычный стандартный материал, а не физический с
+    // clearcoat, как во вьюере: на главной модель только позирует, зато
+    // физический материал с clearcoat в этой сцене уходил в чёрное —
+    // отражать ему нечего, а разбираться с окружением ради заставки
+    // дороже, чем она стоит.
+    o.material = tooth
+      ? new THREE.MeshStandardMaterial({
+          color: 0xf6f3ee, roughness: 0.38, metalness: 0,
+        })
+      : new THREE.MeshStandardMaterial({
+          // Кость СКЛАДЫВАЕТСЯ со сценой, а не затемняет её. Обычная
+          // полупрозрачность здесь не годится: оболочка челюсти это
+          // десятки налегающих друг на друга поверхностей, и каждая
+          // умножает затемнение — зубы за ними уходили в чёрное.
+          color: 0x8fa0b2, roughness: 0.8, metalness: 0,
+          transparent: true, opacity: 0.085, depthWrite: false,
+          blending: THREE.AdditiveBlending, side: THREE.FrontSide,
+        });
+    if (!tooth) o.renderOrder = 2;
+  });
+
+  // Центрируем по рамке модели, а не по началу координат: том обрезан
+  // по-своему у каждого аппарата, и модель иначе уезжает из кадра.
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  root.position.sub(mid);
+
+  const pivot = new THREE.Group();
+  pivot.add(root);
+  scene.add(pivot);
+
+  // Модель стоит в правой половине кадра: слева лежит текст, и по центру
+  // она оказывалась ровно под заголовком.
+  const radius = Math.max(size.x, size.y, size.z);
+  pivot.position.x = radius * 0.52;
+  camera.position.set(0, radius * 0.16, radius * 1.85);
+  camera.lookAt(pivot.position.x * 0.62, 0, 0);
+
+  $("hload").hidden = true;
+
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (!still) pivot.rotation.y += 0.0022;
+    renderer.render(scene, camera);
+  })();
+
+  addEventListener("resize", () => {
+    const w = host.clientWidth, h = host.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  });
+}
+
+(async () => {
+  const caseId = await facts();
+  if (caseId) hero(caseId);
+  else $("hload").textContent = "Кейсов пока нет";
+})();
+</script>
+</body>
+</html>

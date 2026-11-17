@@ -2,6 +2,10 @@
 <title>Actina — пациенты</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/app.css">
+<!-- Проверка входа — до отрисовки: иначе на долю секунды виден
+     чужой экран, а на показе это читается как сбой. -->
+<script src="/auth.js"></script>
+<script>actinaAuth.guard();</script>
 <style>
   /* Только то, что относится к этому экрану. Общее — в app.css: палитра и
      типографика раньше были скопированы в каждую страницу и уже начали
@@ -232,18 +236,17 @@
 
 <div id="app">
   <header class="hdr">
-    <a class="wm" href="/patients"><i></i>Actina</a>
+    <a class="wm" href="/" title="На главную"><i></i>Actina</a>
     <div class="brand">
       <p>{{ subtitle }}</p>
     </div>
-    <nav class="tabs">
-      <a class="tab on" href="/patients">{{ t("Пациенты") }}</a>
-      <a class="tab" href="/2d">2D ОПТГ</a>
-      <a class="tab" href="/cbct">3D КЛКТ</a>
-      <a class="tab" href="/ios">Скан</a>
-      <a class="tab" href="/logs">{{ t("Журнал") }}</a>
-    </nav>
-    <div class="hdr-right"><div id="lang-switch"></div></div>
+    <!-- Вкладок модальностей в шапке больше нет: в показе один трек, КЛКТ,
+         и строка «2D ОПТГ / Скан / Журнал» уводила с него на первом экране.
+         Экраны никуда не делись и открываются адресами /2d, /ios, /logs. -->
+    <div class="hdr-right">
+      <div id="lang-switch"></div>
+      <div class="who" id="who"></div>
+    </div>
   </header>
 
   <main class="page">
@@ -1080,4 +1083,23 @@ createApp({
     };
   },
 }).mount("#app");
+</script>
+
+<script>
+/* Кто вошёл. Имени врача у нас нет: настоящей учётной записи не
+   существует, а в подпись под находками врач вводит имя сам. Поэтому в
+   шапке стоит номер, которым вошли, — он хотя бы правда. */
+(() => {
+  const box = document.getElementById("who");
+  if (!box) return;
+  const ses = window.actinaAuth && actinaAuth.read();
+  if (!ses) {
+    if (window.actinaAuth && actinaAuth.isGuest())
+      box.innerHTML = '<span class="doc">Режим просмотра по ссылке</span>';
+    return;
+  }
+  box.innerHTML = '<span class="doc">' + (ses.phone || "Врач").replace(/[<>&]/g, "") + '</span>'
+                + '<button class="out" type="button">Выйти</button>';
+  box.querySelector(".out").onclick = () => { actinaAuth.end(); location.href = "/"; };
+})();
 </script>
