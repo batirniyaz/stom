@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Помощник стоматолога Stomadent</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--text:#14171c;--muted:#5d6673;--border:#dde1e7;--accent:#2f6fde;--accent-soft:#e6eefc;--ok-soft:#e3f5ec;--ok:#1f9d61}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1116;--surface:#161a21;--surface-2:#1d222b;--text:#e7ebf0;--muted:#9aa4b2;--border:#2a313c;--accent:#6c9bf0;--accent-soft:#1c2a44;--ok-soft:#173326;--ok:#3fc584}}
+:root[data-theme="dark"]{--bg:#0e1116;--surface:#161a21;--surface-2:#1d222b;--text:#e7ebf0;--muted:#9aa4b2;--border:#2a313c;--accent:#6c9bf0;--accent-soft:#1c2a44;--ok-soft:#173326;--ok:#3fc584}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:36px 16px 64px}
+h1{font-size:30px;line-height:1.2;margin:0 0 12px}
+h2{font-size:21px;margin:36px 0 12px}
+.lead{color:var(--muted);font-size:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:10px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px 12px 54px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;font-size:14px}
+.steps b{display:block}
+.steps ul{margin:6px 0 0;padding-left:18px}
+.principle{background:var(--ok-soft);border-radius:14px;padding:16px 18px;margin-top:14px}
+.principle b{color:var(--ok)}
+ol.q{padding-left:22px}
+ol.q li{margin:6px 0}
+.muted{color:var(--muted)}
+footer{margin-top:40px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Stomadent: помощник стоматолога для разбора КЛКТ</h1>
+  <p class="lead">Здравствуйте! Мы команда студентов на National AI Hackathon в Ташкенте. Делаем инструмент для стоматологов и хотим услышать мнение практикующего врача, прежде чем строить дальше. Это займёт 5–10 минут. Нам важна честная критика: что полезно, что лишнее, чего не хватает.</p>
+
+  <h2>Какую проблему решаем</h2>
+  <div class="card">Разбор КЛКТ занимает много времени: нужно пройти сотни срезов, проверить каждый зуб, ничего не пропустить. По нашим прикидкам, на одного пациента уходит до часа. Мы хотим, чтобы черновую работу делал компьютер, а врач тратил время только на проверку и решения.</div>
+
+  <h2>Как это работает</h2>
+  <ol class="steps">
+    <li><b>Пациент</b>Врач открывает профиль пациента или создаёт новый, записывает жалобы и самочувствие. Прошлые снимки сохраняются, видно, как менялось состояние.</li>
+    <li><b>Загрузка снимка</b>Врач загружает КЛКТ.</li>
+    <li><b>Разбор</b>Программа строит 3D-модель челюсти и ищет проблемы. Для каждой измеряет показатели (например, глубину поражения в миллиметрах) и сверяет их с порогами из опубликованных клинических исследований.</li>
+    <li><b>Список находок</b>Справа появляется список: зуб, предполагаемый диагноз, уровень серьёзности от A+ до C и уверенность программы в процентах. Проблемные зубы подсвечиваются на 3D-модели.</li>
+    <li><b>Объяснение</b>У каждой находки можно раскрыть «Почему программа так думает»: что измерено и с каким порогом сравнено.</li>
+    <li><b>Вопросы</b>В чате можно спросить: «Почему ты считаешь, что это пульпит?», «Сколько зубов с проблемами?», «Сколько примерно займёт лечение?»</li>
+    <li><b>Проверка врачом</b>Врач проходит по каждой находке и решает сам:
+      <ul><li>подтвердить с коротким комментарием своими словами («Да, вижу разрежение у верхушки 36»);</li><li>или отклонить, поменять диагноз или уровень.</li></ul>
+      Без решения врача ни один диагноз не попадает в отчёт.</li>
+    <li><b>Отчёт</b>Когда всё проверено, формируются два PDF:
+      <ul><li>для врача — профессиональный, с изображениями, измерениями и комментариями;</li><li>для пациента — простым языком: какие зубы требуют внимания и примерно сколько визитов понадобится.</li></ul>
+      В отчёте указано, что разбор подготовлен программой и проверен врачом (с именем врача).</li>
+  </ol>
+  <div class="principle"><b>Главный принцип:</b> программа ничего не решает за врача. Она находит, измеряет и объясняет, а диагноз ставит врач.</div>
+
+  <h2>Вопросы к вам</h2>
+  <div class="card">
+  <ol class="q">
+    <li>Сколько времени у вас сейчас уходит на разбор одного КЛКТ?</li>
+    <li>Какая часть этой работы самая долгая или самая утомительная?</li>
+    <li>Каким находкам вы бы доверились, а какие всё равно проверяли бы сами полностью?</li>
+    <li>Помогает ли процент уверенности, или вам важнее видеть, что именно измерено?</li>
+    <li>Понятна ли шкала A+ / A / B+ / B / C? Как бы вы назвали уровни серьёзности?</li>
+    <li>Подтверждать каждую находку с комментарием — это нормально или слишком долго?</li>
+    <li>Нужен ли отдельный отчёт для пациента простым языком? Что в нём должно быть?</li>
+    <li>Полезна ли история снимков пациента, чтобы видеть динамику?</li>
+    <li>Чего здесь не хватает, чтобы вы реально пользовались этим в работе?</li>
+    <li>Можно ли с вами связаться ещё раз, когда будет рабочая версия?</li>
+  </ol>
+  </div>
+  <footer>Спасибо за ваше время!</footer>
+</div>
+</body>
+</html>
