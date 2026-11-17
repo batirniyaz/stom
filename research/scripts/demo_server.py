@@ -1277,10 +1277,55 @@ class PatientIn(BaseModel):
     note: str = ""
 
 
+def _last_study_brief(st: dict) -> dict:
+    """Строка списка: с чем человек приходил и что с разбором.
+
+    Врач ищет глазами «кого ещё не разобрал» и «у кого критичное». Если
+    список показывает только фамилию и дату, за этим приходится заходить в
+    каждую карточку по очереди.
+
+    НИЧЕГО НЕ СЧИТАЕТ. Находки берутся только из кэша: пересчёт занимает
+    минуты, и запускать его при открытии СПИСКА нельзя — открыли список на
+    двадцать пациентов и положили машину.
+    """
+    out = {
+        "kind": st.get("kind"), "kind_label": st.get("kind_label"),
+        "status": st.get("status"), "complaints": st.get("complaints") or "",
+        "at": st.get("taken_at") or st.get("uploaded_at"),
+        "case_id": st.get("legacy_case") or "",
+    }
+    if st.get("kind") != "cbct" or st.get("status") != "ready":
+        return out
+    c = cbct.get_case(out["case_id"]) if out["case_id"] else None
+    cached = _cached_findings(c) if c else None
+    if cached is None:
+        return out
+    st2 = cbct.apply_review(cached, cbct.review_for(c), drop_rejected=False)
+    counts = {"alert": 0, "warning": 0, "info": 0}
+    for f in (st2.get("findings") or []):
+        key = ((f.get("level") or {}).get("key")) or f.get("severity")
+        if key in counts:
+            counts[key] += 1
+    rev = st2.get("review") or {}
+    out["levels"] = counts
+    out["review"] = {"reviewed": rev.get("reviewed", 0),
+                     "total": rev.get("total", 0),
+                     "signed": (rev.get("signed") or {}).get("at")
+                               if isinstance(rev.get("signed"), dict)
+                               else rev.get("signed")}
+    return out
+
+
 @app.get("/api/patients")
 def api_patients(q: str = Query("", description="поиск по фамилии или карте"),
                  limit: int = 200) -> dict:
-    return {"patients": pat.list_patients(q, limit)}
+    rows = pat.list_patients(q, limit)
+    last = pat.last_studies([r["id"] for r in rows])
+    for r in rows:
+        st = last.get(r["id"])
+        if st:
+            r["last"] = _last_study_brief(st)
+    return {"patients": rows}
 
 
 @app.post("/api/patients")

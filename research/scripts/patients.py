@@ -364,6 +364,36 @@ def list_studies(patient_id: str) -> list[dict]:
     return [_study_row(r) for r in rows]
 
 
+def last_studies(patient_ids: list[str]) -> dict[str, dict]:
+    """Последнее исследование каждого пациента — одним запросом.
+
+    Нужно списку пациентов: врач смотрит на строку и хочет видеть, с чем
+    человек приходил в последний раз. Запрос на пациента в цикле на
+    двух сотнях карточек дал бы двести обращений к базе ради одной
+    страницы.
+    """
+    ids = [i for i in (patient_ids or []) if i]
+    if not ids:
+        return {}
+    marks = ",".join("?" * len(ids))
+    sql = (f"SELECT s.* FROM studies s"
+           f" JOIN (SELECT patient_id, MAX(uploaded_at) AS m FROM studies"
+           f"       WHERE patient_id IN ({marks}) GROUP BY patient_id) t"
+           f"   ON t.patient_id = s.patient_id AND t.m = s.uploaded_at")
+    with connect() as con:
+        rows = con.execute(sql, ids).fetchall()
+    out: dict[str, dict] = {}
+    for r in rows:
+        d = _study_row(r)
+        # У двух исследований может совпасть время загрузки (пакетный ввоз
+        # кладёт их одной секундой). Тогда берём любое, но устойчиво —
+        # по идентификатору, чтобы список не прыгал между перезагрузками.
+        prev = out.get(d["patient_id"])
+        if prev is None or d["id"] < prev["id"]:
+            out[d["patient_id"]] = d
+    return out
+
+
 def _study_row(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["kind_label"] = STUDY_KINDS.get(d["kind"], d["kind"])

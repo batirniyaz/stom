@@ -12,14 +12,80 @@
      расходиться между собой. */
   .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
   .plist { display: flex; flex-direction: column; gap: 7px; }
+  /* Строка пациента по макету. Колонки фиксированы, а не «по содержимому»:
+     врач ведёт глазом по столбцу (кто — сколько лет — когда снимок — с чем
+     пришёл — что с разбором), и прыгающие колонки это чтение ломают.
+     Жалоба занимает всё оставшееся место: она длиннее всего и обрезается
+     многоточием, а не переносит строку. */
   .prow {
-    display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px;
-    align-items: center; background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--r); padding: 12px 16px; text-align: left; width: 100%;
-    color: inherit;
+    display: grid; gap: 14px; align-items: center;
+    grid-template-columns: 44px minmax(190px, 240px) 62px 155px minmax(0, 1fr) auto;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 11px 15px; text-align: left; width: 100%;
+    color: inherit; transition: border-color .18s, background .18s, transform .18s;
   }
-  .prow:hover { border-color: rgba(53,201,224,.4); background: var(--panel-2); }
-  .pname { font-size: 14.5px; font-weight: 600; }
+  .prow:hover {
+    border-color: rgba(47,196,178,.45); background: var(--panel-2);
+    transform: translateX(3px);
+  }
+  .phead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .phead h1 { margin: 0; font-size: 24px; letter-spacing: -.4px; font-weight: 600; }
+  .phead-n {
+    font: 500 12px var(--mono); color: var(--muted); background: var(--panel-2);
+    border-radius: 999px; padding: 2px 9px;
+  }
+  .btn.nowrap { white-space: nowrap; }
+  .search { margin-bottom: 12px; }
+  .pnm { min-width: 0; display: block; }
+  /* Метка «пример» вынесена из имени: внутри обрезаемого по ширине имени
+     она сама превращалась в многоточие. */
+  .pnm-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .pnm-top .badge-ex { margin: 0; flex: none; }
+  /* Длинная фамилия не должна переносить строку: от переноса едет вся
+     сетка колонок, и соседние строки перестают читаться столбцом. */
+  .pname {
+    font-size: 14.5px; font-weight: 600; display: block;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pcard-no { font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+  .page-col { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .pwhen { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .pwhen b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  /* Жалоба курсивом — это слова пациента, а не наш текст. */
+  .pcmp {
+    font-style: italic; color: #c1cad6; font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .prt { text-align: right; font-size: 12.5px; white-space: nowrap; }
+  .prt .st2 { color: var(--dim); display: block; margin-top: 2px; }
+  .prt .st2.done { color: var(--ok); }
+  .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin: 0 4px 0 0; vertical-align: 0;
+  }
+  .dot.k { background: var(--lv-k); } .dot.v { background: var(--lv-v); }
+  .dot.n { background: var(--lv-n); }
+  .dot + span { margin-right: 8px; color: var(--muted); }
+
+  /* Портрет. Инициалы на своём цвете: по списку из двадцати фамилий глаз
+     цепляется за пятно раньше, чем читает буквы. Цвет берётся из имени,
+     поэтому у одного пациента он всегда один и тот же. */
+  .av {
+    width: 40px; height: 40px; border-radius: 50%; display: grid;
+    place-items: center; font-weight: 700; font-size: 14px; color: #fff;
+    letter-spacing: .5px; text-shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+
+  @media (max-width: 1000px) {
+    .prow { grid-template-columns: 44px minmax(0, 1fr) auto;
+            grid-template-areas: "av nm rt" "cm cm cm"; }
+    .prow > :nth-child(1) { grid-area: av; }
+    .prow > :nth-child(2) { grid-area: nm; }
+    .prow > :nth-child(3), .prow > :nth-child(4) { display: none; }
+    .prow > :nth-child(5) { grid-area: cm; }
+    .prow > :nth-child(6) { grid-area: rt; }
+  }
+
   .chips { display: flex; gap: 5px; }
   .alarm { font-size: 11.5px; color: var(--warn); white-space: nowrap; }
   .when { font-size: 12px; color: var(--dim); white-space: nowrap; }
@@ -252,11 +318,14 @@
   <main class="page">
     <!-- ---------------- список ---------------- -->
     <template v-if="view === 'list'">
-      <div class="bar">
-        <input class="field" v-model="query" @input="searchDebounced"
-               :placeholder="t('Поиск по фамилии или номеру карты')">
-        <button class="btn" @click="newOpen = !newOpen">+ {{ t("Новый пациент") }}</button>
+      <div class="phead">
+        <h1>{{ t("Пациенты") }}</h1>
+        <span class="phead-n" v-if="patients.length">{{ patients.length }}</span>
+        <span style="flex:1"></span>
+        <button class="btn nowrap" @click="newOpen = !newOpen">+ {{ t("Новый пациент") }}</button>
       </div>
+      <input class="field search" v-model="query" @input="searchDebounced"
+             :placeholder="t('Поиск по фамилии или номеру карты')">
 
       <div class="card" v-if="newOpen">
         <div class="card-t">{{ t("Новый пациент") }}</div>
@@ -279,20 +348,29 @@
 
       <div class="plist" v-if="patients.length">
         <button class="prow" v-for="p in patients" :key="p.id" @click="open(p.id)">
-          <span>
-            <span class="pname">{{ p.display }}<span class="badge-ex"
-              v-if="p.is_example">пример</span></span>
-            <div class="sub">
-              <template v-if="p.age">{{ p.age }} лет · </template>
-              <template v-if="p.card_no">карта {{ p.card_no }} · </template>
-              исследований: {{ p.studies_count }}
-            </div>
+          <span class="av" :style="avStyle(p)">{{ initials(p.display) }}</span>
+          <span class="pnm">
+            <span class="pnm-top">
+              <span class="pname">{{ p.display }}</span>
+              <span class="badge-ex" v-if="p.is_example">пример</span>
+            </span>
+            <span class="pcard-no" v-if="p.card_no">{{ p.card_no }}</span>
           </span>
-          <span class="chips">
-            <span class="chip" :class="k" v-for="k in p.kinds" :key="k">{{ kindShort(k) }}</span>
+          <span class="page-col">{{ p.age ? p.age + " лет" : "—" }}</span>
+          <span class="pwhen">
+            <b>{{ fmtDate((p.last && p.last.at) || p.last_study_at) }}</b>
+            <template v-if="p.last"> · {{ p.last.kind_label }}</template>
           </span>
-          <span class="alarm">{{ p.alarm || '' }}</span>
-          <span class="when">{{ fmtDate(p.last_study_at) }}</span>
+          <span class="pcmp" :title="(p.last && p.last.complaints) || ''"
+            >{{ (p.last && p.last.complaints) || "" }}</span>
+          <span class="prt">
+            <span v-if="p.last && p.last.levels">
+              <span class="dot k"></span><span>{{ p.last.levels.alert }}</span>
+              <span class="dot v"></span><span>{{ p.last.levels.warning }}</span>
+              <span class="dot n"></span><span>{{ p.last.levels.info }}</span>
+            </span>
+            <span class="st2" :class="{ done: reviewDone(p) }">{{ rowStatus(p) }}</span>
+          </span>
         </button>
       </div>
       <div class="empty" v-else-if="!loading">
@@ -942,6 +1020,44 @@ createApp({
         { hour: "2-digit", minute: "2-digit" }) : s;
     }
 
+    /* Инициалы и цвет портрета. Цвет берётся из имени, поэтому у одного
+       пациента он всегда один и тот же: по списку глаз цепляется за пятно
+       раньше, чем читает буквы. */
+    const AV_TONES = [
+      ["#2fc4b2", "#1b6f8f"], ["#7d7ae8", "#4b3f9e"], ["#e5a53f", "#a35f1f"],
+      ["#4cb782", "#1f6b52"], ["#e0796c", "#8f3b3b"], ["#56b8d6", "#2a6a8f"],
+    ];
+    function initials(name) {
+      return String(name || "").split(/\s+/).filter(Boolean).slice(0, 2)
+        .map(w => w[0]).join("").toUpperCase();
+    }
+    function avStyle(p) {
+      let h = 0;
+      const key = String(p.id || p.display || "");
+      for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+      const [a, b] = AV_TONES[Math.abs(h) % AV_TONES.length];
+      return { background: `linear-gradient(135deg, ${a}, ${b})` };
+    }
+
+    /* Что со строкой пациента. Порядок вопросов такой же, как у врача:
+       есть ли снимок -> посчитан ли -> разобран ли -> подписан ли. */
+    const REVIEW_READY = p => p.last && p.last.review && p.last.review.total
+                              && p.last.review.reviewed >= p.last.review.total;
+    function reviewDone(p) { return !!REVIEW_READY(p); }
+    function rowStatus(p) {
+      const l = p.last;
+      if (!l) return t("Снимков нет");
+      if (l.status === "processing" || l.status === "queued") return t("обрабатывается");
+      if (l.status === "error") return t("ошибка обработки");
+      if (l.status !== "ready") return t("загружен, не разобран");
+      const r = l.review;
+      if (!r || !r.total) return t("разбор не посчитан");
+      if (r.signed) return t("подписано");
+      if (r.reviewed >= r.total) return t("всё разобрано");
+      if (r.reviewed) return `${t("разобрано")} ${r.reviewed} ${t("из")} ${r.total}`;
+      return t("не разобрано");
+    }
+
     function statusText(s) {
       // Стадию обработки НЕ переводим: она приходит с сервера клиническим
       // текстом («сегментация скана нейросетью»), и перевод такого — это
@@ -1076,7 +1192,7 @@ createApp({
       planStages, composePlan, t, lang,
       planCount, kindsLine, findingGroups, isOpen, toggle,
       go, open, createPatient, searchDebounced, upload, onPick, onDrop,
-      fmtDate, statusText,
+      fmtDate, statusText, rowStatus, reviewDone, initials, avStyle,
       retry, photoGrid, photoCount, pickPhotos, dropPhotos, movePhoto, removePhoto, isArmed,
       openLightbox, closeLightbox,
       kindShort: k => KIND_SHORT[k] || k,
