@@ -3,8 +3,6 @@
  "name": "Демонстрационный кейс (публичный набор, CC BY 4.0)",
  "volume": null,
  "masks": {
-  "ours": null,
-  "pretrained": null,
   "sp": "mask_sp.mha"
  },
  "model": "sp",
@@ -226,7 +224,7 @@
      "sites": {
       "mesial": {
        "mm": 5.2,
-       "root_fraction": 0.402,
+       "root_fraction": 0.403,
        "percentile": 77,
        "severity": "норма"
       },
@@ -240,18 +238,18 @@
     },
     {
      "tooth": 17,
-     "root_len_mm": 12.3,
+     "root_len_mm": 12.5,
      "sites": {
       "mesial": {
-       "mm": 4.0,
-       "root_fraction": 0.323,
-       "percentile": 51,
+       "mm": 4.2,
+       "root_fraction": 0.335,
+       "percentile": 57,
        "severity": "норма"
       },
       "distal": {
-       "mm": 4.3,
-       "root_fraction": 0.348,
-       "percentile": 58,
+       "mm": 4.5,
+       "root_fraction": 0.361,
+       "percentile": 64,
        "severity": "норма"
       }
      }
@@ -276,18 +274,18 @@
     },
     {
      "tooth": 22,
-     "root_len_mm": 15.5,
+     "root_len_mm": 15.3,
      "sites": {
       "mesial": {
-       "mm": 5.4,
-       "root_fraction": 0.348,
-       "percentile": 80,
+       "mm": 5.1,
+       "root_fraction": 0.337,
+       "percentile": 77,
        "severity": "норма"
       },
       "distal": {
-       "mm": 5.5,
-       "root_fraction": 0.357,
-       "percentile": 82,
+       "mm": 5.3,
+       "root_fraction": 0.347,
+       "percentile": 79,
        "severity": "норма"
       }
      }
@@ -298,13 +296,13 @@
      "sites": {
       "mesial": {
        "mm": 6.4,
-       "root_fraction": 0.294,
+       "root_fraction": 0.293,
        "percentile": 89,
        "severity": "выше нормы"
       },
       "distal": {
        "mm": 6.8,
-       "root_fraction": 0.314,
+       "root_fraction": 0.313,
        "percentile": 92,
        "severity": "выше нормы"
       }
@@ -312,7 +310,7 @@
     },
     {
      "tooth": 24,
-     "root_len_mm": 14.7,
+     "root_len_mm": 14.6,
      "sites": {
       "mesial": {
        "mm": 2.8,
@@ -322,7 +320,7 @@
       },
       "distal": {
        "mm": 2.8,
-       "root_fraction": 0.193,
+       "root_fraction": 0.192,
        "percentile": 22,
        "severity": "норма"
       }
@@ -334,8 +332,8 @@
      "sites": {
       "mesial": {
        "mm": 3.6,
-       "root_fraction": 0.266,
-       "percentile": 41,
+       "root_fraction": 0.269,
+       "percentile": 42,
        "severity": "норма"
       },
       "distal": {
@@ -348,18 +346,18 @@
     },
     {
      "tooth": 26,
-     "root_len_mm": 13.8,
+     "root_len_mm": 13.6,
      "sites": {
       "mesial": {
-       "mm": 2.8,
-       "root_fraction": 0.2,
-       "percentile": 21,
+       "mm": 2.5,
+       "root_fraction": 0.183,
+       "percentile": 16,
        "severity": "норма"
       },
       "distal": {
-       "mm": 4.4,
-       "root_fraction": 0.317,
-       "percentile": 61,
+       "mm": 4.2,
+       "root_fraction": 0.306,
+       "percentile": 56,
        "severity": "норма"
       }
      }
@@ -370,13 +368,13 @@
      "sites": {
       "mesial": {
        "mm": 2.7,
-       "root_fraction": 0.212,
+       "root_fraction": 0.21,
        "percentile": 20,
        "severity": "норма"
       },
       "distal": {
        "mm": 5.1,
-       "root_fraction": 0.398,
+       "root_fraction": 0.395,
        "percentile": 76,
        "severity": "норма"
       }
@@ -406,7 +404,7 @@
      "sites": {
       "mesial": {
        "mm": 2.7,
-       "root_fraction": 0.183,
+       "root_fraction": 0.184,
        "percentile": 19,
        "severity": "норма"
       },
@@ -430,7 +428,7 @@
       },
       "distal": {
        "mm": 2.6,
-       "root_fraction": 0.175,
+       "root_fraction": 0.174,
        "percentile": 19,
        "severity": "норма"
       }
@@ -466,8 +464,8 @@
       },
       "distal": {
        "mm": 3.5,
-       "root_fraction": 0.242,
-       "percentile": 38,
+       "root_fraction": 0.243,
+       "percentile": 39,
        "severity": "норма"
       }
      }
@@ -483,7 +481,7 @@
        "severity": "норма"
       },
       "distal": {
-       "mm": 3.3,
+       "mm": 3.4,
        "root_fraction": 0.261,
        "percentile": 35,
        "severity": "норма"
@@ -543,154 +541,154 @@
    "teeth": [
     {
      "tooth": 11,
-     "pulp_hu": 749,
-     "dentin_hu": 1769,
-     "diff_hu": -1020,
-     "pulp_vox": 1850,
+     "pulp_hu": 868,
+     "dentin_hu": 1775,
+     "diff_hu": -907,
+     "pulp_vox": 2167,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 35.7,
-     "pulp_gap_mm": 0.7,
+     "pulp_gap_mm": 0.4,
      "fill_gap_mm": null
     },
     {
      "tooth": 12,
-     "pulp_hu": 815,
-     "dentin_hu": 1579,
-     "diff_hu": -764,
-     "pulp_vox": 1445,
+     "pulp_hu": 908,
+     "dentin_hu": 1588,
+     "diff_hu": -680,
+     "pulp_vox": 1706,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 35.8,
-     "pulp_gap_mm": 1.4,
-     "fill_gap_mm": null
-    },
-    {
-     "tooth": 13,
-     "pulp_hu": 615,
-     "dentin_hu": 1582,
-     "diff_hu": -967,
-     "pulp_vox": 2340,
-     "status": "vital",
-     "confidence": "high",
-     "metal_mm": 29.3,
      "pulp_gap_mm": 2.3,
      "fill_gap_mm": null
     },
     {
+     "tooth": 13,
+     "pulp_hu": 705,
+     "dentin_hu": 1582,
+     "diff_hu": -877,
+     "pulp_vox": 2559,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 29.3,
+     "pulp_gap_mm": 1.0,
+     "fill_gap_mm": null
+    },
+    {
      "tooth": 14,
-     "pulp_hu": 538,
-     "dentin_hu": 1350,
-     "diff_hu": -812,
-     "pulp_vox": 1761,
+     "pulp_hu": 452,
+     "dentin_hu": 1352,
+     "diff_hu": -900,
+     "pulp_vox": 1545,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 34.1,
-     "pulp_gap_mm": 1.9,
+     "pulp_gap_mm": 2.2,
      "fill_gap_mm": null
     },
     {
      "tooth": 15,
-     "pulp_hu": 350,
-     "dentin_hu": 1254,
-     "diff_hu": -904,
-     "pulp_vox": 1876,
+     "pulp_hu": 407,
+     "dentin_hu": 1251,
+     "diff_hu": -844,
+     "pulp_vox": 1977,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 35.3,
-     "pulp_gap_mm": 0.8,
+     "pulp_gap_mm": 0.9,
      "fill_gap_mm": null
     },
     {
      "tooth": 16,
-     "pulp_hu": 519,
-     "dentin_hu": 1309,
-     "diff_hu": -790,
-     "pulp_vox": 4177,
+     "pulp_hu": 579,
+     "dentin_hu": 1311,
+     "diff_hu": -732,
+     "pulp_vox": 4447,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 39.4,
-     "pulp_gap_mm": 1.4,
+     "pulp_gap_mm": 0.9,
      "fill_gap_mm": null
     },
     {
      "tooth": 17,
-     "pulp_hu": 627,
-     "dentin_hu": 1444,
-     "diff_hu": -817,
-     "pulp_vox": 4291,
+     "pulp_hu": 711,
+     "dentin_hu": 1447,
+     "diff_hu": -736,
+     "pulp_vox": 4828,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 39.5,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.8,
      "fill_gap_mm": null
     },
     {
      "tooth": 21,
-     "pulp_hu": 830,
-     "dentin_hu": 1884,
-     "diff_hu": -1054,
-     "pulp_vox": 1902,
+     "pulp_hu": 940,
+     "dentin_hu": 1890,
+     "diff_hu": -950,
+     "pulp_vox": 2112,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 33.9,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.7,
      "fill_gap_mm": null
     },
     {
      "tooth": 22,
-     "pulp_hu": 808,
-     "dentin_hu": 1831,
-     "diff_hu": -1023,
-     "pulp_vox": 1159,
+     "pulp_hu": 1060,
+     "dentin_hu": 1842,
+     "diff_hu": -782,
+     "pulp_vox": 1529,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 28.3,
-     "pulp_gap_mm": 1.8,
+     "pulp_gap_mm": 1.6,
      "fill_gap_mm": null
     },
     {
      "tooth": 23,
-     "pulp_hu": 880,
-     "dentin_hu": 1816,
-     "diff_hu": -936,
-     "pulp_vox": 2093,
+     "pulp_hu": 992,
+     "dentin_hu": 1825,
+     "diff_hu": -833,
+     "pulp_vox": 2549,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 21.8,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.5,
      "fill_gap_mm": null
     },
     {
      "tooth": 24,
-     "pulp_hu": 812,
-     "dentin_hu": 1617,
-     "diff_hu": -805,
-     "pulp_vox": 1669,
+     "pulp_hu": 1020,
+     "dentin_hu": 1626,
+     "diff_hu": -606,
+     "pulp_vox": 2180,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 15.3,
-     "pulp_gap_mm": 2.9,
+     "pulp_gap_mm": 3.0,
      "fill_gap_mm": null
     },
     {
      "tooth": 25,
-     "pulp_hu": 621,
-     "dentin_hu": 1571,
-     "diff_hu": -950,
-     "pulp_vox": 1803,
+     "pulp_hu": 791,
+     "dentin_hu": 1576,
+     "diff_hu": -785,
+     "pulp_vox": 2211,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 8.5,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.5,
      "fill_gap_mm": null
     },
     {
      "tooth": 26,
-     "pulp_hu": 736,
-     "dentin_hu": 1601,
-     "diff_hu": -864,
-     "pulp_vox": 4058,
+     "pulp_hu": 912,
+     "dentin_hu": 1616,
+     "diff_hu": -704,
+     "pulp_vox": 5270,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 0.2,
@@ -699,34 +697,34 @@
     },
     {
      "tooth": 27,
-     "pulp_hu": 729,
-     "dentin_hu": 1728,
-     "diff_hu": -999,
-     "pulp_vox": 3887,
+     "pulp_hu": 896,
+     "dentin_hu": 1746,
+     "diff_hu": -850,
+     "pulp_vox": 4762,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 3.3,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.9,
      "fill_gap_mm": null
     },
     {
      "tooth": 28,
-     "pulp_hu": 343,
-     "dentin_hu": 1047,
-     "diff_hu": -704,
-     "pulp_vox": 980,
+     "pulp_hu": 428,
+     "dentin_hu": 1070,
+     "diff_hu": -642,
+     "pulp_vox": 1312,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 6.1,
-     "pulp_gap_mm": 2.2,
+     "pulp_gap_mm": 0.6,
      "fill_gap_mm": null
     },
     {
      "tooth": 31,
-     "pulp_hu": 1236,
-     "dentin_hu": 1776,
-     "diff_hu": -540,
-     "pulp_vox": 968,
+     "pulp_hu": 1320,
+     "dentin_hu": 1768,
+     "diff_hu": -448,
+     "pulp_vox": 1073,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 34.6,
@@ -735,166 +733,166 @@
     },
     {
      "tooth": 32,
-     "pulp_hu": 971,
-     "dentin_hu": 1736,
-     "diff_hu": -765,
-     "pulp_vox": 1365,
+     "pulp_hu": 985,
+     "dentin_hu": 1734,
+     "diff_hu": -749,
+     "pulp_vox": 1309,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 30.1,
-     "pulp_gap_mm": 1.4,
+     "pulp_gap_mm": 0.5,
      "fill_gap_mm": null
     },
     {
      "tooth": 33,
-     "pulp_hu": 932,
-     "dentin_hu": 1796,
-     "diff_hu": -864,
-     "pulp_vox": 2316,
+     "pulp_hu": 985,
+     "dentin_hu": 1795,
+     "diff_hu": -810,
+     "pulp_vox": 2459,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 24.0,
-     "pulp_gap_mm": 1.3,
-     "fill_gap_mm": null
-    },
-    {
-     "tooth": 34,
-     "pulp_hu": 816,
-     "dentin_hu": 1649,
-     "diff_hu": -833,
-     "pulp_vox": 1616,
-     "status": "vital",
-     "confidence": "high",
-     "metal_mm": 19.1,
-     "pulp_gap_mm": 3.8,
-     "fill_gap_mm": null
-    },
-    {
-     "tooth": 35,
-     "pulp_hu": 690,
-     "dentin_hu": 1550,
-     "diff_hu": -860,
-     "pulp_vox": 1773,
-     "status": "vital",
-     "confidence": "high",
-     "metal_mm": 15.0,
-     "pulp_gap_mm": 0.5,
-     "fill_gap_mm": null
-    },
-    {
-     "tooth": 36,
-     "pulp_hu": 611,
-     "dentin_hu": 1491,
-     "diff_hu": -880,
-     "pulp_vox": 4274,
-     "status": "vital",
-     "confidence": "high",
-     "metal_mm": 10.0,
-     "pulp_gap_mm": 1.1,
-     "fill_gap_mm": null
-    },
-    {
-     "tooth": 37,
-     "pulp_hu": 293,
-     "dentin_hu": 1357,
-     "diff_hu": -1064,
-     "pulp_vox": 4091,
-     "status": "vital",
-     "confidence": "high",
-     "metal_mm": 11.6,
      "pulp_gap_mm": 0.7,
      "fill_gap_mm": null
     },
     {
+     "tooth": 34,
+     "pulp_hu": 914,
+     "dentin_hu": 1645,
+     "diff_hu": -731,
+     "pulp_vox": 1924,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 19.1,
+     "pulp_gap_mm": 3.2,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 35,
+     "pulp_hu": 869,
+     "dentin_hu": 1547,
+     "diff_hu": -678,
+     "pulp_vox": 2214,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 15.0,
+     "pulp_gap_mm": 0.2,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 36,
+     "pulp_hu": 767,
+     "dentin_hu": 1489,
+     "diff_hu": -722,
+     "pulp_vox": 5127,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 10.0,
+     "pulp_gap_mm": 0.3,
+     "fill_gap_mm": null
+    },
+    {
+     "tooth": 37,
+     "pulp_hu": 547,
+     "dentin_hu": 1398,
+     "diff_hu": -851,
+     "pulp_vox": 6125,
+     "status": "vital",
+     "confidence": "high",
+     "metal_mm": 11.6,
+     "pulp_gap_mm": 0.6,
+     "fill_gap_mm": null
+    },
+    {
      "tooth": 38,
-     "pulp_hu": 290,
-     "dentin_hu": 1310,
-     "diff_hu": -1020,
-     "pulp_vox": 2501,
+     "pulp_hu": 672,
+     "dentin_hu": 1442,
+     "diff_hu": -770,
+     "pulp_vox": 4012,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 20.7,
-     "pulp_gap_mm": 2.5,
+     "pulp_gap_mm": 0.7,
      "fill_gap_mm": null
     },
     {
      "tooth": 41,
-     "pulp_hu": 1147,
-     "dentin_hu": 1753,
-     "diff_hu": -606,
-     "pulp_vox": 1065,
+     "pulp_hu": 1150,
+     "dentin_hu": 1749,
+     "diff_hu": -598,
+     "pulp_vox": 1022,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 38.6,
-     "pulp_gap_mm": 1.8,
+     "pulp_gap_mm": 3.4,
      "fill_gap_mm": null
     },
     {
      "tooth": 42,
-     "pulp_hu": 976,
-     "dentin_hu": 1654,
-     "diff_hu": -678,
-     "pulp_vox": 1610,
+     "pulp_hu": 1036,
+     "dentin_hu": 1663,
+     "diff_hu": -627,
+     "pulp_vox": 1823,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 41.7,
-     "pulp_gap_mm": 1.0,
+     "pulp_gap_mm": 0.2,
      "fill_gap_mm": null
     },
     {
      "tooth": 43,
-     "pulp_hu": 594,
-     "dentin_hu": 1642,
-     "diff_hu": -1048,
-     "pulp_vox": 2102,
+     "pulp_hu": 734,
+     "dentin_hu": 1643,
+     "diff_hu": -909,
+     "pulp_vox": 2409,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 43.7,
-     "pulp_gap_mm": 0.5,
+     "pulp_gap_mm": 0.7,
      "fill_gap_mm": null
     },
     {
      "tooth": 44,
-     "pulp_hu": 383,
-     "dentin_hu": 1426,
-     "diff_hu": -1043,
-     "pulp_vox": 1642,
+     "pulp_hu": 553,
+     "dentin_hu": 1414,
+     "diff_hu": -861,
+     "pulp_vox": 1829,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 43.9,
-     "pulp_gap_mm": 2.0,
+     "pulp_gap_mm": 1.8,
      "fill_gap_mm": null
     },
     {
      "tooth": 45,
-     "pulp_hu": 310,
-     "dentin_hu": 1340,
-     "diff_hu": -1030,
-     "pulp_vox": 1777,
+     "pulp_hu": 420,
+     "dentin_hu": 1334,
+     "diff_hu": -914,
+     "pulp_vox": 1920,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 44.8,
-     "pulp_gap_mm": 1.4,
+     "pulp_gap_mm": 1.0,
      "fill_gap_mm": null
     },
     {
      "tooth": 46,
-     "pulp_hu": 501,
-     "dentin_hu": 1274,
-     "diff_hu": -773,
-     "pulp_vox": 4514,
+     "pulp_hu": 557,
+     "dentin_hu": 1268,
+     "diff_hu": -711,
+     "pulp_vox": 4758,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 45.9,
-     "pulp_gap_mm": 1.5,
+     "pulp_gap_mm": 0.3,
      "fill_gap_mm": null
     },
     {
      "tooth": 47,
-     "pulp_hu": 353,
-     "dentin_hu": 1205,
-     "diff_hu": -852,
-     "pulp_vox": 4239,
+     "pulp_hu": 414,
+     "dentin_hu": 1211,
+     "diff_hu": -797,
+     "pulp_vox": 4791,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 48.4,
@@ -903,14 +901,14 @@
     },
     {
      "tooth": 48,
-     "pulp_hu": 386,
-     "dentin_hu": 1320,
-     "diff_hu": -934,
-     "pulp_vox": 3756,
+     "pulp_hu": 584,
+     "dentin_hu": 1375,
+     "diff_hu": -791,
+     "pulp_vox": 5104,
      "status": "vital",
      "confidence": "high",
      "metal_mm": 55.4,
-     "pulp_gap_mm": 3.6,
+     "pulp_gap_mm": 0.9,
      "fill_gap_mm": null
     }
    ],
@@ -1141,51 +1139,25 @@
    },
    {
     "code": "tooth_impacted",
-    "tooth": 28,
-    "value": 0.102,
-    "unit": "доля",
-    "severity": "warning",
-    "text": "Зуб 28 — подозрение на ретенцию: не дошёл до зубного ряда на 41.4 мм",
-    "action": "хирург: оценить показания к удалению ретенированного зуба",
-    "route": "surgery",
-    "confidence": "medium",
-    "basis": [
-     {
-      "label": "доля коронки, упирающейся в кость",
-      "value": 0.1,
-      "unit": "доля",
-      "rule": "порог ретенции ≥0.6",
-      "note": "порог по разрыву в распределении на client2/client4, врачом не подписан"
-     },
-     {
-      "label": "выше уровня зубного ряда",
-      "value": 41.4,
-      "unit": "мм",
-      "rule": "порог ≥8.0 мм"
-     }
-    ]
-   },
-   {
-    "code": "tooth_impacted",
     "tooth": 48,
-    "value": 0.628,
+    "value": 0.695,
     "unit": "доля",
     "severity": "warning",
-    "text": "Зуб 48 — подозрение на ретенцию: окружён костью на 63%",
+    "text": "Зуб 48 — подозрение на ретенцию: окружён костью на 69%",
     "action": "хирург: оценить показания к удалению ретенированного зуба",
     "route": "surgery",
     "confidence": "medium",
     "basis": [
      {
       "label": "доля коронки, упирающейся в кость",
-      "value": 0.63,
+      "value": 0.69,
       "unit": "доля",
       "rule": "порог ретенции ≥0.6",
       "note": "порог по разрыву в распределении на client2/client4, врачом не подписан"
      },
      {
       "label": "выше уровня зубного ряда",
-      "value": -5.1,
+      "value": -5.0,
       "unit": "мм",
       "rule": "порог ≥8.0 мм"
      }
@@ -1194,7 +1166,7 @@
    {
     "code": "restoration",
     "tooth": 26,
-    "value": 6.9,
+    "value": 7.0,
     "unit": "мм",
     "severity": "info",
     "text": "Мост в области зуба 26",
@@ -1204,7 +1176,7 @@
     "basis": [
      {
       "label": "до центра ближайшего зуба",
-      "value": 6.9,
+      "value": 7.0,
       "unit": "мм",
       "rule": "дальше 25 мм — артефакт",
       "note": "привязка к зубу по расстоянию центров: у моста она условна"
@@ -1490,6 +1462,26 @@
   ],
   "quality": [
    {
+    "code": "tooth_position_implausible",
+    "tooth": null,
+    "value": null,
+    "unit": null,
+    "severity": "warning",
+    "text": "Положение зуба в маске невозможно у 28 (+41.4 мм от своего ряда): по модулю это больше 30 мм, тогда как у настоящей ретенции замерено не более 29.5 мм. Маска этого зуба собрана неверно — измерения по нему недостоверны",
+    "action": null,
+    "route": "review",
+    "confidence": "high",
+    "basis": [
+     {
+      "label": "отклонение от уровня своего ряда",
+      "value": 41.4,
+      "unit": "мм",
+      "rule": "невозможно выше 30 мм",
+      "note": "порог выше нашего же максимума настоящей ретенции (29.5 мм) и высоты челюсти над окклюзионной плоскостью (25-30 мм)"
+     }
+    ]
+   },
+   {
     "code": "prosth_artifact",
     "tooth": null,
     "value": null,
@@ -1713,7 +1705,7 @@
     "order": 9
    }
   ],
-  "v": 15
+  "v": 16
  },
  "review": null,
  "panorama": null,
@@ -1725,5 +1717,6 @@
  "sides_uncertain": null,
  "sides_vote": null,
  "created_at": "2026-08-31T15:16:11",
- "fixture": true
+ "fixture": true,
+ "has_volume": false
 }
