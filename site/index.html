@@ -425,15 +425,14 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
   <div class="hcopy">
     <div class="tag">Разбор КЛКТ</div>
     <h1>Actina</h1>
-    <p>ИИ-разбор КЛКТ: находит, измеряет, объясняет. Диагноз ставит врач.</p>
+    <p>Платформа разбора КЛКТ для стоматологов</p>
     <div class="facts">
       <div><b id="fcount">31</b> зуб распознан на снимке</div>
       <div>Точность распознавания зубов <b>96.9%</b> (95% ДИ 96.2–97.6), 100 пациентов внешней выборки</div>
-      <div>Разбор снимка: минуты вместо часа. Цель, замеряем</div>
     </div>
     <div class="hbtns"><button class="btn pri big" id="hOpen">Открыть пациентов</button><button class="btn ghost" id="hDemo">Посмотреть демо-кейс</button></div>
   </div>
-  <div class="hcred">Модель: публичный набор figshare 26965903, CC BY 4.0. Данные пациентов выдуманные.</div>
+  <div class="hcred">Демо-данные · снимок: figshare 26965903, CC BY 4.0</div>
   <div class="loading" id="loadingH">Загрузка 3D-модели…</div>
 </section>
 
@@ -442,7 +441,6 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
   <div class="lbox">
     <button class="wm" id="lLogo" style="font-size:22px"><i></i>Actina</button>
     <h1>Вход для врача</h1>
-    <p class="muted" style="margin:0">Аккаунт врача работает на ноутбуке или компьютере клиники.</p>
     <div id="lstep1">
       <label for="phone">Номер телефона</label>
       <input id="phone" type="tel" inputmode="tel" value="+998 " autocomplete="tel">
@@ -457,7 +455,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
       <button class="btn pri" id="doLogin">Войти</button>
       <button class="btn ghost" id="back1" style="margin-top:6px">Изменить номер</button>
     </div>
-    <div class="hintbox">Демо: любой номер, код <b>1234</b>. В рабочей версии код придёт по SMS, а вход с телефона будет закрыт.</div>
+    <div class="hintbox">Демо-доступ: любой номер, код <b>1234</b></div>
   </div>
 </section>
 
@@ -480,14 +478,14 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <button class="btn sm" id="chBack">← К разбору</button>
     <div class="who2" id="chwho"></div>
     <div class="cmpl" id="chcmp"></div>
-    <span class="mini">ИИ-помощник · только по этому снимку</span>
+    <span class="mini">Actis</span>
   </header>
   <div class="chbody">
     <aside class="chside" id="chside"></aside>
     <main class="chmain">
-      <div class="chhead"><div class="bot-av">A</div><div><b>Помощник Actina</b><span>Отвечает по находкам этого снимка. Диагноз ставит врач.</span></div></div>
+      <div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div>
       <div class="chmsgs" id="chmsgs"></div>
-      <div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Спросите про этот снимок, например: что с зубом 36?" aria-label="Вопрос"></textarea><button class="btn pri" type="submit">Спросить</button></form><div class="cnote">Чего нет в данных, скажет прямо: «не знаю». Источники ответа кликабельны, ведут к находке.</div></div>
+      <div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn pri" type="submit">Спросить</button></form></div>
     </main>
   </div>
 </section>
@@ -499,7 +497,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <div class="who2" id="vwho"></div>
     <div class="cmpl" id="vcmp"></div>
     <span class="ro-badge" id="roBadge" hidden>Только просмотр</span>
-    <button class="btn sm pri" id="toChat">✦ Чат с ИИ</button>
+    <button class="btn sm pri" id="toChat">✦ Actis</button>
     <button class="btn sm ghost" id="lang">РУС</button>
     <button class="btn sm" id="share">Поделиться ссылкой</button>
   </header>
@@ -553,7 +551,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
       <div class="pane" id="p-info" hidden></div>
     </aside>
   </div>
-  <footer class="cfoot">Предварительный разбор ИИ, проверен врачом · модель nnU-Net v2 · правила версии 16 · точность распознавания зубов 96.9% (95% ДИ 96.2–97.6)</footer>
+  <footer class="cfoot">nnU-Net v2 · правила v16 · точность распознавания зубов 96.9% (95% ДИ 96.2–97.6)</footer>
 </section>
 
 <aside class="drawer" id="drawer" hidden></aside><div class="shade" id="shade" hidden></div>
@@ -712,7 +710,7 @@ function drawPatient(id){
    +'<div class="card pcard" style="--i:1"><h3>Контакты</h3>'+kv([['Телефон',p.phone],['Адрес',p.addr],['Род занятий',p.job],['Экстренный контакт',p.emerg]])+'</div>'
    +'<div class="card pcard" style="--i:2"><h3>Здоровье</h3>'+kv([['Дата рождения',p.dob||String(p.born)],['Группа крови',p.blood],['Аллергия',p.allergy,fl],['Хронические болезни',p.chronic],['Лекарства',p.meds],['Привычки',p.habit]])+'</div>'
    +'<div class="card pcard" style="--i:3"><h3>В клинике</h3>'+kv([['Карта открыта',p.since],['Как пришёл',p.ref],['Визитов',String(p.visits.length)],['Проф. чистка',p.cleaning]])+'</div>'
-   +'<div class="card pcard" style="--i:4"><h3>Заметки врача</h3><textarea class="note" id="note" placeholder="Сохраняются автоматически"></textarea></div>'
+   +'<div class="card pcard" style="--i:4"><h3>Заметки врача</h3><textarea class="note" id="note" placeholder="Заметка"></textarea></div>'
    +'</div><div><div class="sect">Визиты и снимки</div><div id="feed"></div></div></div>';
   $('#cb').addEventListener('click',function(){go('#/patients')});
   $('#upB').addEventListener('click',function(){openDrawer(id)});
@@ -723,7 +721,7 @@ function drawPatient(id){
   p.visits.forEach(function(v,i){
     var ready=v.st==='ready',d=el('div','card visit'),s=ready&&i===0?pstatus(p):null;
     d.style.setProperty('--i',i+1);
-    d.innerHTML='<div class="d">'+v.d+'<small>'+v.type+'</small></div><div><div class="cmp">'+esc(v.cmp||'Жалоба не указана')+'</div><div class="meta">'+(ready?(i===0?s.dots+' · '+s.t:'Разбор готов'):v.st==='proc'?'<i class="spin"></i>Обрабатывается':'Архив, без разбора')+'</div>'+(ready&&nready>1&&i===0?'<div class="stub">Сравнение с прошлым визитом: появится после хакатона</div>':'')+'</div>'+(ready?'<button class="btn pri sm">Открыть разбор</button>':'<span></span>');
+    d.innerHTML='<div class="d">'+v.d+'<small>'+v.type+'</small></div><div><div class="cmp">'+esc(v.cmp||'Жалоба не указана')+'</div><div class="meta">'+(ready?(i===0?s.dots+' · '+s.t:'Разбор готов'):v.st==='proc'?'<i class="spin"></i>Обрабатывается':'Архив, без разбора')+'</div>'+'</div>'+(ready?'<button class="btn pri sm">Открыть разбор</button>':'<span></span>');
     var bt=$('button',d);if(bt)bt.addEventListener('click',function(){go('#/case/'+id)});feed.appendChild(d)});
   if($('#e3'))$('#e3').addEventListener('click',function(){openDrawer(id)});
 }
@@ -735,10 +733,10 @@ function openDrawer(pid){
   $('#drawer').dataset.lock='';
   function chips(arr,cls,sel){return arr.map(function(a){return '<button type="button" class="'+(sel&&sel===a?'on':'')+'" data-v="'+esc(a)+'">'+esc(a)+'</button>'}).join('')}
   $('#drawer').innerHTML='<div class="dh"><h2>'+(np?'Новый пациент':'Новый снимок')+'</h2><button class="x" id="dx" aria-label="Закрыть">✕</button></div>'
-   +(np?'<div class="muted">Заведите карточку, затем загрузите КЛКТ.</div>':'<div class="muted" style="display:flex;gap:10px;align-items:center;margin-top:8px">'+avatar(p.id,p.name,34)+'<span>'+esc(p.name)+' · '+p.id+'</span></div>')
+   +(np?'':'<div class="muted" style="display:flex;gap:10px;align-items:center;margin-top:8px">'+avatar(p.id,p.name,34)+'<span>'+esc(p.name)+' · '+p.id+'</span></div>')
    +(np?'<div class="stp"><span class="s" id="sp1"><b>1</b>Пациент</span><i id="spl"></i><span class="s" id="sp2"><b>2</b>Снимок</span></div>':'')
    +'<div class="dstep" id="s1"'+(np?'':' hidden')+'>'
-     +'<div class="phbox"><span class="avw" id="dav">'+avatar('new','Нов Пац',72)+'<button class="cam" id="dcam" type="button" aria-label="Фото">📷</button></span><div class="t"><b>Фото пациента</b>Необязательно. Можно добавить позже.</div></div>'
+     +'<div class="phbox"><span class="avw" id="dav">'+avatar('new','Нов Пац',72)+'<button class="cam" id="dcam" type="button" aria-label="Фото">📷</button></span><div class="t"><b>Фото пациента</b></div></div>'
      +'<div class="two"><div><label>Фамилия</label><input type="text" id="nLast" placeholder="Юсупова" autocomplete="off"></div><div><label>Имя</label><input type="text" id="nFirst" placeholder="Нодира" autocomplete="off"></div></div>'
      +'<div class="two"><div><label>Пол</label><div class="seg" id="sgSex"><button type="button" data-v="Ж" class="on">Женский</button><button type="button" data-v="М">Мужской</button></div></div><div><label>Год рождения</label><input type="number" id="nYear" min="1920" max="2026" value="1990"></div></div>'
      +'<div class="two"><div><label>Телефон</label><input type="text" id="nPhone" value="+998 " inputmode="tel"></div><div><label>Номер карты</label><input type="text" id="nCard" value="'+nextId+'"></div></div>'
@@ -746,8 +744,8 @@ function openDrawer(pid){
      +'<label>Аллергия</label><div class="chp" id="chAl">'+chips(['Нет','Лидокаин','Пенициллин','Латекс','Другое'],'','Нет')+'</div><input type="text" id="nAlOther" placeholder="Что именно" hidden style="margin-top:6px">'
      +'<div class="err" id="nErr1"></div></div>'
    +'<div class="dstep" id="s2"'+(np?' hidden':'')+'>'
-     +'<label>Жалобы на этот визит</label><textarea id="nCom" rows="3" placeholder="Своими словами, например: ноет слева снизу при накусывании"></textarea><div class="chp" id="chCom">'+chips(QCOM)+'</div>'
-     +'<div class="demo-opt"><span class="pill ok">выбран</span><div><b>Демо-снимок: КЛКТ, обе челюсти</b><div class="muted">Публичный набор. В демо доступен один снимок.</div></div></div>'
+     +'<label>Жалобы на этот визит</label><textarea id="nCom" rows="3" placeholder="Жалобы пациента"></textarea><div class="chp" id="chCom">'+chips(QCOM)+'</div>'
+     +'<div class="demo-opt"><span class="pill ok">выбран</span><div><b>Демо-снимок: КЛКТ, обе челюсти</b></div></div>'
      +'<div class="drop" id="drop">Или перетащите файл КЛКТ (ZIP или DICOM)<br><button class="btn sm" id="pick" type="button" style="margin-top:8px">Выбрать файл</button><input type="file" id="fi" hidden><div id="fn" style="margin-top:8px;font-size:13px"></div></div>'
      +'<div class="err" id="nErr2"></div></div>'
    +'<div class="btns"><button class="btn" id="mc" type="button">Отмена</button><button class="btn ghost" id="mb" type="button" hidden>← Назад</button><button class="btn pri" id="mgo" type="button"></button></div>';
@@ -765,7 +763,7 @@ function openDrawer(pid){
   $('#chCom').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var t=$('#nCom');var cur0=t.value.trim();t.value=cur0?cur0.replace(/[.,;]\s*$/,'')+', '+b.dataset.v.toLowerCase():b.dataset.v;t.focus()});
   $('#nPhone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.indexOf('998')===0)d=d.slice(3);d=d.slice(0,9);var o='+998 ';if(d.length>0)o+=d.slice(0,2);if(d.length>2)o+=' '+d.slice(2,5);if(d.length>5)o+=' '+d.slice(5,7);if(d.length>7)o+=' '+d.slice(7,9);this.value=o});
   $('#pick').addEventListener('click',function(){$('#fi').click()});
-  function setF(f){if(f)$('#fn').innerHTML='Файл «'+esc(f.name)+'» ('+(f.size/1048576).toFixed(1)+' МБ) принят. <b>В демо будет разобран демо-снимок.</b>'}
+  function setF(f){if(f)$('#fn').innerHTML='Файл «'+esc(f.name)+'» ('+(f.size/1048576).toFixed(1)+' МБ) принят. Будет разобран демо-снимок.'}
   $('#fi').addEventListener('change',function(){setF(this.files[0])});
   var d=$('#drop');['dragenter','dragover'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('over')})});
   ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('over')})});
@@ -789,7 +787,7 @@ $('#shade').addEventListener('click',closeDrawer);
 var STAGES=['Конвертация серии','Сегментация зубов, кости, канала','Сборка 3D-модели','Поиск находок'];
 function runProcess(id){
   $('#drawer').dataset.lock='1';
-  $('#drawer').innerHTML='<h2>Идёт разбор снимка</h2><div class="muted">В рабочей версии это 2–4 минуты, в демо ускорено. Окно можно закрыть, результат появится в карточке.</div><ul class="steps">'+STAGES.map(function(s,i){return '<li id="st'+i+'"><span>○</span>'+s+'</li>'}).join('')+'</ul><div class="prog"><i id="pb"></i></div><div class="muted" id="pt">0%</div><div class="btns" id="pbtn"><button class="btn" id="hide">Закрыть окно</button></div>';
+  $('#drawer').innerHTML='<h2>Идёт разбор снимка</h2><ul class="steps">'+STAGES.map(function(s,i){return '<li id="st'+i+'"><span>○</span>'+s+'</li>'}).join('')+'</ul><div class="prog"><i id="pb"></i></div><div class="muted" id="pt">0%</div><div class="btns" id="pbtn"><button class="btn" id="hide">Закрыть окно</button></div>';
   $('#hide').addEventListener('click',function(){$('#drawer').dataset.lock='';closeDrawer();route()});
   var i=0;
   (function step(){
@@ -927,7 +925,7 @@ function addLog(id,x){var C=cs(id);C.log=C.log||[];C.log.push({t:TODAY.slice(0,5
 function openCase(id){
   cur=id;sel=null;isolated=null;openForm=null;mode='case';var p=getP(id),v=readyVisit(p);
   $('#vwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
-  $('#vcmp').textContent='Жалоба: '+(v.cmp||'не указана');
+  $('#vcmp').textContent=v.cmp||'Жалоба не указана';
   $('#roBadge').hidden=!ro;$('#toChat').hidden=ro;$('#share').hidden=ro;$('#vBack').textContent=ro?'← На главную':'← Пациенты';
   if(!ro&&!cs(id).opened){cs(id).opened=true;addLog(id,'Разбор открыт врачом')}
   ensure3d();mount($('#gl'));
@@ -943,7 +941,7 @@ function select(id){sel=id;openForm=null;tab('find');applyMode();drawFind();draw
 function drawFind(){
   var p=$('#p-find');if(!p||!cur)return;var C=cs(cur),n=reviewed(cur),all=n>=F.length,st=p.scrollTop;
   p.className='pane'+(findAnim?' stag':'');
-  p.innerHTML=ro?'<div class="prg"><div>Режим просмотра: <b>'+F.length+' находок</b></div><div class="muted" style="font-size:12.5px">Подтверждать и отклонять находки может только врач после входа.</div></div>':'<div class="prg"><div>Разобрано <b>'+n+'</b> из '+F.length+'</div><div class="bar2"><i style="width:'+(n/F.length*100)+'%"></i></div><div class="pb"><button class="btn sm" id="pdfD" '+(all?'':'disabled')+'>PDF врачу</button><button class="btn sm" id="pdfP" '+(all?'':'disabled')+'>PDF пациенту</button>'+(all?'':'<span class="muted" style="font-size:12px;align-self:center">откроются, когда разобрано всё</span>')+'</div></div>';
+  p.innerHTML=ro?'<div class="prg"><div>Режим просмотра: <b>'+F.length+' находок</b></div></div>':'<div class="prg"><div>Разобрано <b>'+n+'</b> из '+F.length+'</div><div class="bar2"><i style="width:'+(n/F.length*100)+'%"></i></div><div class="pb"><button class="btn sm" id="pdfD" '+(all?'':'disabled')+'>PDF врачу</button><button class="btn sm" id="pdfP" '+(all?'':'disabled')+'>PDF пациенту</button>'+'</div></div>';
   var fi=0;
   ROLES.forEach(function(role){
     var list=F.filter(function(f){return f.role===role});if(!list.length)return;
@@ -1005,7 +1003,7 @@ $('#share').addEventListener('click',function(){
   var u=location.origin+location.pathname+'#/shared/'+cur;
   function ok(){toast('Ссылка скопирована. Открывается без входа, только просмотр')}
   try{navigator.clipboard.writeText(u).then(ok,function(){prompt('Скопируйте ссылку',u)})}catch(e){prompt('Скопируйте ссылку',u)}});
-$('#lang').addEventListener('click',function(){toast('Каракалпакский перевод в работе: пока только русский')});
+$('#lang').addEventListener('click',function(){toast('Каракалпакский язык: в разработке')});
 $('#expand').addEventListener('click',function(){var c=$('#col');if(col0==null){col0=c.getBoundingClientRect().width;c.style.setProperty('--colw',Math.round(window.innerWidth*0.84)+'px');this.textContent='⤡'}else{c.style.setProperty('--colw',col0+'px');col0=null;this.textContent='⤢'}});
 (function(){var h=$('#handle'),drag=false;h.addEventListener('pointerdown',function(e){drag=true;h.setPointerCapture(e.pointerId)});
   h.addEventListener('pointermove',function(e){if(!drag)return;var w=Math.max(320,Math.min(window.innerWidth*0.86,window.innerWidth-e.clientX));$('#col').style.setProperty('--colw',w+'px');S.colw=Math.round(w)});
@@ -1020,25 +1018,25 @@ document.addEventListener('keydown',function(e){
 /* ---------- чат ---------- */
 function firstMsg(){
   var c=counts(cur),v=readyVisit(getP(cur)),first=F.filter(function(f){return lvOf(f)==='k'})[0];
-  var hint=first?(' Жалоба: «'+esc((v.cmp||'').toLowerCase())+'». Начните с зуба '+first.tooth+'.'):'';
+  var hint=first?(' По жалобе начните с зуба '+first.tooth+'.'):'';
   return {w:'bot',h:'Нашёл '+F.length+' находок: '+c.k+' критичная, '+c.v+' важных, '+c.n+' незначительных.'+hint,s:first?[first.id]:[]}}
 function answer(q){
   var t=q.toLowerCase(),f0=sel?findF(sel):null,m=/(?:^|\D)([1-4][1-8])(?:\D|$)/.exec(t);
   if(/почему.*критич|почему это/.test(t)){var f=f0||F.filter(function(x){return lvOf(x)==='k'})[0];return {h:'Зуб '+f.tooth+': '+f.t.toLowerCase()+'. '+f.why+' '+f.cav,s:[f.id]}}
-  if(/визит|сроки/.test(t)){var v=F.filter(function(x){return cs(cur).rev[x.id]!=='rej'}).reduce(function(a,x){return a+x.visits},0);return {h:'По предварительному плану примерно '+v+' визитов: лечение канала 36 (до 3), пломбирование 37 и 46, консультация пародонтолога по 16. Сроки уточнит врач.',s:['f36','f37','f46','f16']}}
+  if(/визит|сроки/.test(t)){var v=F.filter(function(x){return cs(cur).rev[x.id]!=='rej'}).reduce(function(a,x){return a+x.visits},0);return {h:'По предварительному плану примерно '+v+' визитов: лечение канала 36 (до 3), пломбирование 37 и 46, консультация пародонтолога по 16.',s:['f36','f37','f46','f16']}}
   if(/что сказать|пациент/.test(t)){var k=F.filter(function(x){return lvOf(x)==='k'})[0];return {h:'Простыми словами: «На снимке видно воспаление у корня зуба '+k.tooth+', это и может болеть. Его нужно лечить в ближайшее время. Ещё несколько зубов требуют пломб, остальное просто наблюдаем».',s:[k.id]}}
-  if(/чего.*не вид|не видишь|не знаешь/.test(t))return {h:'Не измеряю: объём пазухи и слизистую, височно-нижнечелюстной сустав (он вне поля снимка), число корневых каналов, дентикли. Если в списке нет находки, это не значит, что там всё хорошо.',s:[]};
+  if(/чего.*не вид|не видишь|не знаешь/.test(t))return {h:'Не измеряю: объём пазухи и слизистую, височно-нижнечелюстной сустав (он вне поля снимка), число корневых каналов, дентикли.',s:[]};
   if(m){var n=+m[1],f2=fByTooth(n);if(f2)return {h:'Зуб '+n+': '+f2.t.toLowerCase()+' ('+LVW[lvOf(f2)].toLowerCase()+'). '+f2.why,s:[f2.id]};return {h:'По зубу '+n+' находок нет. Это не заключение о здоровье зуба: если есть сомнения, смотрите срезы.',s:[]}}
   if(/сколько/.test(t))return {h:'Находок '+F.length+': '+F.map(function(f){return 'зуб '+f.tooth+' ('+LV[lvOf(f)].toLowerCase()+')'}).join(', ')+'.',s:F.map(function(f){return f.id})};
   if(/пазух|гайм/.test(t))return {h:'Корень зуба 15 в 0,9 мм от дна пазухи. Такая близость у большинства верхних зубов, это не патология, но важно при имплантации. Объём пазухи не измеряю.',s:['f15']};
-  if(/эмал|рак|онколог|диагноз/.test(t))return {h:'Это я не измеряю, поэтому ни числа, ни вывода не назову. Диагноз ставит врач.',s:[]};
-  return {h:'Отвечаю только по находкам этого снимка. Спросите про конкретный зуб или выберите вопрос ниже.',s:[]}}
+  if(/эмал|рак|онколог|диагноз/.test(t))return {h:'Это я не измеряю, поэтому ни числа, ни вывода не назову.',s:[]};
+  return {h:'Не понял вопрос. Назовите зуб или находку.',s:[]}}
 var thinking=false,typeT=null;
 function hist(){if(!S.msgs[cur]||!S.msgs[cur].length){S.msgs[cur]=[firstMsg()];save()}return S.msgs[cur]}
 function openChat(id){
   cur=id;thinking=false;clearInterval(typeT);var p=getP(id),v=readyVisit(p);
   $('#chwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
-  $('#chcmp').textContent='Жалоба: '+(v.cmp||'не указана');
+  $('#chcmp').textContent=v.cmp||'Жалоба не указана';
   $('#chside').innerHTML='<div class="who3">'+avatar(p.id,p.name,44)+'<div><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div></div><div class="cmp2">'+esc(v.cmp||'')+'</div><div class="sect">Находки снимка</div><div class="fl" id="chfl"></div>';
   F.slice().sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))}).forEach(function(f,i){
     var b=el('button',null,'<span class="dot '+lvOf(f)+'" style="margin:0"></span><small>зуб '+f.tooth+'</small><span>'+esc(ftext(f))+'</span>');b.type='button';
@@ -1084,19 +1082,19 @@ function drawPlan(){
     return '<div class="sv">'+ord(a).map(function(f,i){return (i?'<div class="mini"></div>':'')+'<div class="it"><span class="lv '+lvOf(f)+'">'+LV[lvOf(f)]+'</span> <b>'+esc(cap(f.plan))+', зуб '+f.tooth+'</b><small>'+esc(ftext(f))+' · '+(f.visits?'визитов: '+f.visits:'по решению врача')+'</small></div>'}).join('')+'</div>'}
   var visits=act.reduce(function(a,f){return a+f.visits},0),idx=0;
   function arrow(){return '<div class="arw" style="--i:'+(idx++)+'"></div>'}
-  var html='<div class="calm" style="margin-top:0">Черновик плана. Порядок этапов взят из плана клиники, правила врачом ещё не подписаны. Отклонённые находки в план не попадают.</div>'
-   +'<div class="tot"><span class="pill acc">Услуг: '+(ther.length+surg.length+watch.length)+'</span><span class="pill">Визитов: около '+visits+'</span><span class="pill">Срок: 2–4 месяца, ориентир</span></div>'
+  var html=''
+   +'<div class="tot"><span class="pill acc">Услуг: '+(ther.length+surg.length+watch.length)+'</span><span class="pill">Визитов: около '+visits+'</span><span class="pill">Срок: 2–4 мес</span></div>'
    +'<div class="flow">'
-   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn '+(all?'ok':'')+'">'+(all?'✓':'1')+'</span><b>Проверка находок врачом</b><span class="dur">'+n+' из '+F.length+'</span></div><div class="sub" style="margin:0 0 0 35px">'+(all?'Все находки разобраны, план подтверждён':'Осталось разобрать: '+(F.length-n))+'</div></div>'
+   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn '+(all?'ok':'')+'">'+(all?'✓':'1')+'</span><b>Проверка находок врачом</b><span class="dur">'+n+' из '+F.length+'</span></div><div class="sub" style="margin:0 0 0 35px">'+(all?'Все находки разобраны':'Осталось разобрать: '+(F.length-n))+'</div></div>'
    +arrow()
    +'<div class="par" style="--i:'+(idx++)+'"><span class="tag">Параллельно</span>'
-     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Терапия</b><span class="dur">1–2 мес</span></div><div class="sub">Лечение зубов и дёсен, гигиена внутри этапа</div>'+chain(ther,'Нет позиций')+'</div>'
-     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Хирургия и имплантация</b><span class="dur">по решению хирурга</span></div><div class="sub">Не ждёт окончания терапии</div>'+chain(surg,'Нет позиций')+'</div>'
+     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Терапия</b><span class="dur">1–2 мес</span></div>'+chain(ther,'Нет позиций')+'</div>'
+     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Хирургия и имплантация</b><span class="dur">по решению хирурга</span></div>'+chain(surg,'Нет позиций')+'</div>'
    +'</div>'
    +arrow()
    +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn g">3</span><b>Наблюдение</b><span class="dur">на контрольных осмотрах</span></div>'+chain(watch,'Нет позиций')+'</div>'
    +arrow()
-   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn g">4</span><b>Контрольный осмотр и снимок</b><span class="dur">через 6 мес</span></div><div class="sub" style="margin:0 0 0 35px">Проверка результата, корректировка плана</div></div>'
+   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn g">4</span><b>Контрольный осмотр и снимок</b><span class="dur">через 6 мес</span></div></div>'
    +'</div>';
   p.innerHTML=html;
 }
@@ -1113,11 +1111,11 @@ function drawInfo(){
    +kv([['Аллергия',p.allergy,p.allergy&&p.allergy!=='Нет'],['Хронические',p.chronic],['Лекарства',p.meds],['Телефон',p.phone]])
    +'<button class="btn sm" id="toPat" style="margin-top:10px">Открыть карточку пациента</button></div>'
    +'<div class="csec"><h4>Визит и жалоба</h4>'+kv([['Дата',v.d],['Жалоба',v.cmp],['Врач','Др. '+docName()]])+'</div>'
-   +'<div class="csec"><h4>Снимок</h4>'+kv([['Тип','КЛКТ, обе челюсти'],['Источник','Демо-снимок, публичный набор figshare 26965903 (CC BY 4.0)'],['Шаг вокселя','около 0,25 мм (демо)'],['Исходный том','В демо не подгружается, поэтому срезов и карточки зуба здесь нет']])+'</div>'
-   +'<div class="csec"><h4>Как обработано</h4>'+kv([['Модель','nnU-Net v2, 3d_fullres'],['Правила находок','версия 16, врачом не подписаны'],['Распознано','31 зуб, обе челюсти, нижнечелюстной канал, пазухи'],['Точность зубов','96.9% (95% ДИ 96.2–97.6), 100 пациентов внешней выборки'],['Время','около 3 минут (в демо ускорено)']])+'</div>'
+   +'<div class="csec"><h4>Снимок</h4>'+kv([['Тип','КЛКТ, обе челюсти'],['Источник','Демо-снимок, публичный набор figshare 26965903 (CC BY 4.0)'],['Шаг вокселя','0,25 мм'],])+'</div>'
+   +'<div class="csec"><h4>Как обработано</h4>'+kv([['Модель','nnU-Net v2, 3d_fullres'],['Правила находок','версия 16, врачом не подписаны'],['Распознано','31 зуб, обе челюсти, нижнечелюстной канал, пазухи'],['Точность зубов','96.9% (95% ДИ 96.2–97.6), 100 пациентов внешней выборки']])+'</div>'
    +'<div class="csec"><h4>Находки по важности</h4><div class="bars">'+bar('Критичные','k','var(--crit)')+bar('Важные','v','var(--warn)')+bar('Незначит.','n','var(--info)')+'</div></div>'
    +'<div class="csec"><h4>Ход проверки: '+n+' из '+F.length+'</h4>'+F.slice().sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))}).map(function(f){var r=C.rev[f.id];return '<div class="mrow"><span class="dot '+lvOf(f)+'" style="margin:0"></span><span class="t">зуб '+f.tooth+' · '+esc(ftext(f))+'</span>'+(r==='ok'?'<span class="pill ok">подтверждена</span>':r==='rej'?'<span class="pill">отклонена</span>':'<span class="pill">ждёт</span>')+'</div>'}).join('')+'</div>'
-   +'<div class="csec"><h4>Чего программа не измеряет</h4><div class="rst"><span>объём пазух и слизистая</span><span>височно-нижнечелюстной сустав</span><span>число корневых каналов</span><span>дентикли</span><span>качество пломбирования</span><span>стадия пародонтита</span></div><div class="calm">Отсутствие находки не значит, что всё хорошо. Процента уверенности у находок нет намеренно: вероятности у нас нет, есть измерение, порог и оговорка.</div></div>'
+   +'<div class="csec"><h4>Чего программа не измеряет</h4><div class="rst"><span>объём пазух и слизистая</span><span>височно-нижнечелюстной сустав</span><span>число корневых каналов</span><span>дентикли</span><span>качество пломбирования</span><span>стадия пародонтита</span></div></div>'
    +'<div class="csec"><h4>Журнал</h4><div class="tl">'+log.map(function(e){return '<div class="ev" style="--i:'+(i0++)+'"><time>'+esc(e.t)+'</time>'+esc(e.x)+'</div>'}).join('')+'</div></div>';
   var tp=$('#toPat');if(tp)tp.addEventListener('click',function(){go(ro?'#/':'#/patient/'+cur)});
 }
@@ -1139,8 +1137,8 @@ function drawProfile(){
    +'<div><label>Номер лицензии</label><input id="dLic" value="'+esc(d.license)+'"></div><div><label>Языки приёма</label><input id="dLang" value="'+esc(d.langs)+'"></div>'
    +'<div class="full"><label>О себе</label><textarea id="dAbout" rows="3">'+esc(d.about)+'</textarea></div></div>'
    +'<div class="btns"><button class="btn pri" id="dSave">Сохранить</button></div></div>'
-   +'<div><div class="card pcard" style="--i:3"><h3>Вход и безопасность</h3>'+kv([['Вход','по номеру телефона и коду из SMS'],['Этот компьютер',S.session&&S.session.trust?'запомнен':'не запомнен'],['С телефона','вход закрыт: аккаунт работает на ноутбуке или компьютере клиники']])+'</div>'
-   +'<div class="card pcard" style="--i:4"><h3>Последние действия</h3>'+(acts.length?acts.slice(0,8).map(function(a){return '<div class="act"><time>'+esc(a.t)+'</time><span>'+esc(a.x)+'</span></div>'}).join(''):'<div class="muted">Пока нет. Откройте разбор и подтвердите находку.</div>')+'</div></div></div>';
+   +'<div><div class="card pcard" style="--i:3"><h3>Вход и безопасность</h3>'+kv([['Вход','по номеру телефона и коду из SMS'],['Этот компьютер',S.session&&S.session.trust?'запомнен':'не запомнен']])+'</div>'
+   +'<div class="card pcard" style="--i:4"><h3>Последние действия</h3>'+(acts.length?acts.slice(0,8).map(function(a){return '<div class="act"><time>'+esc(a.t)+'</time><span>'+esc(a.x)+'</span></div>'}).join(''):'<div class="muted">Действий нет</div>')+'</div></div></div>';
   $('#pb').addEventListener('click',function(){go('#/patients')});
   $('#pout').addEventListener('click',function(){S.session=null;save();go('#/')});
   $('#pcam').addEventListener('click',function(){readPhoto(function(u){S.photos.doctor=u;save();$('#pav').firstChild.outerHTML=avatar('doctor',S.doc.name,104);$('#meAv').innerHTML=avatar('doctor',S.doc.name,30);toast('Фото сохранено')})});
