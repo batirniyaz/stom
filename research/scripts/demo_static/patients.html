@@ -28,6 +28,51 @@
     border-color: rgba(47,196,178,.45); background: var(--panel-2);
     transform: translateX(3px);
   }
+  /* ---- карточка пациента ---- */
+  .crumb { margin-bottom: 10px; }
+  .btn-ghost.sm { padding: 5px 11px; font-size: 12.5px; border-radius: 8px; }
+  .ph-card {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    padding: 16px 18px;
+  }
+  .ph-who { min-width: 0; }
+  .ph-card h2 { margin: 0; font-size: 23px; letter-spacing: -.4px; font-weight: 600; }
+  .ph-card .sub { margin-top: 3px; }
+  .av.av-lg { width: 72px; height: 72px; font-size: 24px; }
+  /* Аллергия и хронические болезни стоят в ШАПКЕ, а не только в анкете:
+     это то, что смотрят до укола, а не листая вкладки. */
+  .chips2 { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .chips2 .c {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 9px; padding: 4px 10px; font-size: 12.5px;
+  }
+  .chips2 .c small { color: var(--dim); margin-right: 6px; }
+  .chips2 .c.flag { border-color: rgba(214,163,39,.5); }
+  .chips2 .c.flag small { color: var(--warn); }
+
+  /* Имя `pgrid` в этом файле уже занято сеткой фотопротокола, и её
+     правило объявлено НИЖЕ — оно выигрывало, и карточки анкеты вставали
+     по 210 px вместо трети ширины. Поэтому своё имя. */
+  .anketa {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px; margin-bottom: 12px;
+  }
+  @media (max-width: 1000px) { .anketa { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 680px) { .anketa { grid-template-columns: 1fr; } }
+  .pcard h3 {
+    font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px; font-weight: 600;
+  }
+  .kv2 {
+    display: grid; grid-template-columns: 120px minmax(0, 1fr);
+    gap: 7px 12px; font-size: 13px; margin: 0;
+  }
+  .kv2 dt { color: var(--dim); }
+  .kv2 dd { margin: 0; overflow-wrap: anywhere; }
+  .kv2 dd.warn { color: var(--warn); }
+  .pnote .note { min-height: 78px; resize: vertical; font: inherit; }
+  .note-st { font-size: 11.5px; color: var(--dim); margin-top: 6px; min-height: 14px; }
+
   .phead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .phead h1 { margin: 0; font-size: 24px; letter-spacing: -.4px; font-weight: 600; }
   .phead-n {
@@ -383,23 +428,37 @@
 
     <!-- ---------------- карточка ---------------- -->
     <template v-else-if="view === 'card'">
-      <div class="bar">
-        <button class="btn-ghost" @click="go('/patients')">← {{ t("Все пациенты") }}</button>
-        <span style="flex:1"></span>
-        <button class="btn" @click="upOpen = !upOpen">+ {{ t("Загрузить исследование") }}</button>
+      <div class="crumb">
+        <button class="btn-ghost sm" @click="go('/patients')">← {{ t("Все пациенты") }}</button>
       </div>
 
       <div class="empty" v-if="!patient">{{ t("Загрузка…") }}</div>
       <template v-else>
-        <div class="pt-head">
-          <h2>{{ patient.display }}<span class="badge-ex"
-            v-if="patient.is_example">пример</span></h2>
-          <div class="sub">
-            <template v-if="patient.age">{{ patient.age }} лет · </template>
-            <template v-if="patient.card_no">карта {{ patient.card_no }} · </template>
-            исследований: {{ studies.length }}
-            <template v-if="patient.note"> · {{ patient.note }}</template>
+        <!-- Шапка карточки по макету: кто это, что важно знать до приёма
+             и действие. Аллергия и принимаемые лекарства стоят в шапке, а
+             не в анкете ниже: это то, что смотрят ДО укола. -->
+        <div class="card ph-card">
+          <span class="av av-lg" :style="avStyle(patient)">{{ initials(patient.display) }}</span>
+          <div class="ph-who">
+            <h2>{{ patient.display }}<span class="badge-ex"
+              v-if="patient.is_example">пример</span></h2>
+            <div class="sub">
+              <span class="pcard-no" v-if="patient.card_no">{{ patient.card_no }}</span>
+              <template v-if="patient.age"> · {{ patient.age }} лет</template>
+              <template v-if="sexWord"> · {{ sexWord }}</template>
+              · {{ t("исследований") }}: {{ studies.length }}
+            </div>
+            <div class="chips2" v-if="profile">
+              <span class="c" :class="{ flag: isFlag(profile.allergy) }">
+                <small>{{ t("Аллергия") }}</small>{{ profile.allergy }}</span>
+              <span class="c"><small>{{ t("Кровь") }}</small>{{ profile.blood }}</span>
+              <span class="c" :class="{ flag: isFlag(profile.chronic) }">
+                <small>{{ t("Хронические") }}</small>{{ profile.chronic }}</span>
+              <span class="c"><small>{{ t("Принимает") }}</small>{{ profile.meds }}</span>
+            </div>
           </div>
+          <span style="flex:1"></span>
+          <button class="btn nowrap" @click="upOpen = !upOpen">+ {{ t("Новый снимок") }}</button>
         </div>
 
         <div class="card" v-if="upOpen">
@@ -459,6 +518,54 @@
 
         <!-- ОБЗОР: состояние за один взгляд, без прокрутки -->
         <template v-if="tab === 'overview'">
+          <!-- Анкета человека. Есть только у карточек-примеров: в базе этих
+               полей нет и не заводится (см. patients.DEMO_PROFILES). У
+               настоящего пациента блок просто не показывается — пустые
+               графы «не указано» хуже их отсутствия. -->
+          <div class="anketa" v-if="profile">
+            <div class="card pcard">
+              <h3>{{ t("Контакты") }}</h3>
+              <dl class="kv2">
+                <dt>{{ t("Телефон") }}</dt><dd>{{ profile.phone }}</dd>
+                <dt>{{ t("Адрес") }}</dt><dd>{{ profile.addr }}</dd>
+                <dt>{{ t("Род занятий") }}</dt><dd>{{ profile.job }}</dd>
+                <dt>{{ t("Экстренный контакт") }}</dt><dd>{{ profile.emerg }}</dd>
+              </dl>
+            </div>
+            <div class="card pcard">
+              <h3>{{ t("Здоровье") }}</h3>
+              <dl class="kv2">
+                <dt>{{ t("Дата рождения") }}</dt>
+                <dd>{{ patient.birth_date || patient.birth_year || "—" }}</dd>
+                <dt>{{ t("Группа крови") }}</dt><dd>{{ profile.blood }}</dd>
+                <dt>{{ t("Аллергия") }}</dt>
+                <dd :class="{ warn: isFlag(profile.allergy) }">{{ profile.allergy }}</dd>
+                <dt>{{ t("Хронические") }}</dt>
+                <dd :class="{ warn: isFlag(profile.chronic) }">{{ profile.chronic }}</dd>
+                <dt>{{ t("Лекарства") }}</dt><dd>{{ profile.meds }}</dd>
+                <dt>{{ t("Привычки") }}</dt><dd>{{ profile.habit }}</dd>
+              </dl>
+            </div>
+            <div class="card pcard">
+              <h3>{{ t("В клинике") }}</h3>
+              <dl class="kv2">
+                <dt>{{ t("Карта открыта") }}</dt><dd>{{ profile.since }}</dd>
+                <dt>{{ t("Как пришёл") }}</dt><dd>{{ profile.ref }}</dd>
+                <dt>{{ t("Исследований") }}</dt><dd>{{ studies.length }}</dd>
+                <dt>{{ t("Проф. чистка") }}</dt><dd>{{ profile.cleaning }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Заметка врача — ЕДИНСТВЕННОЕ поле анкеты, которое в базе
+               есть по-настоящему, и оно действительно сохраняется. -->
+          <div class="card pcard pnote">
+            <h3>{{ t("Заметка врача") }}</h3>
+            <textarea class="field note" v-model="noteDraft" @input="saveNote"
+                      :placeholder="t('Что важно помнить об этом пациенте')"></textarea>
+            <div class="note-st">{{ noteState }}</div>
+          </div>
+
           <div class="tiles">
             <div class="tile" :class="(summary.counts || {}).attention ? 'warn' : 'ok'">
               <div class="k">{{ t("Требует внимания") }}</div>
@@ -714,6 +821,7 @@ createApp({
       newOpen: false, saving: false, formError: "",
       form: { last_name: "", first_name: "", birth_year: null, card_no: "", note: "" },
       patient: null, studies: [], registration: {}, summary: {},
+      profile: null, noteDraft: "", noteState: "",
       plan: {}, planLoaded: false, composed: null, composing: false,
       composeError: "", tab: "overview", openedKeys: [],
       upOpen: false, uploading: false, upError: "", upKind: "", files: [],
@@ -782,6 +890,9 @@ createApp({
       state.patient = d.patient;
       state.studies = d.studies;
       state.registration = d.registration || {};
+      state.profile = d.profile || null;
+      state.noteDraft = (d.patient && d.patient.note) || "";
+      state.noteState = "";
       state.summary = {};
       // Сводка приходит отдельным запросом: она собирается из всех
       // исследований и считается дольше, а список должен появиться сразу.
@@ -1060,6 +1171,47 @@ createApp({
       return t("не разобрано");
     }
 
+    /* Пол словом: «М» в карточке читается как инициал, а не как пол. */
+    const sexWord = computed(() => {
+      const v = (state.patient || {}).sex;
+      return v === "М" ? "мужчина" : v === "Ж" ? "женщина" : "";
+    });
+
+    /* Значение, на которое врач должен обратить внимание. «нет», прочерк и
+       пустая строка — это отсутствие особенности, а не особенность. */
+    const NO_FLAG = new Set(["", "-", "—", "нет", "Нет", "не указано", "отрицает"]);
+    function isFlag(v) { return !NO_FLAG.has(String(v || "").trim()); }
+
+    /* Заметка врача — единственное поле анкеты, которое есть в базе.
+       Сохраняем с задержкой: иначе запрос уходит на каждую букву. */
+    let noteTimer = null;
+    function saveNote() {
+      state.noteState = "";
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(async () => {
+        const p = state.patient;
+        if (!p) return;
+        state.noteState = t("сохраняем…");
+        try {
+          // PUT требует карточку целиком: шлём то, что уже есть, меняя
+          // только заметку.
+          await api(`/api/patients/${p.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              last_name: p.last_name, first_name: p.first_name,
+              middle_name: p.middle_name, birth_year: p.birth_year,
+              sex: p.sex, card_no: p.card_no, note: state.noteDraft,
+            }),
+          });
+          p.note = state.noteDraft;
+          state.noteState = t("сохранено");
+        } catch (e) {
+          state.noteState = t("не сохранилось");
+        }
+      }, 700);
+    }
+
     function statusText(s) {
       // Стадию обработки НЕ переводим: она приходит с сервера клиническим
       // текстом («сегментация скана нейросетью»), и перевод такого — это
@@ -1195,6 +1347,7 @@ createApp({
       planCount, kindsLine, findingGroups, isOpen, toggle,
       go, open, createPatient, searchDebounced, upload, onPick, onDrop,
       fmtDate, statusText, rowStatus, reviewDone, initials, avStyle,
+      sexWord, isFlag, saveNote,
       retry, photoGrid, photoCount, pickPhotos, dropPhotos, movePhoto, removePhoto, isArmed,
       openLightbox, closeLightbox,
       kindShort: k => KIND_SHORT[k] || k,

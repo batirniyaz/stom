@@ -1383,7 +1383,12 @@ def api_patient(pid: str) -> dict:
     # нужна ссылка, а не идентификатор.
     for st in studies:
         st["view_url"] = _study_view_url(st)
+    # Анкета (контакты, здоровье, история в клинике) есть ТОЛЬКО у
+    # карточек-примеров и лежит не в базе, а рядом с ростером: вести
+    # медицинскую анкету — отдельный продукт, и девять колонок под показ
+    # дали бы девять пустых граф у настоящих пациентов.
     return {"patient": p, "studies": studies,
+            "profile": pat.demo_profile(p),
             "registration": _registration_state(studies)}
 
 
