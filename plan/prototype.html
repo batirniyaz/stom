@@ -1,0 +1,357 @@
+<title>Прототип Stomadent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Раскладка: узкая шапка пациента, слева 3D-модель на тёмном фоне, справа один сайдбар с тремя вкладками. Данные находок выдуманные, модель челюсти настоящая (публичный набор). */
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --surface2:#eef0f4; --text:#161a20; --muted:#5d6775; --line:#dfe3e9;
+  --accent:#1f5fd6; --accent-soft:#e3ecfb;
+  --crit:#d3342b; --crit-soft:#fbe6e4; --warn:#b7791f; --warn-soft:#fbf0d9; --info:#64707f; --info-soft:#e9ecf1; --ok:#1d8a52; --ok-soft:#dff3e8;
+  --viewer:#0e1218;
+  --f-head:"Space Grotesk","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0f14; --surface:#161b22; --surface2:#1e242d; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a313b;
+  --accent:#6ea0ff; --accent-soft:#1b2a45;
+  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37; --ok:#59c98a; --ok-soft:#173326;
+  --viewer:#0a0d12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c0f14; --surface:#161b22; --surface2:#1e242d; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a313b;
+  --accent:#6ea0ff; --accent-soft:#1b2a45;
+  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37; --ok:#59c98a; --ok-soft:#173326;
+  --viewer:#0a0d12; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:1280px;margin:0 auto;padding-block:14px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.top h1{font:700 20px var(--f-head);margin:0}
+.pt{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px;flex:1;min-width:0}
+.pt b{font-weight:600}.pt .muted{color:var(--muted)}
+.demo-tag{font-size:12px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+
+/* 3D */
+.stage{position:relative;background:radial-gradient(120% 120% at 50% 20%,#1a212b,var(--viewer));border-radius:16px;overflow:hidden;height:min(72vh,680px);min-height:380px;border:1px solid var(--line)}
+#gl{position:absolute;inset:0}
+#gl canvas{display:block;width:100%;height:100%}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:#9aa5b4;font-size:14px;text-align:center;padding:20px}
+.tools{position:absolute;left:12px;top:12px;display:flex;flex-wrap:wrap;gap:8px;max-width:calc(100% - 24px)}
+.tool{background:rgba(22,27,34,.82);color:#e8ecf2;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;font-size:13px;backdrop-filter:blur(6px)}
+.tool[aria-pressed="false"]{opacity:.55}
+.tool.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.legend{position:absolute;left:12px;bottom:12px;display:flex;gap:12px;font-size:12px;color:#c4ccd6;background:rgba(14,18,24,.7);padding:6px 12px;border-radius:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.hint{position:absolute;right:12px;bottom:12px;font-size:12px;color:#9aa5b4;background:rgba(14,18,24,.7);padding:6px 12px;border-radius:10px}
+.cred{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* сайдбар */
+.side{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;height:min(72vh,680px);min-height:420px}
+@media (max-width:980px){.side{height:auto;min-height:0}}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;background:transparent;padding:12px 6px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs .n{display:inline-block;min-width:20px;font-size:12px;background:var(--surface2);border-radius:99px;padding:0 6px;margin-left:4px;color:var(--muted)}
+.pane{padding:12px;overflow:auto;flex:1;min-height:0}
+.pane[hidden]{display:none}
+.lv{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;white-space:nowrap;color:#fff}
+.lv.k{background:var(--crit)}.lv.v{background:var(--warn)}.lv.n{background:var(--info)}
+.fcard{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--surface)}
+.fcard.open{border-color:var(--accent)}
+.fhead{display:flex;gap:10px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:11px 12px}
+.fhead .t{flex:1;min-width:0;font-weight:500}
+.fhead .t small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.state{font-size:12px;font-weight:600;color:var(--ok)}
+.fcard.rej .t{text-decoration:line-through;color:var(--muted)}
+.fcard.rej .state{color:var(--muted)}
+.fbody{padding:0 12px 12px;border-top:1px solid var(--line);font-size:14px}
+.fbody details{margin:10px 0 0}
+.fbody summary{cursor:pointer;color:var(--accent);font-weight:500}
+.fbody label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 3px}
+.fbody select,.fbody textarea,.chatin input{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.fbody textarea{min-height:60px;resize:vertical}
+.err{color:var(--crit);font-size:13px;min-height:18px;margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;font-weight:600}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.bad{color:var(--crit);border-color:var(--crit)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.sum{background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:10px}
+.prog{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 12px}
+.prog i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0}
+.row .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:11px;color:#fff}
+.row .dot.ok{background:var(--ok);border-color:var(--ok)}.row .dot.rej{background:var(--info);border-color:var(--info)}
+.msgs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.b{background:var(--surface2);border-radius:12px;padding:9px 12px;font-size:14px;max-width:92%}
+.b.me{background:var(--accent-soft);align-self:flex-end}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.chatin{display:flex;gap:6px}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.docs{display:none;margin-top:16px;gap:14px;grid-template-columns:1fr 1fr}
+.docs.show{display:grid}
+@media (max-width:760px){.docs.show{grid-template-columns:1fr}}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
+.doc h3{font:700 17px var(--f-head);margin:0 0 4px}
+.doc .m{color:var(--muted);font-size:13px;margin-bottom:10px}
+.doc ul{margin:6px 0;padding-left:18px}
+.doc .foot{margin-top:12px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+</style>
+
+<div class="app">
+  <div class="top">
+    <h1>Stomadent</h1>
+    <div class="pt"><b>Пациент #A-0142</b><span class="muted">34 года</span><span>Жалоба: боль слева снизу на холодное</span><span class="muted">КЛКТ от 17.11.2026</span></div>
+    <span class="demo-tag">Прототип · данные выдуманные</span>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="stage">
+        <div id="gl"></div>
+        <div class="loading" id="loading">Загрузка 3D-модели…</div>
+        <div class="tools">
+          <button class="tool" id="tBone" aria-pressed="true">Кость</button>
+          <button class="tool" id="tNerve" aria-pressed="true">Нерв</button>
+          <button class="tool" id="tRot" aria-pressed="true">Автовращение</button>
+          <button class="tool acc" id="tReset">Вся челюсть</button>
+        </div>
+        <div class="legend"><span><i style="background:#e5484d"></i>Критичная</span><span><i style="background:#e8a33d"></i>Важная</span><span><i style="background:#8b96a5"></i>Незначительная</span></div>
+        <div class="hint">Вращать: мышь · Приблизить: колесо · Выбрать зуб: клик</div>
+      </div>
+      <p class="cred">Модель челюсти: публичный набор figshare 26965903, лицензия CC BY 4.0. Находки, пациент и тексты на странице придуманы.</p>
+      <div class="docs" id="docs"></div>
+    </div>
+
+    <aside class="side">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-t="find" aria-selected="true">Находки<span class="n" id="nFind">5</span></button>
+        <button role="tab" data-t="check" aria-selected="false">Чек-лист<span class="n" id="nCheck">0/5</span></button>
+        <button role="tab" data-t="chat" aria-selected="false">Чат</button>
+      </div>
+      <div class="pane" id="p-find"></div>
+      <div class="pane" id="p-check" hidden></div>
+      <div class="pane" id="p-chat" hidden></div>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
+var LV={k:'Критичная',v:'Важная',n:'Незначительная'};
+var COL={k:0xe5484d,v:0xe8a33d,n:0x8b96a5};
+
+/* ---------- выдуманные находки ---------- */
+var F=[
+ {id:'f36',tooth:36,t:'Периапикальный очаг',lv:'k',why:'На срезе через верхушку корня видна зона разрежения 4,2 мм. Порог для очага в исследованиях — 3 мм. Жалоба пациента «боль слева снизу» совпадает по месту.',ai:'Зона разрежения у верхушки корня',plan:'лечение канала, 2–3 визита'},
+ {id:'f37',tooth:37,t:'Глубокий кариес',lv:'v',why:'Полость доходит до 0,8 мм от пульпы. Порог близости — 1 мм.',ai:'Полость близко к пульпе',plan:'пломбирование'},
+ {id:'f46',tooth:46,t:'Кариес',lv:'v',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',ai:'Снижение плотности на контактной поверхности',plan:'пломбирование'},
+ {id:'f48',tooth:48,t:'Ретенция зуба мудрости',lv:'n',why:'Коронка зуба 48 на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга'},
+ {id:'f15',tooth:15,t:'Корень близко к дну пазухи',lv:'n',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних зубов и сама по себе не патология.',ai:'Корень близко к пазухе',plan:'учесть при планировании имплантации'}
+];
+var sel=null, rev={}, lvOver={}, comm={};
+function lvOf(f){return lvOver[f.id]||f.lv}
+function byId(id){return F.filter(function(f){return f.id===id})[0]}
+function byTooth(n){return F.filter(function(f){return f.tooth===n})[0]}
+
+/* ---------- 3D ---------- */
+var scene,camera,renderer,controls,model,teethMesh={},bone=[],nerve=[],others=[],origCam,origTarget,anim=null;
+(function init3d(){
+  var host=$('#gl');
+  if(!window.THREE||!THREE.GLTFLoader){$('#loading').textContent='3D не загрузился: проверьте интернет.';return}
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(35,1,0.5,2000);
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  host.appendChild(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x334155,0.9));
+  var d1=new THREE.DirectionalLight(0xffffff,0.8);d1.position.set(1,1.2,1.5);scene.add(d1);
+  var d2=new THREE.DirectionalLight(0x9fb4d6,0.35);d2.position.set(-1.5,0.3,-1);scene.add(d2);
+  controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;controls.autoRotate=true;controls.autoRotateSpeed=0.8;
+  controls.addEventListener('start',function(){if($('#tRot').getAttribute('aria-pressed')==='true'){controls.autoRotate=false;$('#tRot').setAttribute('aria-pressed','false')}});
+  function resize(){var r=host.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+  new ResizeObserver(resize).observe(host);resize();
+  var loader=new THREE.GLTFLoader();
+  fetch('model.b64.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(function(t){var bin=atob(t),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer}).then(function(buf){
+    loader.parse(buf,'',function(g){
+      model=g.scene;scene.add(model);prepare();$('#loading').style.display='none';
+    },function(e){$('#loading').textContent='Не удалось разобрать модель.'});
+  }).catch(function(){$('#loading').textContent='Не удалось загрузить модель.'});
+  var ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),down=null;
+  renderer.domElement.addEventListener('pointerdown',function(e){down=[e.clientX,e.clientY]});
+  renderer.domElement.addEventListener('pointerup',function(e){
+    if(!down||Math.abs(e.clientX-down[0])+Math.abs(e.clientY-down[1])>5||!model)return;
+    var r=renderer.domElement.getBoundingClientRect();
+    mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(mouse,camera);
+    var targets=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)targets.push(m)})});
+    var hit=ray.intersectObjects(targets,false)[0];
+    if(hit){var n=hit.object.userData.fdi,f=byTooth(n);if(f)select(f.id,true)}
+  });
+  (function loop(){requestAnimationFrame(loop);
+    if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*(3-2*k);
+      camera.position.lerpVectors(anim.p0,anim.p1,e);controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
+    controls.update();renderer.render(scene,camera)})();
+})();
+function prepare(){
+  var ivory=0xe9e4d8;
+  model.traverse(function(o){
+    var chain=[],p=o;while(p){chain.push(p.name);p=p.parent}
+    var tooth=null,kind=null;
+    chain.forEach(function(n){var m=/^tooth_(\d\d)$/.exec(n||'');if(m)tooth=+m[1];if(/^(mandible|maxilla)$/.test(n))kind='bone';if(n==='nerve')kind='nerve';if(/^(pulp|pharynx|incisive|lingual|sinus|prosthetics)$/.test(n))kind='hide'});
+    if(!o.isMesh)return;
+    if(tooth){
+      o.material=new THREE.MeshStandardMaterial({color:ivory,roughness:.45,metalness:0,side:THREE.DoubleSide});
+      o.userData.fdi=tooth;(teethMesh[tooth]=teethMesh[tooth]||[]).push(o);
+    }else if(kind==='bone'){
+      o.material=new THREE.MeshStandardMaterial({color:0xc9d1dc,transparent:true,opacity:.22,roughness:.8,depthWrite:false,side:THREE.DoubleSide});bone.push(o);
+    }else if(kind==='nerve'){
+      o.material=new THREE.MeshStandardMaterial({color:0xe5645c,roughness:.5});nerve.push(o);
+    }else{o.visible=false;others.push(o)}
+  });
+  var box=new THREE.Box3().setFromObject(model),c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());
+  var dist=Math.max(s.x,s.y,s.z)*2.1;
+  camera.position.set(c.x,c.y+s.y*.15,c.z+dist);controls.target.copy(c);camera.lookAt(c);
+  origCam=camera.position.clone();origTarget=c.clone();
+  colorTeeth();
+}
+function colorTeeth(){
+  Object.keys(teethMesh).forEach(function(k){
+    var f=byTooth(+k),base=new THREE.Color(0xe9e4d8);
+    teethMesh[k].forEach(function(m){
+      var c=base.clone();
+      if(f){var r=rev[f.id];c.lerp(new THREE.Color(COL[lvOf(f)]),r==='rej'?0.25:0.72)}
+      m.material.color.copy(c);
+      m.material.emissive=new THREE.Color(sel&&f&&f.id===sel?0x335599:0x000000);
+    });
+  });
+}
+function flyTo(toothNum){
+  var ms=teethMesh[toothNum];if(!ms||!camera)return;
+  var b=new THREE.Box3();ms.forEach(function(m){b.expandByObject(m)});
+  var c=b.getCenter(new THREE.Vector3()),dir=camera.position.clone().sub(controls.target).normalize();
+  anim={t:0,n:40,p0:camera.position.clone(),p1:c.clone().add(dir.multiplyScalar(38)),c0:controls.target.clone(),c1:c};
+}
+function resetView(){if(!origCam)return;isolate(null);anim={t:0,n:40,p0:camera.position.clone(),p1:origCam.clone(),c0:controls.target.clone(),c1:origTarget.clone()}}
+var isolated=null;
+function isolate(n){
+  isolated=n;
+  Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){m.visible=(n==null)||(+k===n)})});
+  var boneOn=$('#tBone').getAttribute('aria-pressed')==='true';
+  bone.forEach(function(m){m.visible=boneOn&&n==null});
+  nerve.forEach(function(m){m.visible=$('#tNerve').getAttribute('aria-pressed')==='true'&&n==null});
+}
+$('#tBone').addEventListener('click',function(){var on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);bone.forEach(function(m){m.visible=on&&isolated==null})});
+$('#tNerve').addEventListener('click',function(){var on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);nerve.forEach(function(m){m.visible=on&&isolated==null})});
+$('#tRot').addEventListener('click',function(){var on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);if(controls)controls.autoRotate=on});
+$('#tReset').addEventListener('click',resetView);
+
+/* ---------- сайдбар ---------- */
+$$('.tabs button').forEach(function(b){b.addEventListener('click',function(){
+  $$('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
+  ['find','check','chat'].forEach(function(t){$('#p-'+t).hidden=t!==b.dataset.t});
+})});
+function goTab(t){var b=$('.tabs button[data-t="'+t+'"]');if(b)b.click()}
+
+function drawFind(){
+  var p=$('#p-find');p.innerHTML='';
+  var done=Object.keys(rev).length;
+  p.appendChild(el('div','sum','Найдено 5 проблем: 1 критичная, 2 важные, 2 незначительные. Жалоба слева снизу — начните с зуба 36.'));
+  F.forEach(function(f){
+    var open=sel===f.id,r=rev[f.id],lv=lvOf(f);
+    var c=el('div','fcard'+(open?' open':'')+(r==='rej'?' rej':''));
+    var h=el('button','fhead','<span class="lv '+lv+'">'+LV[lv]+'</span><span class="t">'+f.t+'<small>Зуб '+f.tooth+'</small></span>'+(r?'<span class="state">'+(r==='ok'?'✓ подтверждена':'отклонена')+'</span>':''));
+    h.type='button';h.addEventListener('click',function(){select(open?null:f.id,true)});c.appendChild(h);
+    if(open){
+      var b=el('div','fbody');
+      b.innerHTML='<details><summary>Почему программа так решила</summary><p style="margin:6px 0 0">'+f.why+'</p></details>'
+       +'<label for="lvSel">Уровень</label><select id="lvSel"><option value="k">Критичная</option><option value="v">Важная</option><option value="n">Незначительная</option></select>'
+       +'<label for="cmt">Ваш комментарий (от 10 символов)</label><textarea id="cmt" placeholder="Что вы увидели и почему согласны"></textarea>'
+       +'<div class="err" id="err"></div>'
+       +'<div class="btns"><button class="btn pri" id="ok" type="button">Подтвердить</button><button class="btn bad" id="rej" type="button">Отклонить</button><button class="btn" id="iso" type="button">'+(isolated===f.tooth?'Показать все зубы':'Показать только этот зуб')+'</button></div>';
+      c.appendChild(b);
+    }
+    p.appendChild(c);
+  });
+  var ls=$('#lvSel');if(ls){var f=byId(sel);ls.value=lvOf(f);$('#cmt').value=comm[sel]||'';
+    ls.addEventListener('change',function(){lvOver[sel]=this.value;comm[sel]=$('#cmt').value;colorTeeth();drawFind();drawCheck()});
+    $('#cmt').addEventListener('input',function(){comm[sel]=this.value});
+    function norm(s){return s.toLowerCase().replace(/[^a-zа-я0-9]/g,'')}
+    function decide(kind){var t=$('#cmt').value.trim(),e=$('#err');
+      if(t.length<10){e.textContent='Напишите хотя бы пару слов своими словами (от 10 символов).';return}
+      if(norm(t).indexOf(norm(f.ai))===0&&norm(t).length<norm(f.ai).length+8){e.textContent='Это повторяет текст программы. Опишите своими словами.';return}
+      comm[f.id]=t;rev[f.id]=kind;refresh()}
+    $('#ok').addEventListener('click',function(){decide('ok')});
+    $('#rej').addEventListener('click',function(){decide('rej')});
+    $('#iso').addEventListener('click',function(){isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth);drawFind()});
+  }
+}
+function drawCheck(){
+  var done=Object.keys(rev).length,p=$('#p-check');p.innerHTML='';
+  $('#nCheck').textContent=done+'/'+F.length;
+  p.appendChild(el('div',null,'<b>'+done+' из '+F.length+' проверено</b>'));
+  p.appendChild(el('div','prog','<i style="width:'+(done/F.length*100)+'%"></i>'));
+  F.forEach(function(f){
+    var r=rev[f.id],row=el('div','row','<span class="dot '+(r||'')+'">'+(r==='ok'?'✓':r==='rej'?'–':'')+'</span><span class="t">Зуб '+f.tooth+' · '+f.t+'</span><span class="lv '+lvOf(f)+'">'+LV[lvOf(f)]+'</span>');
+    row.style.cursor='pointer';row.addEventListener('click',function(){goTab('find');select(f.id,true)});p.appendChild(row);
+  });
+  var b=el('button','btn pri','Создать заключение');b.type='button';b.style.marginTop='14px';b.style.width='100%';b.disabled=done<F.length;
+  b.addEventListener('click',buildDocs);p.appendChild(b);
+  p.appendChild(el('p','note',done<F.length?'Заключение откроется, когда по всем находкам принято решение.':'Всё проверено. Заключение появится под 3D-моделью.'));
+}
+function select(id,fromUi){
+  sel=id;colorTeeth();drawFind();
+  if(id){var f=byId(id);flyTo(f.tooth);if(fromUi)goTab('find')}
+}
+function refresh(){colorTeeth();drawFind();drawCheck()}
+
+/* ---------- заключение ---------- */
+function buildDocs(){
+  var ok=F.filter(function(f){return rev[f.id]==='ok'}),rj=F.filter(function(f){return rev[f.id]==='rej'});
+  var cnt={k:0,v:0,n:0};ok.forEach(function(f){cnt[lvOf(f)]++});
+  var d=$('#docs');d.className='docs show';
+  var doc='<div class="doc"><h3>Заключение по КЛКТ — для врача</h3><div class="m">Пациент #A-0142 · снимок 17.11.2026</div>'
+   +'<div>Жалоба: боль слева снизу на холодное</div><div>Подтверждено: критичных '+cnt.k+' · важных '+cnt.v+' · незначительных '+cnt.n+'</div><ul>';
+  ok.forEach(function(f){doc+='<li><b>Зуб '+f.tooth+'</b>, '+f.t.toLowerCase()+' ('+LV[lvOf(f)].toLowerCase()+'). Комментарий врача: «'+comm[f.id]+'»</li>'});
+  doc+='</ul>'+(rj.length?'<div class="m">Отклонено врачом: '+rj.map(function(f){return 'зуб '+f.tooth}).join(', ')+'</div>':'')
+   +'<div class="foot">Предварительный разбор выполнен программой (nnU-Net, Claude Haiku) и проверен врачом: ФИО врача, '+new Date().toLocaleDateString('ru-RU')+'.</div></div>';
+  var pat='<div class="doc"><h3>Ваши зубы — простыми словами</h3><div class="m">Для пациента #A-0142</div>';
+  if(!ok.length)pat+='<div>Серьёзных проблем врач не подтвердил.</div>';
+  ok.forEach(function(f){pat+='<p><b>Зуб '+f.tooth+'.</b> '+f.t+'. Что делать: '+f.plan+'.</p>'});
+  pat+='<div class="foot">Сроки ориентировочные, их уточнит врач. Разбор подготовлен программой и проверен врачом.</div></div>';
+  d.innerHTML=doc+pat;d.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ---------- чат ---------- */
+var Q=[
+ ['Сколько зубов с проблемами?','Находок 5 на 5 зубах: 1 критичная, 2 важные, 2 незначительные.'],
+ ['Почему зуб 36 критичный?','У верхушки корня 36 зона разрежения 4,2 мм, порог — 3 мм, и пациент жалуется на боль слева снизу. Решение за вами: посмотрите срез через верхушку корня.'],
+ ['Сколько визитов нужно?','По плану ориентировочно 4–6 визитов: лечение канала 36 (2–3), пломбирование 37 и 46, наблюдение за 48. Сроки уточнит врач.'],
+ ['Какая у зуба 12 толщина эмали?','Это программа не измеряет, поэтому числа я не назову.']
+];
+function drawChat(){
+  var p=$('#p-chat');
+  p.innerHTML='<div class="msgs" id="msgs"></div><div class="chips" id="chips"></div><form class="chatin" id="cf"><input id="ci" placeholder="Задайте вопрос по этому снимку" autocomplete="off"><button class="btn pri" type="submit">Спросить</button></form><p class="note">В прототипе ответы заготовлены. Настоящий чат отвечает только по данным этого снимка.</p>';
+  var m=$('#msgs');
+  function add(w,t){m.appendChild(el('div','b'+(w==='me'?' me':''),t));p.scrollTop=p.scrollHeight}
+  add('bot','Нашёл 5 проблем: 1 критичная, 2 важные, 2 незначительные. Пациент жалуется на боль слева снизу — начните с зуба 36.');
+  Q.forEach(function(q){var b=el('button',null,q[0]);b.type='button';b.addEventListener('click',function(){add('me',q[0]);add('bot',q[1])});$('#chips').appendChild(b)});
+  $('#cf').addEventListener('submit',function(e){e.preventDefault();var v=$('#ci').value.trim();if(!v)return;add('me',v);
+    var hit=Q.filter(function(q){return q[0].toLowerCase().split(' ').filter(function(w){return w.length>4&&v.toLowerCase().indexOf(w.slice(0,5))>=0}).length>=2})[0];
+    add('bot',hit?hit[1]:'В прототипе я отвечаю только на готовые вопросы выше.');$('#ci').value=''});
+}
+drawFind();drawCheck();drawChat();
+})();
+</script>
