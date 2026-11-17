@@ -70,6 +70,7 @@ kbd{font:600 12px var(--f);border:1px solid var(--line);border-bottom-width:2px;
 /* вход: панель слева на главной, череп чуть вправо */
 .hlogin{position:absolute;z-index:3;left:max(24px,6vw);top:50%;width:min(380px,calc(100% - 48px));transform:translate(-24px,-50%);opacity:0;visibility:hidden;transition:opacity .45s ease,transform .6s cubic-bezier(.2,.7,.2,1),visibility 0s .45s}
 .home.login-mode .hlogin{opacity:1;visibility:visible;transform:translate(0,-50%);transition:opacity .5s ease .3s,transform .7s cubic-bezier(.2,.7,.2,1) .3s,visibility 0s}
+.lback{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;padding:4px 0;margin-bottom:14px;cursor:pointer}.lback:hover{text-decoration:underline}
 .hcopy{transition:opacity .4s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
 .home.login-mode .hcopy{opacity:0;pointer-events:none;transform:translate(-32px,-52%)}
 #heroGl{transition:transform .9s cubic-bezier(.2,.7,.2,1)}
@@ -462,7 +463,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     </div>
     <div class="hbtns"><button class="btn pri big" id="hOpen">Открыть пациентов</button><button class="btn ghost" id="hDemo">Посмотреть демо-кейс</button></div>
   </div>
-  <div class="hlogin" id="hlogin"><div class="lbox">
+  <div class="hlogin" id="hlogin"><button class="lback" id="lBack" type="button">← Назад</button><div class="lbox">
     <button class="wm" id="lLogo" style="font-size:22px"><i></i>Actina</button>
     <h1>Вход для врача</h1>
     <div id="lstep1">
@@ -709,6 +710,8 @@ $('#hOpen').addEventListener('click',function(){go('#/patients')});
 $('#hDemo').addEventListener('click',function(){if(!S.session){S.session={name:docName(),demo:true,trust:true};save()}go('#/case/DEMO-001')});
 $('#meBtn').addEventListener('click',function(){go('#/profile')});
 $('#lLogo').addEventListener('click',function(){go('#/')});
+$('#lBack').addEventListener('click',function(){go('#/')});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('#v-home').classList.contains('login-mode'))go('#/')});
 $('#logoBtn').addEventListener('click',function(){go('#/patients')});
 $('#phone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.indexOf('998')===0)d=d.slice(3);d=d.slice(0,9);var o='+998 ';if(d.length>0)o+=d.slice(0,2);if(d.length>2)o+=' '+d.slice(2,5);if(d.length>5)o+=' '+d.slice(5,7);if(d.length>7)o+=' '+d.slice(7,9);this.value=o});
 $('#getCode').addEventListener('click',function(){
