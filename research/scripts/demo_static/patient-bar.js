@@ -1,0 +1,109 @@
+/* Панель пациента над вьюером: чей это снимок и что ещё у него есть.
+ *
+ * Зачем. Открыв исследование, врач терял контекст: на экране зубы, а чьи —
+ * не написано. Чтобы сравнить КЛКТ со сканом одного человека, приходилось
+ * возвращаться в список пациентов и заходить заново — и так на каждое
+ * сравнение.
+ *
+ * Один файл на оба вьюера намеренно. Панель одинаковая, а копия в каждом
+ * вьюере разошлась бы: в этом проекте так уже случилось со справочником
+ * ролей и с палитрой.
+ *
+ * Подключение:
+ *     <script src="/patient-bar.js"></script>
+ *     patientBar.mount(caseId, элемент);   // элемент — куда вставить
+ */
+(function () {
+  const KIND_SHORT = { cbct: "КЛКТ", ios: "Скан", opg: "ОПТГ",
+                       periapical: "Прицельный" };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"]/g,
+      c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  function style() {
+    if (document.getElementById("patient-bar-css")) return;
+    const el = document.createElement("style");
+    el.id = "patient-bar-css";
+    el.textContent = `
+      .pbar {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        padding: 8px 14px; border-bottom: 1px solid var(--line, rgba(255,255,255,.09));
+        background: var(--panel-2, #1c1a21); font-size: 13px;
+      }
+      .pbar a.pb-back {
+        color: var(--muted, #a9a29a); text-decoration: none; font-size: 12.5px;
+        border: 1px solid var(--line, rgba(255,247,237,.09)); border-radius: 8px;
+        padding: 4px 9px;
+      }
+      .pbar a.pb-back:hover { color: var(--text, #ede9e3); }
+      .pbar .pb-name { font-weight: 600; }
+      .pbar .pb-sub { color: var(--muted, #a9a29a); font-size: 12px; }
+      .pbar .pb-studies { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+      .pbar .pb-st {
+        border: 1px solid var(--line, rgba(255,247,237,.09)); border-radius: 8px;
+        padding: 4px 11px; font-size: 12px; color: var(--muted, #a9a29a);
+        text-decoration: none; white-space: nowrap;
+      }
+      .pbar .pb-st:hover { color: var(--text, #ede9e3);
+        border-color: var(--line-2, rgba(255,247,237,.16)); }
+      .pbar .pb-st.on {
+        color: var(--cyan, #35c9e0); border-color: rgba(53,201,224,.45);
+        background: rgba(53,201,224,.12);
+      }
+      /* Исследование, которое ещё считается или упало, кликать незачем —
+         показываем состояние, а не ведём в пустой экран. */
+      .pbar .pb-st.busy { opacity: .55; pointer-events: none; }
+    `;
+    document.head.appendChild(el);
+  }
+
+  async function mount(caseId, target) {
+    if (!caseId || !target) return null;
+    style();
+    let data;
+    try {
+      const r = await fetch(`/api/cases/${encodeURIComponent(caseId)}/owner`);
+      if (!r.ok) return null;
+      data = await r.json();
+    } catch (e) { return null; }
+    if (!data || !data.patient) return null;
+
+    const p = data.patient;
+    const parts = [];
+    if (p.age) parts.push(`${p.age} лет`);
+    if (p.card_no) parts.push(`карта ${esc(p.card_no)}`);
+
+    // Если у пациента несколько исследований одного типа, «Скан, Скан, Скан»
+    // ничего не различает — добавляем дату. При одном таком типе дата лишняя.
+    const counts = {};
+    for (const s of data.studies || []) counts[s.kind] = (counts[s.kind] || 0) + 1;
+
+    const chips = (data.studies || []).map(s => {
+      const busy = s.status !== "ready";
+      let label = KIND_SHORT[s.kind] || s.kind;
+      if (counts[s.kind] > 1) {
+        const d = new Date(s.taken_at || s.uploaded_at);
+        if (!isNaN(d)) label += " " + d.toLocaleDateString("ru-RU",
+          { day: "2-digit", month: "2-digit" });
+      }
+      const title = busy ? `${s.kind_label}: ${s.status}` : s.kind_label;
+      return `<a class="pb-st${s.current ? " on" : ""}${busy ? " busy" : ""}"
+                 href="${busy ? "#" : s.view_url}" title="${esc(title)}"
+                >${label}${busy ? " ·" : ""}</a>`;
+    }).join("");
+
+    const bar = document.createElement("div");
+    bar.className = "pbar";
+    bar.innerHTML = `
+      <a class="pb-back" href="/patients/${p.id}">← Карточка</a>
+      <span class="pb-name">${esc(p.display)}</span>
+      <span class="pb-sub">${parts.join(" · ")}</span>
+      <span class="pb-studies">${chips}</span>`;
+    target.prepend(bar);
+    return bar;
+  }
+
+  window.patientBar = { mount };
+})();

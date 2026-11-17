@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Границы диагностики Stomadent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600;7..72,700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+:root {
+  --bg: #f6f4f0;
+  --surface: #ffffff;
+  --surface-2: #f0ede8;
+  --line: #ddd7cf;
+  --line-2: #c9c2b8;
+  --text: #23262b;
+  --text-2: #565b63;
+  --muted: #7d838c;
+  --accent: #0d7c8a;
+  --accent-soft: rgba(13, 124, 138, .10);
+  --ok: #1c7a4f;
+  --ok-soft: rgba(28, 122, 79, .11);
+  --go: #0d6fa8;
+  --go-soft: rgba(13, 111, 168, .11);
+  --warn: #9a6510;
+  --warn-soft: rgba(154, 101, 16, .12);
+  --stop: #a4402f;
+  --stop-soft: rgba(164, 64, 47, .11);
+  --shadow: 0 1px 2px rgba(35, 38, 43, .05), 0 8px 24px -16px rgba(35, 38, 43, .28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131519;
+    --surface: #1a1d22;
+    --surface-2: #21252b;
+    --line: #2b3037;
+    --line-2: #3a4048;
+    --text: #e8e6e2;
+    --text-2: #b0b5bd;
+    --muted: #848a93;
+    --accent: #3fc4d4;
+    --accent-soft: rgba(63, 196, 212, .13);
+    --ok: #4bc98a;
+    --ok-soft: rgba(75, 201, 138, .13);
+    --go: #56aef0;
+    --go-soft: rgba(86, 174, 240, .13);
+    --warn: #e0a94a;
+    --warn-soft: rgba(224, 169, 74, .14);
+    --stop: #ef8a76;
+    --stop-soft: rgba(239, 138, 118, .13);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .8);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #131519;
+  --surface: #1a1d22;
+  --surface-2: #21252b;
+  --line: #2b3037;
+  --line-2: #3a4048;
+  --text: #e8e6e2;
+  --text-2: #b0b5bd;
+  --muted: #848a93;
+  --accent: #3fc4d4;
+  --accent-soft: rgba(63, 196, 212, .13);
+  --ok: #4bc98a;
+  --ok-soft: rgba(75, 201, 138, .13);
+  --go: #56aef0;
+  --go-soft: rgba(86, 174, 240, .13);
+  --warn: #e0a94a;
+  --warn-soft: rgba(224, 169, 74, .14);
+  --stop: #ef8a76;
+  --stop-soft: rgba(239, 138, 118, .13);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Onest, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+}
+
+/* ---------- шапка ---------- */
+
+.eyebrow {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+h1 {
+  font-family: Literata, Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.14;
+  letter-spacing: -.015em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+
+.lede {
+  font-size: clamp(16.5px, 2vw, 19px);
+  line-height: 1.62;
+  color: var(--text-2);
+  max-width: 68ch;
+  margin: 0 0 10px;
+}
+
+.stamp {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- главный вывод ---------- */
+
+.verdict {
+  margin: 44px 0 8px;
+  padding: 26px 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.verdict h2 {
+  font-family: Literata, Georgia, serif;
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  letter-spacing: -.01em;
+}
+
+.verdict p {
+  margin: 0 0 20px;
+  color: var(--text-2);
+  max-width: 72ch;
+}
+
+.limits {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.limit {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.limit .n {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 7px;
+}
+
+.limit b {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.limit span {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+  display: block;
+}
+
+/* ---------- секции ---------- */
+
+.sect { margin-top: 52px; }
+
+.sect-h {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.sect-h h2 {
+  font-family: Literata, Georgia, serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+
+.sect-h .cnt {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  margin-top: 22px;
+}
+
+/* ---------- карточка пункта ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card h3 {
+  font-size: 17.5px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -.005em;
+}
+
+.chip {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.chip.ok { color: var(--ok); background: var(--ok-soft); border-color: var(--ok-soft); }
+.chip.go { color: var(--go); background: var(--go-soft); border-color: var(--go-soft); }
+.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: var(--warn-soft); }
+.chip.stop { color: var(--stop); background: var(--stop-soft); border-color: var(--stop-soft); }
+
+.metric {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  color: var(--text-2);
+}
+
+.metric b { color: var(--text); font-weight: 600; }
+
+.rows { display: grid; gap: 9px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  align-items: baseline;
+}
+
+.row .k {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 2px;
+}
+
+.row .v { color: var(--text-2); }
+.row .v b { color: var(--text); font-weight: 600; }
+
+/* ---------- что нужно от клиники ---------- */
+
+.ask {
+  margin-top: 56px;
+  padding: 30px 30px 26px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.ask h2 {
+  font-family: Literata, Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  letter-spacing: -.01em;
+}
+
+.ask > p {
+  margin: 0 0 22px;
+  color: var(--text-2);
+  max-width: 70ch;
+}
+
+.asks { display: grid; gap: 16px; }
+
+.item {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.item .num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+}
+
+.item b { display: block; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.item span { display: block; color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
+.item .why { color: var(--muted); font-size: 13.5px; margin-top: 5px; }
+
+/* ---------- подвал ---------- */
+
+.foot {
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 76ch;
+}
+
+.foot b { color: var(--text-2); font-weight: 600; }
+
+@media (max-width: 560px) {
+  .wrap { padding: 40px 18px 72px; }
+  .row { grid-template-columns: 1fr; gap: 2px; }
+  .verdict, .ask { padding: 22px 20px; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Stomadent · разбор по первоисточникам</p>
+  <h1>Границы диагностики: что мы измеряем и чего не видим</h1>
+  <p class="lede">
+    Четырнадцать задач из списка, составленного на приёме. По каждой проверено,
+    что показывают опубликованные работы, что делает Diagnocat и что получается
+    на наших собственных снимках.
+  </p>
+  <p class="lede">
+    Итог короткий: <b>задач, невыполнимых по алгоритму, в списке нет</b>.
+    Осталось три ограничения, и ни одно из них не снимается выбором модели.
+  </p>
+  <p class="stamp">Клиника ProAxis, Нукус · сентябрь 2026 · черновик, пороги врачом не подписаны</p>
+
+  <div class="verdict">
+    <h2>Три ограничения, которые решаются не в коде</h2>
+    <p>
+      Каждое из них я сначала принял за невозможность задачи. Проверка по
+      источникам показала: задача решаема, упирается другое.
+    </p>
+    <div class="limits">
+      <div class="limit">
+        <span class="n">01</span>
+        <b>Чего нет в кадре</b>
+        <span>Сустав лежит выше поля зрения наших снимков. Снимается протоколом
+        съёмки.</span>
+      </div>
+      <div class="limit">
+        <span class="n">02</span>
+        <b>Чего нет в разметке</b>
+        <span>Пазухи, дентикли. Эталонные датасеты сами их не содержат.
+        Снимается своей разметкой.</span>
+      </div>
+      <div class="limit">
+        <span class="n">03</span>
+        <b>Чего нет в снимке</b>
+        <span>Пульпит как диагноз, число каналов на панораме. Снимается другим
+        входом: жалобами пациента, прицельным снимком.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ КЛКТ ============ -->
+  <section class="sect">
+    <div class="sect-h">
+      <h2>КЛКТ</h2>
+      <span class="cnt">6 задач</span>
+    </div>
+    <div class="grid">
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Нижнечелюстной нерв</h3>
+          <span class="chip ok">работает</span>
+        </div>
+        <div class="metric">
+          расстояние до корней · кортикальная стенка<br>
+          <b>риск повреждения ×9.9</b> при отсутствии стенки
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Есть</span><span class="v">Канал, резцовый и язычный каналы, расстояние до каждого корня</span></div>
+          <div class="row"><span class="k">Нет</span><span class="v">Ментального отверстия — его нет и у Diagnocat</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Тип кости</h3>
+          <span class="chip ok">сделано иначе</span>
+        </div>
+        <div class="metric">
+          низ фронт <b>0.95</b> · верх фронт <b>0.86</b> · верх жеват <b>0.72</b><br>
+          тот же градиент, что у Миша — но измеренный
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Чем</span><span class="v">Доля костной ткани, порог от дентина <b>этого же</b> снимка</span></div>
+          <div class="row"><span class="k">Почему</span><span class="v">Ошибка HU на 13 аппаратах — <b>35…1562</b>, шире всего диапазона D1–D4</span></div>
+          <div class="row"><span class="k">Итог</span><span class="v">Чужим порогом нельзя, своим измерением можно</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Пазуха</h3>
+          <span class="chip go">нужна разметка</span>
+        </div>
+        <div class="metric">
+          в эталоне ToothFairy2: <b>1.6 см³</b> при норме ~15<br>
+          у нас на выходе: <b>1–3 см³</b> — то же число
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Взять</span><span class="v">nnU-Net на воздушной полости: <b>Dice 0.96</b> при вокселе 0.40 мм — крупнее нашего</span></div>
+          <div class="row"><span class="k">Цена</span><span class="v">45–80 томов своей разметки</span></div>
+          <div class="row"><span class="k">Даст</span><span class="v">Объём, утолщение слизистой, кисты — сейчас не считаем ничего из этого</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Канал MB2</h3>
+          <span class="chip go">другая постановка</span>
+        </div>
+        <div class="metric">
+          обычный КЛКТ <b>72%</b> → супер-разрешение <b>92%</b> → микро-КТ <b>100%</b><br>
+          наш инструмент (сегментация) — <b>53.8%</b>, худший результат
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Взять</span><span class="v">Классификатор среза корня, а <b>не</b> сегментацию канала</span></div>
+          <div class="row"><span class="k">Почему</span><span class="v">Канал 0.24 мм при вокселе 0.31 — классификатор ловит косвенные признаки, ему не нужно его разрешать</span></div>
+          <div class="row"><span class="k">Потолок</span><span class="v">Разрешение остаётся потолком, но не стеной</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Ортодонтия</h3>
+          <span class="chip go">реализуемо</span>
+        </div>
+        <div class="metric">
+          на скане уже считаем: класс по Энглю, прикус,<br>
+          симметрия дуги · <b>AUC 0.97</b> глубокий прикус
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Добавить</span><span class="v">Цефалометрию по КЛКТ — точки и углы по готовым маскам</span></div>
+          <div class="row"><span class="k">Ориентир</span><span class="v">У Diagnocat 76 точек и 23 измерения</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Сустав (ВНЧС)</h3>
+          <span class="chip stop">нет в кадре</span>
+        </div>
+        <div class="metric">
+          модель существует: воксель <b>0.3 мм</b> — ровно наш, точность <b>92.4%</b><br>
+          но челюсть упирается в границу тома у <b>всех</b> наших кейсов
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Замер</span><span class="v">Площадь сечения растёт вниз: 64 → 106 → 180 → 373 мм². Это срез ветви, а не мыщелка — головка выше кадра</span></div>
+          <div class="row"><span class="k">Нужно</span><span class="v">Протокол съёмки с полем зрения, захватывающим суставные головки</span></div>
+          <div class="row"><span class="k">Пока</span><span class="v">Обучать модель не на чем: сустава нет ни на одном снимке</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ ОПТГ ============ -->
+  <section class="sect">
+    <div class="sect-h">
+      <h2>Панорама</h2>
+      <span class="cnt">6 задач</span>
+    </div>
+    <div class="grid">
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Кариес и глубокий кариес</h3>
+          <span class="chip ok">работает</span>
+        </div>
+        <div class="metric">
+          наш ансамбль <b>mAP50 0.665</b> — норма для панорамы<br>
+          с разметкой по битвингам: <b>recall 0.96</b>
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Рост</span><span class="v">Даёт не смена архитектуры, а разметка, подтверждённая прицельными снимками</span></div>
+          <div class="row"><span class="k">Нельзя</span><span class="v">Говорить «кариеса нет»: до четверти проксимальных очагов не проецируется</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Периапикальные очаги</h3>
+          <span class="chip ok">работает</span>
+        </div>
+        <div class="metric">
+          чувствительность <b>0.78–0.93</b>, специфичность до <b>1.00</b><br>
+          но у клыков — <b>0.27</b>
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Добавить</span><span class="v">Объём очага в мм³ — у Diagnocat это единственная числовая находка</span></div>
+          <div class="row"><span class="k">Нельзя</span><span class="v">Отличить кисту от гранулёмы по снимку</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Пародонтит со степенью</h3>
+          <span class="chip go">две задачи</span>
+        </div>
+        <div class="metric">
+          «пародонтит II+ или нет» — <b>AUROC 0.94</b><br>
+          четыре стадии по снимку — <b>0.77</b>
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Взять</span><span class="v">Шесть ключевых точек: шейка, гребень, апекс — мезиально и дистально. <b>Тот же алгоритм, что уже работает у нас на КЛКТ</b></span></div>
+          <div class="row"><span class="k">Оговорка</span><span class="v">Авторы стадирующей работы пишут сами: модель стадирует только <b>рентгенологическую</b> убыль. Полная стадия требует зондирования</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Эндодонтическое лечение</h3>
+          <span class="chip ok">факт лечения</span>
+        </div>
+        <div class="metric">
+          наличие пломбировки: <b>92–98%</b><br>
+          гуттаперча яркая, сеть видит её легко
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Отдаём</span><span class="v">Факт лечения и очаг у корня</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Качество пломбировки и ре-эндо</h3>
+          <span class="chip warn">нужен прицельный</span>
+        </div>
+        <div class="metric">
+          у Diagnocat на панораме: короткая пломбировка <b>F1 8.3%</b>,<br>
+          пустоты <b>14.3%</b> — при <b>&gt;94%</b> у той же системы на КЛКТ
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Причина</span><span class="v">У верхних моляров 3–4 канала на плоском снимке сливаются в одну полосу: видно «залит хорошо», когда два пустые</span></div>
+          <div class="row"><span class="k">Решение</span><span class="v">Прицельный снимок или КЛКТ. Это не выбор модели</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Пульпит</h3>
+          <span class="chip warn">признак, не диагноз</span>
+        </div>
+        <div class="metric">
+          по снимку <b>82–86%</b> · снимок + жалобы пациента <b>96–98%</b><br>
+          прирост приходит из симптомов, не из картинки
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Считаем</span><span class="v">Экспозицию пульпы: сохранена ли перегородка до камеры. Это измерение</span></div>
+          <div class="row"><span class="k">Не пишем</span><span class="v">«Пульпит» — это диагноз по боли и тестам, и сами тесты против гистологии дают 62–78%</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ Прочее ============ -->
+  <section class="sect">
+    <div class="sect-h">
+      <h2>Скан и карточка</h2>
+      <span class="cnt">2 задачи</span>
+    </div>
+    <div class="grid">
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Оригинальный цвет скана</h3>
+          <span class="chip warn">наполовину</span>
+        </div>
+        <div class="metric">
+          было: цвет <b>запекался в вершины</b><br>
+          стало: родная текстура <b>6348×6008</b> в модели
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Осталось</span><span class="v">Атлас сканера без полей между фрагментами — на зубах красные крапины десны</span></div>
+          <div class="row"><span class="k">Лечится</span><span class="v">Пересборкой развёртки, отдельная работа</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>Фотопротокол</h3>
+          <span class="chip ok">готово</span>
+        </div>
+        <div class="metric">
+          девять позиций · дата съёмки из EXIF камеры<br>
+          просмотр в полный экран
+        </div>
+        <div class="rows">
+          <div class="row"><span class="k">Зачем EXIF</span><span class="v">По ней сравнивают «до» и «после», а не по дате загрузки</span></div>
+          <div class="row"><span class="k">Не делаем</span><span class="v">Автоматический анализ фотографий</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ Что нужно от клиники ============ -->
+  <div class="ask">
+    <h2>Что зависит от клиники, а не от нас</h2>
+    <p>
+      Три вещи, которые мы не можем сделать своими силами. Каждая открывает
+      сразу несколько пунктов из списка выше.
+    </p>
+    <div class="asks">
+
+      <div class="item">
+        <span class="num">01</span>
+        <div>
+          <b>Снимки с суставом в кадре</b>
+          <span>Поле зрения, захватывающее суставные головки — сейчас том обрезан на уровне ветви челюсти.</span>
+          <span class="why">Открывает: диагностику ВНЧС целиком. Без этого обучать не на чем.</span>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="num">02</span>
+        <div>
+          <b>Пары «панорама + прицельный» одного пациента</b>
+          <span>Прицельные снимки по тем зубам, где на панораме видна патология.</span>
+          <span class="why">Открывает: рост кариеса с 0.70–0.85 до 0.96 и оценку качества пломбировки каналов. Стоит больше, чем любая смена архитектуры.</span>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="num">03</span>
+        <div>
+          <b>Пародонтальная карта к снимку</b>
+          <span>Зондирование и потеря прикрепления по тем пациентам, чьи панорамы у нас есть.</span>
+          <span class="why">Открывает: единственный способ когда-либо проверить стадию пародонтита. Публичного набора с такой парной разметкой не существовало до 2025 года.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="foot">
+    <b>Как читать эти числа.</b> Всё, что здесь названо, — измерения, а не диагнозы.
+    Процента уверенности на находках у нас нет намеренно: вероятность требует
+    разметки рентгенолога, на которой её можно откалибровать, а такой разметки в
+    проекте пока нет. Вместо процента каждая находка несёт основание — что
+    измерено, при каком пороге и с какой оговоркой. Это можно проверить прямо на
+    срезе.
+    <br><br>
+    <b>Отдельно про сравнение с Diagnocat.</b> Половины пунктов этого списка у него
+    тоже нет: ни плотности кости, ни диагностики сустава, ни пульпита, ни кист.
+    По пародонту он называет степень клинически (лёгкий / средний / тяжёлый) —
+    мы отдаём перцентиль собственной выборки, то есть проверяемое утверждение об
+    измерении. На панорамные находки у него нет клиренса FDA вообще.
+  </p>
+
+</div>
+
+</body>
+</html>

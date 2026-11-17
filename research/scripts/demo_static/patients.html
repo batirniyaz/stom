@@ -1,0 +1,1089 @@
+<meta charset="utf-8">
+<title>Stomadent — Пациенты</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/app.css">
+<style>
+  /* Только то, что относится к этому экрану. Общее — в app.css: палитра и
+     типографика раньше были скопированы в каждую страницу и уже начали
+     расходиться между собой. */
+  .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .plist { display: flex; flex-direction: column; gap: 7px; }
+  .prow {
+    display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px;
+    align-items: center; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 12px 16px; text-align: left; width: 100%;
+    color: inherit;
+  }
+  .prow:hover { border-color: rgba(53,201,224,.4); background: var(--panel-2); }
+  .pname { font-size: 14.5px; font-weight: 600; }
+  .chips { display: flex; gap: 5px; }
+  .alarm { font-size: 11.5px; color: var(--warn); white-space: nowrap; }
+  .when { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .badge-ex {
+    font-size: 10.5px; color: var(--dim); border: 1px dashed var(--line);
+    border-radius: 999px; padding: 2px 8px; margin-left: 7px; font-weight: 400;
+  }
+
+  .pt-head { margin-bottom: 16px; }
+  .pt-head h2 { margin: 0; font-size: 21px; letter-spacing: -.3px; }
+  .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 12px; align-items: start; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+
+  .study {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    align-items: center; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel-2);
+    margin-bottom: 7px; width: 100%; text-align: left; color: inherit;
+  }
+  .study:hover { border-color: rgba(53,201,224,.4); }
+  .cover {
+    display: grid; grid-template-columns: auto 1fr; gap: 11px; align-items: start;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+  }
+  .cover:last-child { border-bottom: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex: none; }
+  .dot.y { background: var(--ok); }
+  .dot.n { background: #3a3540; }
+
+  .form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form label { display: flex; flex-direction: column; gap: 5px; font-size: 12px;
+                color: var(--muted); }
+  .form .wide { grid-column: 1 / -1; }
+  .drop {
+    grid-column: 1/-1; border: 1.5px dashed var(--line-2); border-radius: 12px;
+    padding: 22px; text-align: center; color: var(--muted); font-size: 13px;
+    background: rgba(255,247,237,.015); cursor: pointer;
+  }
+  .drop.over { border-color: var(--cyan); background: rgba(53,201,224,.06); }
+  .drop b { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+  .err { color: var(--bad); font-size: 12.5px; }
+
+  /* Плитки с цифрами: главное состояние читается за секунду, до чтения
+     текста. Врач сначала спрашивает «сколько и насколько срочно». */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+           gap: 10px; margin-bottom: 14px; }
+  .tile {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 12px 14px;
+  }
+  .tile .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+             color: var(--dim); }
+  .tile .v { font-size: 22px; font-weight: 600; margin-top: 3px; line-height: 1.1; }
+  .tile .s { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .tile.warn .v { color: var(--warn); }
+  .tile.ok .v { color: var(--ok); }
+
+  /* Вкладки карточки: у врача четыре разные задачи, и в одном столбце они
+     мешают друг другу — до плана приходилось прокручивать два экрана. */
+  .ptabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line);
+           margin-bottom: 14px; overflow-x: auto; }
+  .ptab {
+    background: none; border: none; color: var(--muted); font-size: 13px;
+    padding: 9px 14px; border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  .ptab:hover { color: var(--text); }
+  .ptab.on { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .ptab .n {
+    font-size: 10.5px; background: rgba(169,162,154,.18); color: var(--muted);
+    border-radius: 999px; padding: 1px 6px; margin-left: 5px;
+  }
+  .ptab.on .n { background: rgba(53,201,224,.18); color: var(--cyan); }
+
+  /* Находка: заголовок читается сразу, основание — по запросу. Длинные
+     «на чём основано» в развёрнутом виде превращали ленту в простыню. */
+  .f-row {
+    border-left: 2px solid var(--line-2); padding: 8px 0 8px 11px;
+    margin-bottom: 8px; font-size: 12.5px; line-height: 1.5;
+  }
+  .f-row.warning { border-left-color: var(--warn); }
+  .f-row.alarm { border-left-color: var(--bad); }
+  .f-head { display: flex; gap: 7px; align-items: baseline; flex-wrap: wrap; }
+  .f-text { flex: 1; min-width: 220px; }
+  .f-more {
+    background: none; border: none; color: var(--dim); font-size: 11px;
+    padding: 0; text-decoration: underline dotted; cursor: pointer;
+  }
+  .f-more:hover { color: var(--cyan); }
+  .f-basis {
+    color: var(--dim); font-size: 11.5px; margin-top: 6px; padding-top: 6px;
+    border-top: 1px dashed var(--line); line-height: 1.5;
+  }
+  .role-h {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--dim); margin: 16px 0 8px; font-weight: 600;
+  }
+  .role-h:first-child { margin-top: 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+             align-items: start; }
+  @media (max-width: 1000px) { .two-col { grid-template-columns: 1fr; } }
+  .btn-sm {
+    float: right; background: rgba(255,247,237,.05); border: 1px solid var(--line);
+    color: var(--muted); border-radius: 7px; padding: 3px 10px; font-size: 11px;
+    text-transform: none; letter-spacing: 0;
+  }
+  .btn-sm:hover { color: var(--cyan); border-color: rgba(53,201,224,.4); }
+  .btn-sm:disabled { opacity: .5; cursor: default; }
+  .stage { margin-bottom: 14px; }
+  .stage-h { font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+  .stage-h .dim { font-weight: 400; font-size: 11.5px; margin-left: 6px; }
+  .proc {
+    border-left: 2px solid var(--line-2); padding: 6px 0 6px 11px;
+    margin-bottom: 6px; font-size: 12.5px;
+  }
+  .why { color: var(--dim); font-size: 11.5px; margin-top: 3px; line-height: 1.45; }
+  .ai-block { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
+  .ai-sum { font-size: 12.5px; line-height: 1.5; margin: 0 0 12px; }
+
+  .chart { display: flex; flex-direction: column; gap: 5px; }
+  .chart-row { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
+  .th {
+    width: 26px; height: 30px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel-2); font-size: 10.5px; color: var(--muted);
+    display: grid; place-items: center; position: relative;
+  }
+  .th.miss { border-style: dashed; color: #4a4550; background: transparent; }
+  .th.mark { border-color: rgba(229,165,63,.5); color: var(--warn); }
+  .th.mark::after {
+    content: ""; position: absolute; bottom: 3px; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--warn);
+  }
+  .chart-legend {
+    display: flex; gap: 14px; justify-content: center; margin-top: 10px;
+    font-size: 11px; color: var(--dim);
+  }
+  .chart-legend i {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 5px; vertical-align: middle;
+  }
+  .dot-mark { background: var(--warn); }
+  .dot-miss { border: 1px dashed var(--line-2); }
+
+  .find {
+    border-left: 2px solid var(--warn); padding: 7px 0 7px 11px;
+    margin-bottom: 8px; font-size: 12.5px; line-height: 1.45;
+  }
+  .src {
+    font-size: 10px; color: var(--dim); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 5px; margin-right: 6px;
+  }
+  .tooth-tag {
+    display: inline-block; font-size: 10.5px; border: 1px solid var(--line-2);
+    border-radius: 5px; padding: 0 5px; margin-right: 4px; color: var(--muted);
+  }
+
+/* ---- фотопротокол ----
+   Сетка по позициям протокола, а не лента: пустой слот сам показывает,
+   чего в протоколе не хватает. Три колонки повторяют клиническую группировку
+   (лицо / ряд / окклюзионно) при девяти позициях. */
+.pgrid {
+  display: grid; gap: 12px; margin-top: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+.pslot {
+  border: 1px dashed var(--line-2); border-radius: 12px; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px; min-height: 150px;
+  background: var(--panel-2); transition: border-color .15s, background .15s;
+}
+.pslot.filled { border-style: solid; border-color: var(--line); }
+.pslot.busy { border-color: rgba(53, 201, 224, .5); }
+.pslot-h { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.pshot { position: relative; border-radius: 9px; overflow: hidden;
+         background: #0f0e12; }
+.pshot img {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  cursor: zoom-in;
+}
+.pshot-b {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 6px; padding: 5px 7px; font-size: 11.5px;
+}
+.pdel {
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+  border-radius: 7px; padding: 2px 7px; cursor: pointer; font-size: 12px;
+  line-height: 1.3;
+}
+.pdel:hover { color: var(--text); }
+/* Удаление подтверждается вторым нажатием той же кнопки: confirm() браузера
+   блокирует страницу, а снимков в протоколе девять. */
+.pdel.armed { color: #fca5a5; border-color: rgba(252, 165, 165, .5); }
+.pdrop {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  flex: 1; min-height: 46px; border-radius: 9px; cursor: pointer;
+  color: var(--muted); font-size: 12px; padding: 8px;
+  border: 1px dashed transparent;
+}
+.pdrop:hover { color: var(--text); border-color: var(--line-2); }
+
+.lightbox {
+  position: fixed; inset: 0; z-index: 50; background: rgba(8, 7, 10, .92);
+  display: flex; align-items: center; justify-content: center; padding: 28px;
+  cursor: zoom-out;
+}
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; }
+.lb-close {
+  position: absolute; top: 16px; right: 20px; font-size: 26px; line-height: 1;
+  background: transparent; border: none; color: var(--muted); cursor: pointer;
+}
+.lb-close:hover { color: var(--text); }
+</style>
+
+<script src="/vue.global.prod.js"></script>
+<script src="/i18n.js"></script>
+
+<div id="app">
+  <header class="hdr">
+    <div class="mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 12h4l2.5-6 4 12 2.5-6h5" stroke="#fff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Stomadent AI</h1>
+      <p>{{ subtitle }}</p>
+    </div>
+    <nav class="tabs">
+      <a class="tab on" href="/patients">{{ t("Пациенты") }}</a>
+      <a class="tab" href="/2d">2D ОПТГ</a>
+      <a class="tab" href="/cbct">3D КЛКТ</a>
+      <a class="tab" href="/ios">Скан</a>
+      <a class="tab" href="/logs">{{ t("Журнал") }}</a>
+    </nav>
+    <div class="hdr-right"><div id="lang-switch"></div></div>
+  </header>
+
+  <main class="page">
+    <!-- ---------------- список ---------------- -->
+    <template v-if="view === 'list'">
+      <div class="bar">
+        <input class="field" v-model="query" @input="searchDebounced"
+               :placeholder="t('Поиск по фамилии или номеру карты')">
+        <button class="btn" @click="newOpen = !newOpen">+ {{ t("Новый пациент") }}</button>
+      </div>
+
+      <div class="card" v-if="newOpen">
+        <div class="card-t">{{ t("Новый пациент") }}</div>
+        <div class="form">
+          <label>{{ t("Фамилия") }}<input class="field" v-model="form.last_name"
+                 placeholder="обязательно" @keyup.enter="createPatient"></label>
+          <label>{{ t("Имя") }}<input class="field" v-model="form.first_name"></label>
+          <label>{{ t("Год рождения") }}<input class="field" type="number" v-model="form.birth_year"
+                 placeholder="например 1985"></label>
+          <label>{{ t("Номер карты") }}<input class="field" v-model="form.card_no"></label>
+          <label class="wide">{{ t("Заметка") }}<input class="field" v-model="form.note"></label>
+          <div class="wide" style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn-ghost" @click="newOpen = false">{{ t("Отмена") }}</button>
+            <button class="btn" @click="createPatient" :disabled="saving">
+              {{ saving ? t('Сохраняем…') : t('Завести') }}</button>
+          </div>
+          <div class="wide err" v-if="formError">{{ formError }}</div>
+        </div>
+      </div>
+
+      <div class="plist" v-if="patients.length">
+        <button class="prow" v-for="p in patients" :key="p.id" @click="open(p.id)">
+          <span>
+            <span class="pname">{{ p.display }}<span class="badge-ex"
+              v-if="p.is_example">пример</span></span>
+            <div class="sub">
+              <template v-if="p.age">{{ p.age }} лет · </template>
+              <template v-if="p.card_no">карта {{ p.card_no }} · </template>
+              исследований: {{ p.studies_count }}
+            </div>
+          </span>
+          <span class="chips">
+            <span class="chip" :class="k" v-for="k in p.kinds" :key="k">{{ kindShort(k) }}</span>
+          </span>
+          <span class="alarm">{{ p.alarm || '' }}</span>
+          <span class="when">{{ fmtDate(p.last_study_at) }}</span>
+        </button>
+      </div>
+      <div class="empty" v-else-if="!loading">
+        {{ query ? 'По запросу никого не найдено' : 'Пациентов пока нет — заведите первого' }}
+      </div>
+      <div class="empty" v-else>{{ t("Загрузка…") }}</div>
+    </template>
+
+    <!-- ---------------- карточка ---------------- -->
+    <template v-else-if="view === 'card'">
+      <div class="bar">
+        <button class="btn-ghost" @click="go('/patients')">← {{ t("Все пациенты") }}</button>
+        <span style="flex:1"></span>
+        <button class="btn" @click="upOpen = !upOpen">+ {{ t("Загрузить исследование") }}</button>
+      </div>
+
+      <div class="empty" v-if="!patient">{{ t("Загрузка…") }}</div>
+      <template v-else>
+        <div class="pt-head">
+          <h2>{{ patient.display }}<span class="badge-ex"
+            v-if="patient.is_example">пример</span></h2>
+          <div class="sub">
+            <template v-if="patient.age">{{ patient.age }} лет · </template>
+            <template v-if="patient.card_no">карта {{ patient.card_no }} · </template>
+            исследований: {{ studies.length }}
+            <template v-if="patient.note"> · {{ patient.note }}</template>
+          </div>
+        </div>
+
+        <div class="card" v-if="upOpen">
+          <div class="card-t">{{ t("Новое исследование") }}</div>
+          <div class="form">
+            <div class="drop" :class="{ over: dragOver }"
+                 @click="$refs.file.click()"
+                 @dragover.prevent="dragOver = true"
+                 @dragleave.prevent="dragOver = false"
+                 @drop.prevent="onDrop">
+              <b v-if="!files.length">Перетащите файлы сюда или нажмите</b>
+              <b v-else>Выбрано файлов: {{ files.length }}</b>
+              <template v-if="!files.length">
+                ZIP с DICOM-серией · снимок JPG или PNG · STL, PLY, OBJ
+              </template>
+              <template v-else>{{ files.map(f => f.name).slice(0, 3).join(', ') }}</template>
+            </div>
+            <input ref="file" type="file" multiple hidden @change="onPick">
+            <label>Тип исследования
+              <select class="field" v-model="upKind">
+                <option value="">определить по файлам</option>
+                <option value="cbct">КЛКТ</option>
+                <option value="opg">Панорамный снимок (ОПТГ)</option>
+                <option value="periapical">Прицельный снимок</option>
+                <option value="ios">Интраоральный скан</option>
+              </select>
+            </label>
+            <div style="display:flex;align-items:flex-end;justify-content:flex-end;gap:8px">
+              <button class="btn-ghost" @click="upOpen = false">Отмена</button>
+              <button class="btn" @click="upload" :disabled="uploading || !files.length">
+                {{ uploading ? t('Загрузка…') + ` ${upDone}%` : t('Загрузить') }}</button>
+            </div>
+            <div class="wide err" v-if="upError">{{ upError }}</div>
+          </div>
+        </div>
+
+        <div class="ptabs">
+          <button class="ptab" :class="{ on: tab === 'overview' }"
+                  @click="tab = 'overview'">{{ t("Обзор") }}</button>
+          <button class="ptab" :class="{ on: tab === 'findings' }"
+                  @click="tab = 'findings'">{{ t("Находки") }}
+            <span class="n" v-if="summary.counts">{{ summary.counts.total }}</span>
+          </button>
+          <button class="ptab" :class="{ on: tab === 'plan' }"
+                  @click="tab = 'plan'">{{ t("План лечения") }}
+            <span class="n" v-if="planCount">{{ planCount }}</span>
+          </button>
+          <button class="ptab" :class="{ on: tab === 'photo' }"
+                  @click="tab = 'photo'">{{ t("Фотопротокол") }}
+            <span class="n" v-if="photos.length">{{ photos.length }}</span>
+          </button>
+          <button class="ptab" :class="{ on: tab === 'studies' }"
+                  @click="tab = 'studies'">{{ t("Исследования") }}
+            <span class="n">{{ studies.length }}</span>
+          </button>
+        </div>
+
+        <!-- ОБЗОР: состояние за один взгляд, без прокрутки -->
+        <template v-if="tab === 'overview'">
+          <div class="tiles">
+            <div class="tile" :class="(summary.counts || {}).attention ? 'warn' : 'ok'">
+              <div class="k">{{ t("Требует внимания") }}</div>
+              <div class="v">{{ (summary.counts || {}).attention ?? "—" }}</div>
+              <div class="s">{{ t("из") }} {{ (summary.counts || {}).total ?? 0 }}
+                {{ t("находок") }}</div>
+            </div>
+            <div class="tile">
+              <div class="k">{{ t("Зубов") }}</div>
+              <div class="v">{{ (summary.teeth_present || []).length || "—" }}</div>
+              <div class="s">{{ t("с отметками") }}:
+                {{ Object.keys(summary.teeth_marked || {}).length }}</div>
+            </div>
+            <div class="tile">
+              <div class="k">{{ t("Исследования") }}</div>
+              <div class="v">{{ studies.length }}</div>
+              <div class="s">{{ kindsLine }}</div>
+            </div>
+            <div class="tile">
+              <div class="k">{{ t("План лечения") }}</div>
+              <div class="v">{{ planCount || "—" }}</div>
+              <div class="s">{{ t("позиций в черновике") }}</div>
+            </div>
+          </div>
+
+          <div class="card" v-if="summary.teeth_present && summary.teeth_present.length">
+            <div class="card-t">{{ t("Зубная карта") }} ·
+              {{ t("находки со всех исследований") }}</div>
+            <div class="chart">
+              <div class="chart-row" v-for="row in chartRows" :key="row.key">
+                <span class="th" v-for="tth in row.teeth" :key="tth"
+                      :class="{ miss: !hasTooth(tth), mark: !!summary.teeth_marked[tth] }"
+                      :title="toothTitle(tth)">{{ tth }}</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <span><i class="dot-mark"></i> {{ t("есть находка") }}</span>
+              <span><i class="dot-miss"></i> {{ t("зуб отсутствует") }}</span>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="card" v-if="summary.attention && summary.attention.length">
+              <div class="card-t">{{ t("Требует внимания") }}</div>
+              <div class="f-row" :class="f.severity"
+                   v-for="(f, i) in summary.attention.slice(0, 6)" :key="i">
+                <div class="f-head">
+                  <span class="src">{{ f.source_label }}</span>
+                  <span class="tooth-tag" v-for="tth in (f.teeth || []).slice(0, 4)"
+                        :key="tth">{{ tth }}</span>
+                  <span class="f-text">{{ f.text }}</span>
+                </div>
+              </div>
+              <button class="btn-sm" v-if="summary.counts.attention > 6"
+                      @click="tab = 'findings'" style="float:none;margin-top:4px">
+                {{ t("Показать все") }} ({{ summary.counts.attention }})</button>
+            </div>
+
+            <div class="card">
+              <div class="card-t">{{ t("Что можно посчитать") }}</div>
+              <div class="cover" v-for="c in coverage" :key="c.name">
+                <span class="dot" :class="c.ok ? 'y' : 'n'"></span>
+                <span>{{ c.name }}
+                  <div class="sub" v-if="!c.ok">{{ c.why }}</div>
+                  <div class="sub" v-else-if="c.extra">{{ c.extra }}</div></span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- НАХОДКИ: полный список, сгруппированный по специальностям -->
+        <template v-else-if="tab === 'findings'">
+          <div class="card">
+            <div v-for="grp in findingGroups" :key="grp.role">
+              <div class="role-h">{{ grp.label }} · {{ grp.items.length }}</div>
+              <div class="f-row" :class="f.severity"
+                   v-for="(f, i) in grp.items" :key="i">
+                <div class="f-head">
+                  <span class="src">{{ f.source_label }}</span>
+                  <span class="tooth-tag" v-for="tth in (f.teeth || []).slice(0, 6)"
+                        :key="tth">{{ tth }}</span>
+                  <span class="f-text">{{ f.text }}</span>
+                  <button class="f-more" v-if="f.basis || f.action" @click="toggle(f)">
+                    {{ isOpen(f) ? t("свернуть") : t("на чём основано") }}</button>
+                </div>
+                <div class="f-basis" v-if="isOpen(f)">
+                  <div v-if="f.basis">{{ f.basis }}</div>
+                  <div v-if="f.action">→ {{ f.action }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="empty" v-if="!findingGroups.length">{{ t("Находок нет") }}</div>
+          </div>
+        </template>
+
+        <!-- ПЛАН -->
+        <template v-else-if="tab === 'plan'">
+          <div class="card">
+            <div class="card-t">{{ t("План лечения") }} — {{ t("черновик") }}
+              <button class="btn-sm" @click="composePlan" :disabled="composing">
+                {{ composing ? t("Собираем…") : t("Собрать текстом") }}</button>
+            </div>
+            <div v-if="planStages.length">
+              <div class="stage" v-for="st in planStages" :key="st.key">
+                <div class="stage-h">{{ st.num }}. {{ st.label }}
+                  <span class="dim">{{ st.note }}</span></div>
+                <div class="proc" v-for="(x, i) in st.procedures" :key="i">
+                  {{ x.name }}<span v-if="x.count > 1"> ×{{ x.count }}</span>
+                  <span class="tooth-tag" v-for="tth in (x.teeth || []).slice(0, 8)"
+                        :key="tth">{{ tth }}</span>
+                  <button class="f-more" v-if="x.why" @click="toggle(x)">
+                    {{ isOpen(x) ? t("свернуть") : t("на чём основано") }}</button>
+                  <div class="f-basis" v-if="isOpen(x)">
+                    <div>{{ x.why }}</div>
+                    <div v-if="x.note">{{ x.note }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty" v-else-if="planLoaded">
+              {{ t("Плана нет: находок, ведущих к лечению, не найдено") }}</div>
+            <div class="empty" v-else>{{ t("Считаем план…") }}</div>
+            <div class="err" v-if="composeError">{{ composeError }}</div>
+
+            <template v-if="composed">
+              <div class="ai-block">
+                <div class="card-t">{{ t("Сводка") }} · {{ t("собрано моделью") }}</div>
+                <p class="ai-sum">{{ composed.summary }}</p>
+                <template v-if="composed.conflicts && composed.conflicts.length">
+                  <div class="card-t">{{ t("Противоречия между исследованиями") }}</div>
+                  <div class="f-row warning" v-for="(c, i) in composed.conflicts"
+                       :key="i">{{ c.text }}</div>
+                </template>
+                <template v-if="composed.missing && composed.missing.length">
+                  <div class="card-t">{{ t("Чего не хватает для решения") }}</div>
+                  <div class="why" v-for="(m, i) in composed.missing" :key="i">
+                    · {{ m }}</div>
+                </template>
+                <div class="why" v-if="composed.dropped && composed.dropped.length"
+                     style="margin-top:10px">
+                  {{ t("Отброшено как не подтверждённое находками") }}:
+                  {{ composed.dropped.join("; ") }}</div>
+                <div class="draft" style="margin-top:12px">
+                  Текст собран моделью по находкам и черновику плана. Модель не
+                  назначает лечение: позиции без основания в данных
+                  отбрасываются. Решение принимает врач.
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <!-- ФОТОПРОТОКОЛ -->
+        <template v-else-if="tab === 'photo'">
+          <div class="card">
+            <div class="card-t">{{ t("Фотопротокол") }}
+              <span class="dim" style="font-weight:400">{{ photoCount }}</span>
+            </div>
+            <div class="err" v-if="photoError">{{ photoError }}</div>
+            <div class="pgrid">
+              <div class="pslot" v-for="sl in photoGrid" :key="sl.key"
+                   :class="{ filled: sl.items.length, busy: photoBusy === sl.key }"
+                   @dragover.prevent @drop.prevent="dropPhotos(sl.key, $event)">
+                <div class="pslot-h">{{ t(sl.label) }}</div>
+                <template v-if="sl.items.length">
+                  <div class="pshot" v-for="ph in sl.items" :key="ph.id">
+                    <img :src="ph.url" :alt="sl.label" loading="lazy"
+                         @click="openLightbox(ph)">
+                    <div class="pshot-b">
+                      <span class="dim">{{ fmtDate(ph.taken_at || ph.uploaded_at) }}</span>
+                      <button class="pdel" :class="{ armed: isArmed(ph) }"
+                              @click.stop="removePhoto(ph)"
+                              :title="t('Удалить снимок')">
+                        {{ isArmed(ph) ? t("точно?") : "×" }}</button>
+                    </div>
+                  </div>
+                </template>
+                <label class="pdrop">
+                  <input type="file" accept="image/*" multiple hidden
+                         @change="pickPhotos(sl.key, $event)">
+                  <span v-if="photoBusy === sl.key">{{ t("Загружаем…") }}</span>
+                  <span v-else-if="sl.items.length">+ {{ t("ещё") }}</span>
+                  <span v-else>{{ t("Перетащите снимок или нажмите") }}</span>
+                </label>
+              </div>
+            </div>
+            <div class="draft" style="margin-top:14px">
+              Снимки уменьшаются до 2000 px по длинной стороне и хранятся
+              рядом с исследованиями пациента. Дата берётся из EXIF камеры —
+              по ней сравнивают «до» и «после», а не по дате загрузки.
+              Автоматический анализ фотографий не выполняется.
+            </div>
+          </div>
+        </template>
+
+        <!-- ИССЛЕДОВАНИЯ -->
+        <template v-else>
+          <div class="card">
+            <a class="study" v-for="st in studies" :key="st.id" :href="st.view_url">
+              <span class="chip" :class="st.kind">{{ kindShort(st.kind) }}</span>
+              <span>
+                <div>{{ st.kind_label }}</div>
+                <div class="sub">{{ fmtDate(st.taken_at || st.uploaded_at, true) }}<template
+                  v-if="st.scanner"> · {{ st.scanner }}</template></div>
+                <div class="err" v-if="st.status === 'error'">{{ st.error }}
+                  <button class="btn-sm" @click.prevent.stop="retry(st)"
+                          :disabled="retrying === st.id">
+                    {{ retrying === st.id ? t("Ставим в очередь…") : t("Повторить") }}
+                  </button>
+                </div>
+              </span>
+              <span class="st" :class="'st-' + st.status">{{ statusText(st) }}</span>
+            </a>
+            <div class="empty" v-if="!studies.length">
+              {{ t("Исследований пока нет") }}</div>
+          </div>
+        </template>
+
+      </template>
+    </template>
+  </main>
+
+  <!-- Просмотр снимка целиком. Клик мимо и Esc закрывают: модальных окон
+       браузера здесь нет намеренно, они блокируют страницу. -->
+  <div class="lightbox" v-if="lightbox" @click="closeLightbox">
+    <img :src="lightbox.url" alt="">
+    <button class="lb-close" @click="closeLightbox">×</button>
+  </div>
+</div>
+
+<script>
+const { createApp, reactive, computed, onMounted, toRefs } = Vue;
+
+/* Перевод в Vue делается функцией t() ПРЯМО В ШАБЛОНЕ, а не подменой
+   textContent по data-i18n, как на обычных страницах: Vue перерисовывает
+   разметку сама и затирает такую подмену при первом же обновлении. Язык
+   держим реактивным — при переключении шаблон перерисуется целиком. */
+const lang = Vue.ref(window.i18n ? window.i18n.lang : "ru");
+if (window.i18n) window.i18n.onChange(v => { lang.value = v; });
+const t = (s) => (lang.value, window.i18n ? window.i18n.t(s) : s);
+
+const KIND_SHORT = { cbct: "КЛКТ", ios: "Скан", opg: "ОПТГ", periapical: "Прицельный" };
+const STATUS = {
+  ready: "готово", processing: "считается", queued: "в очереди",
+  uploaded: "загружено", error: "ошибка",
+};
+
+createApp({
+  setup() {
+    const state = reactive({
+      view: "list",
+      patients: [], loading: true, query: "",
+      newOpen: false, saving: false, formError: "",
+      form: { last_name: "", first_name: "", birth_year: null, card_no: "", note: "" },
+      patient: null, studies: [], registration: {}, summary: {},
+      plan: {}, planLoaded: false, composed: null, composing: false,
+      composeError: "", tab: "overview", openedKeys: [],
+      upOpen: false, uploading: false, upError: "", upKind: "", files: [],
+      upDone: 0,
+      dragOver: false,
+      photos: [], photoSlots: [], photoBusy: "", photoError: "",
+      retrying: "",
+      lightbox: null,
+      poll: null,
+    });
+
+    async function api(path, opts) {
+      const r = await fetch(path, opts);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || `Ошибка ${r.status}`);
+      return data;
+    }
+
+    /* Адрес отражает экран — ссылку на карточку врач пересылает целиком.
+       Тот же принцип, что уже принят во вьюерах КЛКТ и скана. */
+    function route() {
+      const m = location.pathname.match(/^\/patients\/([\w-]+)/);
+      return m ? { view: "card", id: m[1] } : { view: "list" };
+    }
+
+    async function draw() {
+      const r = route();
+      state.view = r.view;
+      if (r.view === "card") await loadPatient(r.id);
+      else await loadList();
+    }
+
+    function go(path) { history.pushState(null, "", path); draw(); }
+
+    // Переключение вкладки отражаем в адресе, не перезагружая данные.
+    Vue.watch(() => state.tab, (v) => {
+      if (state.view !== "card") return;
+      const u = new URL(location.href);
+      v === "overview" ? u.searchParams.delete("tab") : u.searchParams.set("tab", v);
+      history.replaceState(null, "", u);
+    });
+    function open(id) { go(`/patients/${id}`); }
+
+    async function loadList() {
+      state.loading = true;
+      try {
+        const d = await api(`/api/patients?q=${encodeURIComponent(state.query)}`);
+        state.patients = d.patients;
+      } finally { state.loading = false; }
+    }
+
+    let timer = null;
+    function searchDebounced() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const u = new URL(location.href);
+        state.query ? u.searchParams.set("q", state.query) : u.searchParams.delete("q");
+        history.replaceState(null, "", u);
+        loadList();
+      }, 250);
+    }
+
+    async function loadPatient(id) {
+      state.patient = null;
+      const d = await api(`/api/patients/${id}`);
+      state.patient = d.patient;
+      state.studies = d.studies;
+      state.registration = d.registration || {};
+      state.summary = {};
+      // Сводка приходит отдельным запросом: она собирается из всех
+      // исследований и считается дольше, а список должен появиться сразу.
+      api(`/api/patients/${id}/summary`)
+        .then(sum => { state.summary = sum; })
+        .catch(() => {});
+      // Вкладка берётся из адреса: врач присылает коллеге ссылку на раздел
+      // («смотри план»), а не объясняет, куда нажать. Тот же принцип, что во
+      // вьюерах КЛКТ и скана.
+      const want = new URLSearchParams(location.search).get("tab");
+      state.tab = ["overview", "findings", "plan", "photo", "studies"].includes(want)
+        ? want : "overview";
+      state.openedKeys = [];
+      state.plan = {}; state.planLoaded = false;
+      state.composed = null; state.composeError = "";
+      api(`/api/patients/${id}/plan`)
+        .then(pl => { state.plan = pl; state.planLoaded = true; })
+        .catch(() => { state.planLoaded = true; });
+      loadPhotos(id);
+      watchPending();
+    }
+
+    /* Пока исследование считается, карточка обновляет его строку сама: КЛКТ
+       считается минутами, и застывшее «в очереди» неотличимо от поломки. */
+    function watchPending() {
+      clearInterval(state.poll);
+      const pending = () => state.studies.filter(
+        s => ["queued", "processing", "uploaded"].includes(s.status));
+      if (!pending().length) return;
+      state.poll = setInterval(async () => {
+        for (const s of pending()) {
+          const st = await api(`/api/studies/${s.id}/status`).catch(() => null);
+          if (!st) continue;
+          s.status = st.status;
+          s.stage = st.stage;
+          s.position = st.position;
+          s.error = st.error;
+          if (st.view_url) s.view_url = st.view_url;
+        }
+        if (!pending().length) {
+          clearInterval(state.poll);
+          loadPatient(state.patient.id);      // готово — обновляем целиком
+        }
+      }, 3000);
+    }
+
+    async function createPatient() {
+      state.formError = "";
+      if (!String(state.form.last_name).trim()) {
+        state.formError = "Фамилия обязательна"; return;
+      }
+      state.saving = true;
+      try {
+        const body = { ...state.form, birth_year: +state.form.birth_year || null };
+        const d = await api("/api/patients", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        state.newOpen = false;
+        state.form = { last_name: "", first_name: "", birth_year: null,
+                       card_no: "", note: "" };
+        open(d.id);
+      } catch (e) { state.formError = e.message; }
+      finally { state.saving = false; }
+    }
+
+    function onPick(e) { state.files = [...e.target.files]; }
+    function onDrop(e) {
+      state.dragOver = false;
+      state.files = [...e.dataTransfer.files];
+    }
+
+    /* Файл режется на части по 20 МБ.
+
+       Не ради красоты: Cloudflare Tunnel режет запрос на 100 МБ, а папка
+       интраорального скана весит под двести — врач получал «Ошибка 413» и
+       упирался в тупик. Обойти лимит прокси нельзя, но можно его не
+       превышать. Побочно появляется настоящий прогресс: при загрузке одним
+       запросом взять его негде. */
+    const CHUNK = 20 * 1024 * 1024;
+
+    async function upload() {
+      state.upError = "";
+      state.uploading = true;
+      state.upDone = 0;
+      try {
+        const uid = (crypto.randomUUID?.() || String(Date.now())).replace(/-/g, "");
+        const total = state.files.reduce(
+          (n, f) => n + Math.max(1, Math.ceil(f.size / CHUNK)), 0);
+        let sent = 0;
+        for (const f of state.files) {
+          const parts = Math.max(1, Math.ceil(f.size / CHUNK));
+          for (let i = 0; i < parts; i++) {
+            const blob = f.slice(i * CHUNK, (i + 1) * CHUNK);
+            const q = new URLSearchParams({
+              upload_id: uid, name: f.name, index: i, total: parts });
+            const r = await fetch(
+              `/api/patients/${state.patient.id}/studies/chunk?${q}`,
+              { method: "POST", body: blob });
+            if (!r.ok) {
+              const d = await r.json().catch(() => ({}));
+              throw new Error(r.status === 413
+                ? "Часть файла не прошла (413). Уменьшите размер части или "
+                  + "загрузите напрямую, минуя внешний адрес."
+                : (d.error || `Ошибка ${r.status}`));
+            }
+            sent++;
+            state.upDone = Math.round(100 * sent / total);
+          }
+        }
+        const q = new URLSearchParams({ upload_id: uid });
+        if (state.upKind) q.set("kind", state.upKind);
+        await api(`/api/patients/${state.patient.id}/studies/finish?${q}`,
+                  { method: "POST" });
+        state.files = [];
+        state.upOpen = false;
+        await loadPatient(state.patient.id);
+      } catch (e) { state.upError = e.message; }
+      finally { state.uploading = false; state.upDone = 0; }
+    }
+
+    // Верхний ряд слева направо — как смотрит врач: 18…11, 21…28.
+    const chartRows = computed(() => [
+      { key: "up", teeth: [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] },
+      { key: "low", teeth: [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] },
+    ]);
+
+    function hasTooth(t) {
+      return (state.summary.teeth_present || []).includes(t);
+    }
+    function toothTitle(t) {
+      const marks = (state.summary.teeth_marked || {})[t];
+      if (!hasTooth(t)) return `Зуб ${t}: отсутствует`;
+      return marks ? `Зуб ${t}: находок ${marks.length}` : `Зуб ${t}`;
+    }
+
+    // Показываем только этапы, где есть услуги: пустые «Ортодонтия — 0»
+    // читаются как «ортодонт не нужен», а это другое утверждение.
+    const planStages = computed(() =>
+      (state.plan.stages || []).filter(st => (st.procedures || []).length));
+
+    const planCount = computed(() => planStages.value
+      .reduce((n, st) => n + (st.procedures || []).length, 0));
+
+    const kindsLine = computed(() => {
+      const seen = [];
+      for (const st of state.studies)
+        if (!seen.includes(st.kind)) seen.push(st.kind);
+      return seen.map(k => KIND_SHORT[k] || k).join(" · ");
+    });
+
+    /* Находки по специальностям: врач читает свой раздел, а не всё подряд.
+       Порядок ролей — как в плане лечения, чтобы разделы не переставлялись
+       между экранами. */
+    const ROLE_LABEL = {
+      urgent: "Неотложное", therapy: "Терапевт", hygiene: "Гигиенист",
+      perio: "Пародонтолог", surgery: "Хирург", prostho: "Ортопед",
+      ortho: "Ортодонт", gnatho: "Гнатолог", review: "Ручная проверка",
+    };
+    const ROLE_ORDER = ["urgent", "therapy", "hygiene", "perio", "surgery",
+                        "prostho", "ortho", "gnatho", "review"];
+
+    const findingGroups = computed(() => {
+      const by = {};
+      for (const f of state.summary.findings || [])
+        (by[f.route || "review"] ||= []).push(f);
+      const keys = Object.keys(by).sort(
+        (a, b) => (ROLE_ORDER.indexOf(a) + 99) % 99 - (ROLE_ORDER.indexOf(b) + 99) % 99);
+      return keys.map(r => ({ role: r, label: ROLE_LABEL[r] || r, items: by[r] }));
+    });
+
+    /* Сворачивание оснований. Ключ — текст находки, а не сам объект: список
+       перечитывается с сервера, и ссылки на объекты после этого другие. */
+    function keyOf(x) { return (x.text || x.name || "") + "|" + (x.why || ""); }
+    function isOpen(x) { return state.openedKeys.includes(keyOf(x)); }
+    function toggle(x) {
+      const k = keyOf(x);
+      const i = state.openedKeys.indexOf(k);
+      if (i >= 0) state.openedKeys.splice(i, 1);
+      else state.openedKeys.push(k);
+    }
+
+    async function composePlan() {
+      state.composing = true;
+      state.composeError = "";
+      try {
+        state.composed = await api(`/api/patients/${state.patient.id}/plan/compose`,
+                                   { method: "POST" });
+      } catch (e) { state.composeError = e.message; }
+      finally { state.composing = false; }
+    }
+
+    const coverage = computed(() => {
+      const has = k => state.studies.some(s => s.kind === k && s.status === "ready");
+      return [
+        { name: "Анатомия, зубы, нерв (3D)", ok: has("cbct"), why: "нужен КЛКТ" },
+        { name: "Уровень кости, эндодонтия, ретенция", ok: has("cbct"), why: "нужен КЛКТ" },
+        { name: "Прикус, симметрия дуги, контакты", ok: has("ios"),
+          why: "нужен интраоральный скан" },
+        { name: "Кариес и периапикальные очаги (2D)",
+          ok: has("opg") || has("periapical"), why: "нужна панорама (ОПТГ)" },
+        /* Пазуха стоит отдельной строкой и намеренно НЕ помечается готовой.
+           Маска покрывает только дно полости (замер: 1-3 см³ при норме ~15),
+           поэтому расстояние до дна считается, а объём пазухи и состояние
+           слизистой — нет. Врачу это надо сказать прямо: «не измеряем»
+           честнее, чем показать пустой результат, который читается как
+           «патологии нет». Тот же принцип, что с дентиклями. */
+        { name: "Дно пазухи: расстояние до корней",
+          ok: has("cbct"), why: "нужен КЛКТ",
+          extra: "объём пазухи и утолщение слизистой не оцениваются — "
+               + "размечено только дно полости" },
+        /* Совмещение — единственная строка, где «есть оба исследования» не
+           значит «посчитано»: матрицу считает отдельный скрипт. Показываем
+           три состояния, а не два. */
+        { name: "Совмещение скана с КЛКТ",
+          ok: !!state.registration.done,
+          why: state.registration.possible
+            ? "оба исследования есть — совмещение ещё не выполнено"
+            : "нужны и КЛКТ, и скан одного пациента",
+          extra: state.registration.done
+            ? (state.registration.accepted
+                ? `принято, расхождение по зубам ${state.registration.tooth_median_mm} мм`
+                : `не принято: расхождение ${state.registration.tooth_median_mm} мм `
+                  + `при пороге 0.5 мм`)
+            : "" },
+      ];
+    });
+
+    /* Дата в ISO читается как машинный идентификатор, а врач смотрит на неё
+       десятки раз за приём. */
+    function fmtDate(iso, withTime = false) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (isNaN(d)) return String(iso).slice(0, 10);
+      const s = d.toLocaleDateString("ru-RU",
+        { day: "2-digit", month: "2-digit", year: "numeric" });
+      return withTime ? s + " " + d.toLocaleTimeString("ru-RU",
+        { hour: "2-digit", minute: "2-digit" }) : s;
+    }
+
+    function statusText(s) {
+      // Стадию обработки НЕ переводим: она приходит с сервера клиническим
+      // текстом («сегментация скана нейросетью»), и перевод такого — это
+      // перевод заключения, а не интерфейса.
+      if (s.status === "processing" && s.stage) return s.stage;
+      if (s.status === "queued" && s.position)
+        return `${t("в очереди")}: ${s.position}`;
+      return t(STATUS[s.status] || s.status);
+    }
+
+    onMounted(() => {
+      state.query = new URLSearchParams(location.search).get("q") || "";
+      draw();
+      addEventListener("popstate", draw);
+    });
+
+    /* Повтор упавшего исследования. Раньше ручка была только в API: врач
+       видел ошибку и не мог ничего сделать, кроме как загрузить файлы
+       заново — а это сотни мегабайт по туннелю. */
+    async function retry(st) {
+      state.retrying = st.id;
+      try {
+        await api(`/api/studies/${st.id}/retry`, { method: "POST" });
+        st.status = "queued"; st.error = "";
+        watchPending();           // строка снова обновляется сама
+      } catch (e) {
+        st.error = e.message;
+      } finally { state.retrying = ""; }
+    }
+
+    /* Фотопротокол.
+     *
+     * Слоты приходят с сервера, а не заданы здесь: подписи позиций нужны
+     * ещё и в отчёте, а две копии справочника в этом проекте уже расходились
+     * (роли врачей, палитра). */
+    async function loadPhotos(id) {
+      state.photos = []; state.photoError = "";
+      try {
+        const d = await api(`/api/patients/${id}/photos`);
+        state.photos = d.photos || [];
+        state.photoSlots = d.slots || [];
+      } catch (e) { state.photoError = e.message; }
+    }
+
+    // Снимки, разложенные по позициям протокола. Пустая позиция остаётся в
+    // сетке: врач должен видеть, чего в протоколе НЕ хватает, — ради этого
+    // протокол и стандартный.
+    const photoGrid = computed(() => {
+      const by = {};
+      for (const ph of state.photos) (by[ph.slot || "other"] ||= []).push(ph);
+      return state.photoSlots.map(sl => ({
+        ...sl, items: by[sl.key] || [],
+      }));
+    });
+
+    // Русское склонение: «1 снимок», «2 снимка», «5 снимков». Без него в
+    // шапке стояло «1 снимков» — мелочь, но она читается как небрежность.
+    const photoCount = computed(() => {
+      const n = state.photos.length;
+      if (!n) return t("снимков нет");
+      const d = n % 10, dd = n % 100;
+      const w = (d === 1 && dd !== 11) ? "снимок"
+              : (d >= 2 && d <= 4 && (dd < 10 || dd >= 20)) ? "снимка" : "снимков";
+      return `${n} ${t(w)}`;
+    });
+
+    async function pickPhotos(slot, ev) {
+      const files = [...(ev.target.files || [])];
+      ev.target.value = "";                    // повторный выбор того же файла
+      if (!files.length || !state.patient) return;
+      await sendPhotos(slot, files);
+    }
+
+    async function dropPhotos(slot, ev) {
+      const files = [...(ev.dataTransfer?.files || [])]
+        .filter(f => /^image\//.test(f.type));
+      if (files.length) await sendPhotos(slot, files);
+    }
+
+    async function sendPhotos(slot, files) {
+      state.photoBusy = slot; state.photoError = "";
+      const fd = new FormData();
+      for (const f of files) fd.append("files", f);
+      try {
+        const url = `/api/patients/${state.patient.id}/photos`
+                  + `?slot=${encodeURIComponent(slot)}`;
+        await api(url, { method: "POST", body: fd });
+        await loadPhotos(state.patient.id);
+      } catch (e) {
+        state.photoError = e.message;
+      } finally { state.photoBusy = ""; }
+    }
+
+    async function movePhoto(ph, slot) {
+      if (ph.slot === slot) return;
+      await api(`/api/photos/${ph.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot }),
+      }).catch(() => {});
+      await loadPhotos(state.patient.id);
+    }
+
+    /* Удаление спрашивает подтверждение прямо в кнопке (двойное нажатие), а
+       не через confirm(): модальное окно браузера блокирует страницу. */
+    const delArmed = reactive({ id: "", timer: null });
+    async function removePhoto(ph) {
+      if (delArmed.id !== ph.id) {
+        delArmed.id = ph.id;
+        clearTimeout(delArmed.timer);
+        delArmed.timer = setTimeout(() => { delArmed.id = ""; }, 3000);
+        return;
+      }
+      delArmed.id = "";
+      await api(`/api/photos/${ph.id}`, { method: "DELETE" }).catch(() => {});
+      await loadPhotos(state.patient.id);
+    }
+    const isArmed = (ph) => delArmed.id === ph.id;
+
+    // Просмотр в полный экран: плитка 320 px не даёт разглядеть край
+    // реставрации, ради которого снимок и делался.
+    function openLightbox(ph) { state.lightbox = ph; }
+    function closeLightbox() { state.lightbox = null; }
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.lightbox) closeLightbox();
+    });
+
+    const subtitle = computed(() =>
+      state.view === "card" ? t("Карточка пациента") : t("Пациенты и исследования"));
+
+    return {
+      ...toRefs(state), coverage, subtitle, chartRows, hasTooth, toothTitle,
+      planStages, composePlan, t, lang,
+      planCount, kindsLine, findingGroups, isOpen, toggle,
+      go, open, createPatient, searchDebounced, upload, onPick, onDrop,
+      fmtDate, statusText,
+      retry, photoGrid, photoCount, pickPhotos, dropPhotos, movePhoto, removePhoto, isArmed,
+      openLightbox, closeLightbox,
+      kindShort: k => KIND_SHORT[k] || k,
+    };
+  },
+}).mount("#app");
+</script>

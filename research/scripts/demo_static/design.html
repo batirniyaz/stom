@@ -1,0 +1,691 @@
+<title>Карта пациента Stomadent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap">
+<style>
+  /* Тёмная тема — не вкусовщина: рентген и 3D читаются на тёмном фоне, так
+     устроены все клинические вьюеры. Поэтому палитра задаётся явно и не
+     зависит от темы зрителя. */
+  /* ТЁПЛАЯ (по умолчанию). Нейтрали сдвинуты в тепло: фон почти без синевы,
+     текст — тёплый белый, серый — не голубой. Акцент оставлен холодным
+     намеренно: жёлтый и красный у нас уже значат «внимание» и «тревога», и
+     тёплый акцент спорил бы с ними за внимание врача. */
+  :root {
+    --bg: #0c0b0e;
+    --panel: #16151a;
+    --panel-2: #1c1a21;
+    --panel-3: #24212b;
+    --line: rgba(255,247,237,.09);
+    --line-2: rgba(255,247,237,.16);
+    --text: #ede9e3;
+    --muted: #a9a29a;
+    --dim: #7b736b;
+    --cyan: #35c9e0;
+    --indigo: #7d7ae8;
+    --grad: linear-gradient(92deg, #35c9e0, #7d7ae8);
+    --ok: #7cc98a;
+    --warn: #e5a53f;
+    --bad: #e0796c;
+    --r: 12px;
+  }
+  /* ХОЛОДНАЯ — то, что в продукте сейчас, для сравнения. */
+  [data-skin="cool"] {
+    --bg: #070b12;
+    --panel: #0d1522;
+    --panel-2: #111c2e;
+    --panel-3: #16233a;
+    --line: rgba(255,255,255,.08);
+    --line-2: rgba(255,255,255,.14);
+    --text: #e6edf7;
+    --muted: #93a3b8;
+    --dim: #64748b;
+    --cyan: #22d3ee;
+    --indigo: #6366f1;
+    --grad: linear-gradient(92deg, #22d3ee, #6366f1);
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 400 14px/1.55 Onest, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;   /* миллиметры в колонках */
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+
+  /* ---------- панель прототипа ---------- */
+  .proto {
+    position: sticky; top: 0; z-index: 60;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 9px 18px; background: #05080e;
+    border-bottom: 1px solid var(--line);
+  }
+  .proto b { font-size: 12px; letter-spacing: .04em; color: var(--dim);
+             text-transform: uppercase; font-weight: 600; }
+  .proto-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .proto-tab {
+    background: rgba(255,255,255,.04); border: 1px solid var(--line);
+    color: var(--muted); border-radius: 8px; padding: 5px 11px; font-size: 12.5px;
+  }
+  .proto-tab:hover { color: var(--text); border-color: var(--line-2); }
+  .proto-tab.on { background: rgba(34,211,238,.13); color: var(--cyan);
+                  border-color: rgba(34,211,238,.4); }
+  .proto-note { margin-left: auto; font-size: 12px; color: var(--dim); }
+
+  /* ---------- общий каркас ---------- */
+  .app { min-height: 100vh; }
+  header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 11px 20px; border-bottom: 1px solid var(--line);
+    background: rgba(13,21,34,.9);
+  }
+  .mark { width: 34px; height: 34px; border-radius: 9px; flex: none;
+          background: var(--grad); display: grid; place-items: center; }
+  .brand h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+  .brand p { margin: 1px 0 0; font-size: 11.5px; color: var(--dim); }
+  .tabs { display: flex; gap: 3px; margin-left: 14px; padding: 3px;
+          background: rgba(148,163,184,.07); border: 1px solid var(--line);
+          border-radius: 10px; }
+  .tab { background: transparent; border: 1px solid transparent; color: var(--muted);
+         border-radius: 7px; padding: 5px 13px; font-size: 12.5px; }
+  .tab.on { color: #fff; background: var(--grad); font-weight: 600; }
+  .head-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .lang { display: flex; gap: 3px; }
+  .lang span { border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px;
+               font-size: 10.5px; color: var(--dim); letter-spacing: .04em; }
+  .lang span.on { color: var(--cyan); border-color: rgba(34,211,238,.4);
+                  background: rgba(34,211,238,.12); }
+
+  main { max-width: 1240px; margin: 0 auto; padding: 20px; }
+  .wide-main { max-width: none; padding: 0; }
+
+  .row-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .search { flex: 1; background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; padding: 10px 13px; color: var(--text); }
+  .btn { background: var(--grad); border: none; color: #04121c; font-weight: 600;
+         padding: 10px 15px; border-radius: 10px; font-size: 13.5px; }
+  .btn-ghost { background: rgba(255,255,255,.05); border: 1px solid var(--line);
+               color: var(--text); padding: 9px 14px; border-radius: 10px;
+               font-size: 13px; }
+
+  /* ---------- список пациентов ---------- */
+  .plist { display: flex; flex-direction: column; gap: 7px; }
+  .prow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px;
+          align-items: center; background: var(--panel); border: 1px solid var(--line);
+          border-radius: var(--r); padding: 12px 16px; text-align: left; width: 100%; }
+  .prow:hover { border-color: rgba(34,211,238,.4); background: var(--panel-2); }
+  .pname { font-size: 14.5px; font-weight: 600; }
+  .psub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .chips { display: flex; gap: 5px; }
+  .chip { font-size: 10.5px; padding: 3px 9px; border-radius: 999px;
+          border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+  .chip.cbct { color: #93c5fd; border-color: rgba(147,197,253,.4); }
+  .chip.ios  { color: #6ee7b7; border-color: rgba(110,231,183,.4); }
+  .chip.opg  { color: #fcd34d; border-color: rgba(252,211,77,.4); }
+  .alarm { font-size: 11.5px; color: var(--warn); white-space: nowrap; }
+  .when { font-size: 12px; color: var(--dim); white-space: nowrap; }
+
+  /* ---------- карточка пациента ---------- */
+  .pt-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+  .pt-head h2 { margin: 0; font-size: 21px; letter-spacing: -.3px; }
+  .pt-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 12px; align-items: start; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line);
+          border-radius: var(--r); padding: 15px 16px; margin-bottom: 12px; }
+  .card-t { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+            color: var(--dim); margin-bottom: 11px; font-weight: 600; }
+  .study { display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+           align-items: center; padding: 11px 13px; border-radius: 10px;
+           border: 1px solid var(--line); background: var(--panel-2);
+           margin-bottom: 7px; width: 100%; text-align: left; }
+  .study:hover { border-color: rgba(34,211,238,.4); }
+  .st { font-size: 11px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .st.ready { color: var(--ok); background: rgba(52,211,153,.12); }
+  .st.run   { color: var(--warn); background: rgba(251,191,36,.12); }
+  .st.none  { color: var(--dim); background: rgba(148,163,184,.1); }
+  .cover { display: grid; grid-template-columns: auto 1fr; gap: 11px;
+           align-items: start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .cover:last-child { border-bottom: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; }
+  .dot.y { background: var(--ok); }
+  .dot.n { background: #334155; }
+
+  /* ---------- просмотр исследования ---------- */
+  .viewer { display: grid; grid-template-columns: 1fr 396px; height: calc(100vh - 108px); }
+  @media (max-width: 1000px) { .viewer { grid-template-columns: 1fr; height: auto; } }
+  .stage { position: relative; background:
+      radial-gradient(120% 100% at 50% 0%, var(--panel-2) 0%, var(--bg) 72%);
+      display: grid; place-items: center; overflow: hidden; }
+  .stage-hint { position: absolute; left: 14px; bottom: 12px; font-size: 11.5px;
+                color: var(--dim); }
+  .side { border-left: 1px solid var(--line); background: var(--panel);
+          overflow: auto; padding: 14px 15px; }
+  .ctx { display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+         border-bottom: 1px solid var(--line); background: var(--panel-2); }
+  .ctx b { font-size: 13.5px; font-weight: 600; }
+  .ctx .sw { margin-left: auto; display: flex; gap: 4px; }
+  .sw button { background: rgba(255,255,255,.04); border: 1px solid var(--line);
+               color: var(--muted); border-radius: 8px; padding: 4px 11px;
+               font-size: 12px; }
+  .sw button.on { color: var(--cyan); border-color: rgba(34,211,238,.45);
+                  background: rgba(34,211,238,.12); }
+
+  .ftabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line);
+           margin: -4px -15px 12px; padding: 0 15px; }
+  .ftab { background: none; border: none; color: var(--muted); font-size: 13px;
+          padding: 8px 11px; border-bottom: 2px solid transparent; }
+  .ftab.on { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .cnt { font-size: 10.5px; background: rgba(148,163,184,.18); color: var(--muted);
+         border-radius: 999px; padding: 1px 6px; margin-left: 5px; }
+
+  .draft { font-size: 11.5px; color: var(--warn); background: rgba(251,191,36,.08);
+           border: 1px solid rgba(251,191,36,.22); border-radius: 9px;
+           padding: 8px 10px; margin-bottom: 12px; line-height: 1.45; }
+  .role { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+          color: var(--dim); margin: 14px 0 7px; font-weight: 600; }
+  .find { border-left: 2px solid var(--line-2); padding: 8px 0 8px 11px;
+          margin-bottom: 8px; font-size: 13px; }
+  .find.warn { border-left-color: var(--warn); }
+  .find.info { border-left-color: var(--cyan); }
+  .find .num { color: var(--warn); font-weight: 600; }
+  .find .why { color: var(--dim); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+  .find .basis { color: var(--muted); font-size: 11px; margin-top: 5px;
+                 border-top: 1px dashed var(--line); padding-top: 5px; }
+  .tooth-tag { display: inline-block; font-size: 11px; border: 1px solid var(--line-2);
+               border-radius: 6px; padding: 1px 6px; margin-right: 5px; color: var(--muted); }
+  .src { font-size: 10px; color: var(--dim); border: 1px solid var(--line);
+         border-radius: 5px; padding: 1px 5px; margin-left: 6px; }
+
+  /* зубная карта */
+  .chart { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .chart-row { display: flex; gap: 3px; justify-content: center; }
+  .th { width: 25px; height: 30px; border-radius: 6px; border: 1px solid var(--line);
+        background: var(--panel-2); font-size: 10.5px; color: var(--muted);
+        display: grid; place-items: center; position: relative; }
+  .th.miss { border-style: dashed; color: #3f4c60; background: transparent; }
+  .th.mark::after { content: ""; position: absolute; bottom: 3px; width: 5px;
+                    height: 5px; border-radius: 50%; background: var(--warn); }
+  .th.alarm { border-color: rgba(248,113,113,.5); color: #fca5a5; }
+
+  /* макет 3D-сцены */
+  .fake3d { width: min(560px, 86%); aspect-ratio: 4/3; position: relative; }
+  .jaw { position: absolute; inset: 0; display: grid; place-items: center; }
+  .tooth-shape { fill: #dfe6ef; stroke: #aab6c6; stroke-width: .6; }
+  .gum-shape { fill: #b0737a; opacity: .85; }
+  .nerve { stroke: #f87171; stroke-width: 3.5; fill: none; stroke-linecap: round; }
+
+  .up { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .up label { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px;
+              color: var(--muted); }
+  .up select, .up input { background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 9px; padding: 9px 10px; color: var(--text); font-size: 13px; }
+  .drop { grid-column: 1/-1; border: 1.5px dashed var(--line-2); border-radius: 12px;
+          padding: 26px; text-align: center; color: var(--muted); font-size: 13px;
+          background: rgba(255,255,255,.015); }
+  .drop b { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+  .queue { display: flex; align-items: center; gap: 10px; font-size: 12.5px;
+           color: var(--muted); padding: 10px 12px; border-radius: 10px;
+           background: var(--panel-2); border: 1px solid var(--line); }
+  .bar { flex: 1; height: 4px; border-radius: 999px; background: rgba(255,255,255,.07);
+         overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 62%; background: var(--grad); }
+  .spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.15);
+          border-top-color: var(--cyan); border-radius: 50%; flex: none;
+          animation: sp 1s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+  .callout { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--r);
+             background: var(--panel); padding: 14px 16px; }
+  .callout h3 { margin: 0 0 8px; font-size: 13px; color: var(--cyan);
+                letter-spacing: .01em; }
+  .callout ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 12.5px;
+                line-height: 1.6; }
+  .callout li + li { margin-top: 5px; }
+  .hidden { display: none !important; }
+</style>
+
+<div class="proto">
+  <b>Прототип</b>
+  <div class="proto-tabs">
+    <button class="proto-tab on" data-screen="list">1 · Пациенты</button>
+    <button class="proto-tab" data-screen="card">2 · Карточка</button>
+    <button class="proto-tab" data-screen="view">3 · Просмотр КЛКТ</button>
+    <button class="proto-tab" data-screen="upload">4 · Загрузка</button>
+  </div>
+  <div class="proto-tabs" style="margin-left:14px">
+    <button class="proto-tab on" data-skin-btn="warm">Тёплая</button>
+    <button class="proto-tab" data-skin-btn="cool">Холодная (как сейчас)</button>
+  </div>
+  <div class="proto-note">Шрифт Onest · данные настоящие</div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 12h4l2.5-6 4 12 2.5-6h5" stroke="#fff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Stomadent AI</h1>
+      <p id="brand-sub">Пациенты и исследования</p>
+    </div>
+    <div class="tabs">
+      <button class="tab on">Пациенты</button>
+      <button class="tab">2D ОПТГ</button>
+      <button class="tab">3D КЛКТ</button>
+      <button class="tab">Скан</button>
+    </div>
+    <div class="head-right">
+      <div class="lang"><span class="on">РУС</span><span>QQ</span></div>
+    </div>
+  </header>
+
+  <!-- ================= 1. СПИСОК ПАЦИЕНТОВ ================= -->
+  <main id="s-list">
+    <div class="row-bar">
+      <input class="search" placeholder="Поиск по фамилии или номеру карты" value="">
+      <button class="btn">+ Новый пациент</button>
+    </div>
+    <div class="plist" id="plist"></div>
+
+    <div class="callout">
+      <h3>Что здесь решено</h3>
+      <ul>
+        <li><b>Тревога вынесена в список.</b> Врач видит «3 находки требуют
+            внимания» до того, как открыл карточку — иначе их приходится искать
+            перебором.</li>
+        <li><b>Типы исследований значками.</b> Видно, у кого есть КЛКТ, а у кого
+            только скан, не заходя внутрь.</li>
+        <li>Сортировка по последнему исследованию, а не по алфавиту: сегодняшний
+            приём важнее буквы «А».</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- ================= 2. КАРТОЧКА ПАЦИЕНТА ================= -->
+  <main id="s-card" class="hidden">
+    <div class="row-bar">
+      <button class="btn-ghost" data-goto="list">← Все пациенты</button>
+      <span style="flex:1"></span>
+      <button class="btn" data-goto="upload">+ Загрузить исследование</button>
+    </div>
+
+    <div class="pt-head">
+      <div>
+        <h2>Мамбетов Азамат</h2>
+        <div class="pt-meta">38 лет · карта 4417 · исследований: 3 ·
+          последнее 06.09.2026</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-t">Исследования</div>
+          <button class="study" data-goto="view">
+            <span class="chip cbct">КЛКТ</span>
+            <span><div>Компьютерная томография</div>
+              <div class="psub">06.09.2026 · Dentium rainbowCT · 30 зубов</div></span>
+            <span class="st ready">готово</span>
+          </button>
+          <button class="study">
+            <span class="chip ios">Скан</span>
+            <span><div>Интраоральный скан</div>
+              <div class="psub">06.09.2026 · Exocad · 30 зубов</div></span>
+            <span class="st ready">готово</span>
+          </button>
+          <button class="study">
+            <span class="chip opg">ОПТГ</span>
+            <span><div>Панорамный снимок</div>
+              <div class="psub">12.08.2026 · 12 находок</div></span>
+            <span class="st ready">готово</span>
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-t">Сводный план — черновик</div>
+          <div class="find warn">
+            <b>Этап 1 · Терапия</b> <span class="src">ОПТГ</span>
+            <div class="why">Лечение кариеса ×6 — зубы 16, 26, 36, 37, 46, 47.
+              Глубокий кариес ×1 — зуб 26.</div>
+          </div>
+          <div class="find warn">
+            <b>Этап 2 · Хирургия</b> <span class="src">КЛКТ</span>
+            <div class="why">Удаление зуба мудрости ×2 — зубы 18, 28
+              (ретенция, выше окклюзионной плоскости на 10.8 и 10.7 мм).</div>
+          </div>
+          <div class="find info">
+            <b>Этап 3 · Ортодонтия</b> <span class="src">Скан</span>
+            <div class="why">Глубокое резцовое перекрытие 6.4 мм — консультация.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-t">Что можно посчитать</div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Анатомия, зубы, нерв, пазухи<div class="psub">по КЛКТ</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Уровень кости, эндодонтия, ретенция<div class="psub">по КЛКТ</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Прикус, симметрия дуги, контакты<div class="psub">по скану</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Кариес и периапикальные очаги<div class="psub">по ОПТГ</div></span></div>
+          <div class="cover"><span class="dot n"></span>
+            <span>Совмещение скана с КЛКТ
+              <div class="psub">не выполнено — запустить</div></span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-t">Требует внимания</div>
+          <div class="find warn">Уровень кости выше нормы: зуб 23
+            <span class="src">КЛКТ</span>
+            <div class="why">дистально 7.1 мм (33% корня) — выше 94% участков выборки</div>
+          </div>
+          <div class="find warn">Канал пломбирован: зуб 46 <span class="src">КЛКТ</span>
+            <div class="why">оценка ранее пролеченного канала</div></div>
+          <div class="find warn">Глубокий кариес: зуб 26 <span class="src">ОПТГ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>Что здесь решено</h3>
+      <ul>
+        <li><b>План собирается по пациенту, а не по снимку.</b> Сейчас у человека с
+            КЛКТ и сканом получается два несвязанных плана — врач сшивает их в
+            голове. Здесь этапы идут вместе, а <span class="src">источник</span>
+            подписан у каждой позиции.</li>
+        <li><b>«Что можно посчитать» говорит и о том, чего нет.</b> Пустой раздел
+            иначе читается как «патологий не найдено» — а это разные вещи.</li>
+        <li><b>Порядок этапов клинический</b> (терапия → хирургия → ортодонтия →
+            ортопедия), взят из плана клиники, а не придуман.</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- ================= 3. ПРОСМОТР ИССЛЕДОВАНИЯ ================= -->
+  <main id="s-view" class="hidden wide-main">
+    <div class="ctx">
+      <button class="btn-ghost" data-goto="card" style="padding:5px 11px">←</button>
+      <b>Мамбетов Азамат</b>
+      <span class="psub" style="margin:0">38 лет · карта 4417</span>
+      <div class="sw">
+        <button class="on">КЛКТ</button>
+        <button>Скан</button>
+        <button>ОПТГ</button>
+      </div>
+    </div>
+
+    <div class="viewer">
+      <div class="stage">
+        <div class="fake3d">
+          <div class="jaw">
+            <svg viewBox="0 0 400 300" width="100%" height="100%" aria-label="Макет 3D-модели челюсти">
+              <path class="gum-shape" d="M60 175 Q200 105 340 175 Q345 215 330 232
+                Q200 175 70 232 Q55 215 60 175 Z"/>
+              <path class="nerve" d="M78 196 Q200 250 322 196"/>
+              <g class="tooth-shape">
+                <ellipse cx="92"  cy="176" rx="12" ry="17"/>
+                <ellipse cx="120" cy="161" rx="12" ry="18"/>
+                <ellipse cx="150" cy="150" rx="11" ry="19"/>
+                <ellipse cx="180" cy="143" rx="10" ry="20"/>
+                <ellipse cx="210" cy="142" rx="10" ry="20"/>
+                <ellipse cx="240" cy="149" rx="11" ry="19"/>
+                <ellipse cx="270" cy="160" rx="12" ry="18"/>
+                <ellipse cx="300" cy="175" rx="12" ry="17"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="stage-hint">ЛКМ — вращать · колесо — приблизить · ПКМ — сдвинуть</div>
+      </div>
+
+      <aside class="side">
+        <div class="ftabs">
+          <button class="ftab on">Находки<span class="cnt">9</span></button>
+          <button class="ftab">План<span class="cnt">4</span></button>
+          <button class="ftab">Зуб</button>
+          <button class="ftab">Срезы</button>
+        </div>
+
+        <div class="chart">
+          <div class="chart-row">
+            <span class="th miss">18</span><span class="th mark alarm">17</span>
+            <span class="th">16</span><span class="th">15</span><span class="th">14</span>
+            <span class="th">13</span><span class="th">12</span><span class="th">11</span>
+            <span class="th">21</span><span class="th">22</span>
+            <span class="th mark alarm">23</span><span class="th">24</span>
+            <span class="th">25</span><span class="th">26</span><span class="th">27</span>
+            <span class="th miss">28</span>
+          </div>
+          <div class="chart-row">
+            <span class="th miss">48</span><span class="th">47</span>
+            <span class="th mark">46</span><span class="th">45</span><span class="th">44</span>
+            <span class="th">43</span><span class="th">42</span><span class="th">41</span>
+            <span class="th">31</span><span class="th">32</span><span class="th">33</span>
+            <span class="th">34</span><span class="th">35</span><span class="th">36</span>
+            <span class="th">37</span><span class="th miss">38</span>
+          </div>
+        </div>
+
+        <div class="draft">Черновик: пороги врачом не подтверждены.
+          Материал для приёма, а не заключение.</div>
+
+        <div class="role">Пародонтолог</div>
+        <div class="find warn">
+          <span class="tooth-tag">23</span>Уровень кости выше нормы:
+          дистально <span class="num">7.1 мм</span> (33% корня),
+          мезиально <span class="num">6.6 мм</span> (30%)
+          <div class="basis">на чём основано: шейка — точка наибольшего спада
+            плотности по внешнему слою; гребень — 95-й перцентиль в секторе ±50°;
+            выше 94% участков выборки из 60 пациентов, медиана выборки 3.9 мм —
+            это база НАШЕГО измерения, не клиническая норма</div>
+        </div>
+
+        <div class="role">Ортопед</div>
+        <div class="find info">
+          <span class="tooth-tag">15</span>Корень у дна гайморовой пазухи:
+          <span class="num">0.7 мм</span>
+          <div class="why">близость к пазухе типична и патологией не является —
+            ближе, чем у 45% зубов выборки</div>
+        </div>
+
+        <div class="role">Хирург</div>
+        <div class="find warn">
+          <span class="tooth-tag">18</span><span class="tooth-tag">28</span>
+          Ретенция: зубы не дошли до окклюзионной плоскости на
+          <span class="num">10.8</span> и <span class="num">10.7 мм</span>
+          <div class="basis">порог 8.0 мм — по разрыву в выборке 115 зубов:
+            между 10.7 и 6.5 мм пусто</div>
+        </div>
+
+        <div class="role">Ручная проверка</div>
+        <div class="find">
+          <span class="tooth-tag">17</span>Зуб сегментирован частично
+          (68 мм³ при норме от 350) — измерения по нему недостоверны
+        </div>
+      </aside>
+    </div>
+
+    <main style="max-width:1240px;margin:0 auto;padding:16px 20px 28px">
+      <div class="callout">
+        <h3>Что здесь решено</h3>
+        <ul>
+          <li><b>Контекст пациента не исчезает.</b> Сейчас во вьюере не видно, чей
+              это снимок; переключатель КЛКТ / Скан / ОПТГ позволяет сравнить
+              исследования одного человека, не возвращаясь в список.</li>
+          <li><b>Основание вместо процента уверенности.</b> У Diagnocat на находке
+              стоит «87%». У нас вероятности нет — есть измерение, порог и
+              оговорка, и это врач может проверить прямо на срезе.</li>
+          <li><b>Зубная карта — навигация.</b> Клик по зубу открывает его карточку
+              и ведёт туда перекрестие срезов.</li>
+          <li><b>Недостоверное отделено от найденного.</b> Огрызок сегментации
+              уходит в «ручную проверку» и не идёт в план: недостоверное
+              измерение хуже отсутствующего, врач не отличит его от настоящего.</li>
+        </ul>
+      </div>
+    </main>
+  </main>
+
+  <!-- ================= 4. ЗАГРУЗКА ================= -->
+  <main id="s-upload" class="hidden">
+    <div class="row-bar">
+      <button class="btn-ghost" data-goto="card">← Мамбетов Азамат</button>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-t">Новое исследование</div>
+          <div class="up">
+            <div class="drop">
+              <b>Перетащите файлы сюда</b>
+              ZIP с DICOM-серией · снимок JPG или PNG · STL, PLY, OBJ
+            </div>
+            <label>Тип исследования
+              <select>
+                <option>определить по файлам</option>
+                <option>КЛКТ</option>
+                <option>Панорамный снимок (ОПТГ)</option>
+                <option>Прицельный снимок</option>
+                <option>Интраоральный скан</option>
+              </select>
+            </label>
+            <label>Дата съёмки
+              <input value="06.09.2026">
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-t">Обработка</div>
+          <div class="queue" style="margin-bottom:8px">
+            <span class="spin"></span>
+            <span>КЛКТ · сегментация нейросетью</span>
+            <span class="bar"><i></i></span>
+            <span class="when">≈ 4 мин</span>
+          </div>
+          <div class="queue">
+            <span class="chip ios">Скан</span>
+            <span>в очереди: 1</span>
+            <span class="bar"></span>
+            <span class="when">ждёт видеокарту</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-t">Что распознано в файлах</div>
+          <div class="cover"><span class="dot y"></span>
+            <span>335 срезов DICOM<div class="psub">серия собрана</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Dentium rainbowCT<div class="psub">аппарат из метаданных</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Стороны подтверждены<div class="psub">правило для этого
+              аппарата задано врачом</div></span></div>
+          <div class="cover"><span class="dot y"></span>
+            <span>Съёмка 05.07.2026<div class="psub">дата из файла</div></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>Что здесь решено</h3>
+      <ul>
+        <li><b>Тип определяется по файлам, врач подтверждает.</b> Он приносит
+            «панораму» и «скан», а не «одиночный DICOM» и «набор STL».</li>
+        <li><b>Очередь видна.</b> Задачи идут по одной: две сети на одной
+            видеокарте уводят память в спилл, и Windows сообщает об этом только
+            скоростью. «В очереди: 1» честнее пустого экрана.</li>
+        <li><b>Аппарат показывается сразу.</b> Если стороны для него не
+            подтверждены, это видно до анализа — иначе о зеркале узнают по
+            перепутанным номерам зубов в плане лечения.</li>
+      </ul>
+    </div>
+  </main>
+</div>
+
+<script>
+  const PATIENTS = [
+    { name: "Мамбетов Азамат", age: 38, card: "4417", kinds: ["cbct", "ios", "opg"],
+      alarm: "3 находки требуют внимания", when: "06.09.2026" },
+    { name: "Юсупова Гулнара", age: 44, card: "4392", kinds: ["cbct"],
+      alarm: "1 находка требует внимания", when: "05.09.2026" },
+    { name: "Сейтмуратов Бахтияр", age: 27, card: "4381", kinds: ["ios"],
+      alarm: "", when: "04.09.2026" },
+    { name: "Абдуллаева Зульфия", age: 51, card: "4377", kinds: ["cbct", "opg"],
+      alarm: "2 находки требуют внимания", when: "02.09.2026" },
+    { name: "Оразбаев Мурат", age: 33, card: "4360", kinds: ["opg"],
+      alarm: "", when: "29.08.2026" },
+  ];
+  const KIND_LABEL = { cbct: "КЛКТ", ios: "Скан", opg: "ОПТГ" };
+
+  document.getElementById("plist").innerHTML = PATIENTS.map(p => `
+    <button class="prow" data-goto="card">
+      <span>
+        <div class="pname">${p.name}</div>
+        <div class="psub">${p.age} лет · карта ${p.card}</div>
+      </span>
+      <span class="chips">${p.kinds.map(k =>
+        `<span class="chip ${k}">${KIND_LABEL[k]}</span>`).join("")}</span>
+      <span class="alarm">${p.alarm}</span>
+      <span class="when">${p.when}</span>
+    </button>`).join("");
+
+  const SCREENS = ["list", "card", "view", "upload"];
+  const SUB = {
+    list: "Пациенты и исследования",
+    card: "Карточка пациента",
+    view: "Просмотр исследования",
+    upload: "Загрузка исследования",
+  };
+
+  function show(name) {
+    for (const s of SCREENS)
+      document.getElementById("s-" + s).classList.toggle("hidden", s !== name);
+    document.querySelectorAll(".proto-tab").forEach(b =>
+      b.classList.toggle("on", b.dataset.screen === name));
+    document.getElementById("brand-sub").textContent = SUB[name] || "";
+    window.scrollTo({ top: 0 });
+  }
+
+  /* Экран в адресе: ссылку на конкретный макет можно переслать, а не
+     объяснять «нажмите вторую вкладку». Тот же принцип, что в самом продукте. */
+  function sync(name, push) {
+    show(name);
+    const u = new URL(location.href);
+    u.searchParams.set("screen", name);
+    history[push ? "pushState" : "replaceState"](null, "", u);
+  }
+  const start = new URLSearchParams(location.search).get("screen");
+  if (SCREENS.includes(start)) show(start);
+  addEventListener("popstate", () => {
+    const n = new URLSearchParams(location.search).get("screen");
+    show(SCREENS.includes(n) ? n : "list");
+  });
+
+  document.addEventListener("click", (e) => {
+    const skin = e.target.closest("[data-skin-btn]");
+    if (skin) {
+      const v = skin.dataset.skinBtn;
+      document.documentElement.dataset.skin = v === "cool" ? "cool" : "";
+      document.querySelectorAll("[data-skin-btn]").forEach(b =>
+        b.classList.toggle("on", b === skin));
+      return;
+    }
+    const t = e.target.closest("[data-screen], [data-goto]");
+    if (!t) return;
+    sync(t.dataset.screen || t.dataset.goto, true);
+  });
+</script>

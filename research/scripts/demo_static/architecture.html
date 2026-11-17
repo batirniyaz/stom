@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Архитектура моделей Stomadent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+:root {
+  --bg: #f6f4f0; --surface: #fff; --surface-2: #f0ede8;
+  --line: #ddd7cf; --line-2: #c9c2b8;
+  --text: #23262b; --text-2: #565b63; --muted: #7d838c;
+  --accent: #0d7c8a; --accent-soft: rgba(13,124,138,.10);
+  --ok: #1c7a4f; --ok-soft: rgba(28,122,79,.11);
+  --new: #0d6fa8; --new-soft: rgba(13,111,168,.11);
+  --wait: #9a6510; --wait-soft: rgba(154,101,16,.12);
+  --stop: #a4402f; --stop-soft: rgba(164,64,47,.11);
+  --shadow: 0 1px 2px rgba(35,38,43,.05), 0 8px 24px -16px rgba(35,38,43,.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131519; --surface: #1a1d22; --surface-2: #21252b;
+    --line: #2b3037; --line-2: #3a4048;
+    --text: #e8e6e2; --text-2: #b0b5bd; --muted: #848a93;
+    --accent: #3fc4d4; --accent-soft: rgba(63,196,212,.13);
+    --ok: #4bc98a; --ok-soft: rgba(75,201,138,.13);
+    --new: #56aef0; --new-soft: rgba(86,174,240,.13);
+    --wait: #e0a94a; --wait-soft: rgba(224,169,74,.14);
+    --stop: #ef8a76; --stop-soft: rgba(239,138,118,.13);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131519; --surface: #1a1d22; --surface-2: #21252b;
+  --line: #2b3037; --line-2: #3a4048;
+  --text: #e8e6e2; --text-2: #b0b5bd; --muted: #848a93;
+  --accent: #3fc4d4; --accent-soft: rgba(63,196,212,.13);
+  --ok: #4bc98a; --ok-soft: rgba(75,201,138,.13);
+  --new: #56aef0; --new-soft: rgba(86,174,240,.13);
+  --wait: #e0a94a; --wait-soft: rgba(224,169,74,.14);
+  --stop: #ef8a76; --stop-soft: rgba(239,138,118,.13);
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: Onest, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 56px 24px 96px; }
+.eyebrow {
+  font-size: 12.5px; font-weight: 600; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+}
+h1 {
+  font-family: Literata, Georgia, serif; font-weight: 600;
+  font-size: clamp(30px, 5vw, 44px); line-height: 1.15;
+  letter-spacing: -.015em; margin: 0 0 18px; text-wrap: balance;
+}
+.lede {
+  font-size: clamp(16.5px, 2vw, 18.5px); line-height: 1.62;
+  color: var(--text-2); max-width: 70ch; margin: 0 0 12px;
+}
+.stamp {
+  font-family: "JetBrains Mono", monospace; font-size: 12.5px;
+  color: var(--muted); margin-top: 24px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+h2 {
+  font-family: Literata, Georgia, serif; font-size: 25px; font-weight: 600;
+  letter-spacing: -.01em; margin: 52px 0 6px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+h3 { font-size: 18px; font-weight: 600; margin: 30px 0 10px; }
+p { max-width: 74ch; }
+
+/* ---- счётчики ---- */
+.counts {
+  display: grid; gap: 14px; margin: 26px 0 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.count {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 13px; padding: 16px 18px; box-shadow: var(--shadow);
+}
+.count .n {
+  font-family: "JetBrains Mono", monospace; font-size: 30px;
+  font-weight: 600; line-height: 1.1; color: var(--accent);
+}
+.count .k { font-size: 13.5px; color: var(--text-2); margin-top: 5px; }
+
+/* ---- схема конвейера ---- */
+.flow {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 16px; padding: 24px; margin: 24px 0;
+  box-shadow: var(--shadow); overflow-x: auto;
+}
+.flow-row {
+  display: flex; align-items: stretch; gap: 12px; min-width: 640px;
+  margin-bottom: 12px;
+}
+.flow-row:last-child { margin-bottom: 0; }
+.src {
+  flex: none; width: 116px; border-radius: 11px; padding: 12px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  display: grid; place-content: center; text-align: center;
+  font-weight: 600; font-size: 14px;
+}
+.arrow {
+  flex: none; align-self: center; color: var(--muted);
+  font-family: "JetBrains Mono", monospace; font-size: 18px;
+}
+.stage {
+  flex: 1; border-radius: 11px; padding: 12px 14px;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.stage b { display: block; font-size: 14.5px; margin-bottom: 3px; }
+.stage span { display: block; font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.stage.new { border-color: var(--new); background: var(--new-soft); }
+.stage.geom { border-style: dashed; }
+
+/* ---- таблица моделей ---- */
+.tbl { overflow-x: auto; margin: 20px 0; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14.5px; }
+th {
+  text-align: left; font-size: 11.5px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--muted); padding: 0 12px 10px;
+  border-bottom: 1px solid var(--line-2);
+}
+td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.mono, .mono { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.pill {
+  display: inline-block; font-size: 11.5px; font-weight: 600;
+  padding: 3px 9px; border-radius: 100px; white-space: nowrap;
+}
+.pill.ok { color: var(--ok); background: var(--ok-soft); }
+.pill.new { color: var(--new); background: var(--new-soft); }
+.pill.wait { color: var(--wait); background: var(--wait-soft); }
+.pill.stop { color: var(--stop); background: var(--stop-soft); }
+
+/* ---- врезка ---- */
+.note {
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0;
+  padding: 18px 20px; margin: 22px 0; box-shadow: var(--shadow);
+}
+.note b { display: block; margin-bottom: 6px; }
+.note p { margin: 0; color: var(--text-2); font-size: 14.5px; }
+
+pre {
+  font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.6;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 11px; padding: 14px 16px; overflow-x: auto; margin: 16px 0;
+}
+
+ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 20px 0; }
+ol.steps li {
+  counter-increment: s; display: grid; grid-template-columns: 34px 1fr;
+  gap: 14px; padding-bottom: 16px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+ol.steps li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+ol.steps li::before {
+  content: counter(s); font-family: "JetBrains Mono", monospace;
+  font-size: 13px; font-weight: 600; color: var(--accent);
+  background: var(--accent-soft); border-radius: 8px;
+  width: 34px; height: 34px; display: grid; place-items: center;
+}
+ol.steps b { display: block; margin-bottom: 3px; }
+ol.steps span { color: var(--text-2); font-size: 14.5px; }
+
+@media (max-width: 560px) {
+  .wrap { padding: 40px 18px 72px; }
+  .flow { padding: 16px; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<p class="eyebrow">Stomadent · проектное решение</p>
+<h1>Архитектура: сколько моделей и что каждая находит</h1>
+<p class="lede">
+  Восемь моделей на три модальности. Три уже работают, пять предстоит обучить.
+  Ни одна не решает больше одной задачи — и это выбор, а не недоделка.
+</p>
+<p class="stamp">Клиника ProAxis, Нукус · сентябрь 2026 · числа замерены на этой машине</p>
+
+<div class="counts">
+  <div class="count"><div class="n">8</div><div class="k">моделей всего</div></div>
+  <div class="count"><div class="n">3</div><div class="k">работают сейчас</div></div>
+  <div class="count"><div class="n">3</div><div class="k">двухэтапных</div></div>
+  <div class="count"><div class="n">32</div><div class="k">находки без обучения</div></div>
+</div>
+
+<h2>Главный принцип: диагноз считает не сеть</h2>
+<p>
+  Сеть отвечает только на вопрос «что здесь за ткань». Все измерения и находки
+  считаются <b>геометрией поверх готовой маски</b> — обычным кодом, без обучения.
+</p>
+<p>
+  Отсюда и главное число этого документа: <b>32 находки из 36 не требуют своей
+  модели</b>. Расстояние от корня до нерва, убыль кости, статус канала, прикус,
+  симметрия дуги — всё это выводится из одной маски арифметикой.
+</p>
+
+<div class="note">
+  <b>Почему это важно для надёжности</b>
+  <p>
+    Находка, выведенная из маски, не может ей противоречить. Врач спрашивал,
+    не разъедутся ли модели в трактовке одного места — при такой схеме это
+    невозможно по построению: место определяет ровно одна сеть, остальное
+    арифметика от неё.
+  </p>
+</div>
+
+<h2>Конвейер по модальностям</h2>
+
+<div class="flow">
+  <div class="flow-row">
+    <div class="src">КЛКТ</div>
+    <div class="arrow">→</div>
+    <div class="stage"><b>1. nnU-Net 3D</b><span>47 классов анатомии: 32 зуба, пульпа, челюсти, каналы, пазухи, реставрации</span></div>
+    <div class="arrow">→</div>
+    <div class="stage geom"><b>Геометрия</b><span>15 находок: нерв, пародонт, эндо, пазуха, ретенция, кость</span></div>
+  </div>
+  <div class="flow-row">
+    <div class="src" style="visibility:hidden">—</div>
+    <div class="arrow" style="visibility:hidden">→</div>
+    <div class="stage new"><b>7. Классификатор MB2</b><span>второй этап: кроп корня + маска от модели 1</span></div>
+    <div class="arrow">→</div>
+    <div class="stage geom"><b>1 находка</b><span>признаки второго канала</span></div>
+  </div>
+  <div class="flow-row">
+    <div class="src" style="visibility:hidden">—</div>
+    <div class="arrow" style="visibility:hidden">→</div>
+    <div class="stage new"><b>8. Сегментация пазухи</b><span>отдельная сеть: нужна своя разметка, 45–80 томов</span></div>
+    <div class="arrow">→</div>
+    <div class="stage geom"><b>3 находки</b><span>объём, слизистая, киста</span></div>
+  </div>
+
+  <div class="flow-row" style="margin-top:20px">
+    <div class="src">Скан</div>
+    <div class="arrow">→</div>
+    <div class="stage"><b>2. DGCNN</b><span>17 классов: зубы на скане, десна</span></div>
+    <div class="arrow">→</div>
+    <div class="stage geom"><b>13 находок</b><span>прикус, симметрия дуги, контакты, стирание, рецессия</span></div>
+  </div>
+
+  <div class="flow-row" style="margin-top:20px">
+    <div class="src">Панорама</div>
+    <div class="arrow">→</div>
+    <div class="stage"><b>3. YOLO-ансамбль</b><span>4 патологии на весь снимок</span></div>
+    <div class="arrow">→</div>
+    <div class="stage geom"><b>4 находки</b><span>кариес, глубокий кариес, очаг, ретенция</span></div>
+  </div>
+  <div class="flow-row">
+    <div class="src" style="visibility:hidden">—</div>
+    <div class="arrow" style="visibility:hidden">→</div>
+    <div class="stage new"><b>4. Детектор зубов</b><span>первый этап каскада: находит и нумерует каждый зуб</span></div>
+    <div class="arrow">→</div>
+    <div class="stage new"><b>5 и 6 на кропе зуба</b><span>классификатор градаций + ключевые точки</span></div>
+  </div>
+</div>
+
+<h2>Восемь моделей поимённо</h2>
+
+<div class="tbl">
+<table>
+<thead>
+<tr><th>№</th><th>Модель</th><th>Что определяет</th><th>Находок</th><th>Логика</th><th>Статус</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td class="mono">1</td>
+  <td><b>nnU-Net 3D</b><br><span style="color:var(--muted);font-size:13px">КЛКТ, 47 классов</span></td>
+  <td>Вся анатомия одной маской: зубы с номерами, пульпа, обе челюсти, нижнечелюстной и резцовые каналы, пазухи, реставрации</td>
+  <td class="mono">15</td>
+  <td>одноэтапная</td>
+  <td><span class="pill ok">работает</span></td>
+</tr>
+<tr>
+  <td class="mono">2</td>
+  <td><b>DGCNN</b><br><span style="color:var(--muted);font-size:13px">скан, 17 классов</span></td>
+  <td>Зубы и десна на интраоральном скане</td>
+  <td class="mono">13</td>
+  <td>одноэтапная</td>
+  <td><span class="pill ok">работает</span></td>
+</tr>
+<tr>
+  <td class="mono">3</td>
+  <td><b>YOLO-ансамбль</b><br><span style="color:var(--muted);font-size:13px">панорама, 4 класса</span></td>
+  <td>Кариес, глубокий кариес, периапикальный очаг, ретенция</td>
+  <td class="mono">4</td>
+  <td>одноэтапная</td>
+  <td><span class="pill ok">работает</span></td>
+</tr>
+<tr>
+  <td class="mono">4</td>
+  <td><b>Детектор зубов 2D</b><br><span style="color:var(--muted);font-size:13px">панорама, YOLO</span></td>
+  <td>Находит каждый зуб и присваивает номер FDI. Сам диагнозов не ставит — готовит вход для моделей 5 и 6</td>
+  <td class="mono">0</td>
+  <td>первый этап</td>
+  <td><span class="pill new">данные есть</span></td>
+</tr>
+<tr>
+  <td class="mono">5</td>
+  <td><b>Классификатор зуба</b><br><span style="color:var(--muted);font-size:13px">кроп 224 px, две головы</span></td>
+  <td>Глубина кариеса (4 градации) и состояние канала (пуст / запломбирован / с очагом)</td>
+  <td class="mono">8</td>
+  <td><b>двухэтапная</b></td>
+  <td><span class="pill new">после №4</span></td>
+</tr>
+<tr>
+  <td class="mono">6</td>
+  <td><b>Ключевые точки</b><br><span style="color:var(--muted);font-size:13px">кроп зуба, 6 точек</span></td>
+  <td>Шейка, гребень и апекс мезиально и дистально → убыль кости в долях длины корня</td>
+  <td class="mono">2</td>
+  <td><b>двухэтапная</b></td>
+  <td><span class="pill new">после №4</span></td>
+</tr>
+<tr>
+  <td class="mono">7</td>
+  <td><b>Классификатор MB2</b><br><span style="color:var(--muted);font-size:13px">КЛКТ, срезы корня</span></td>
+  <td>Признаки второго мезиально-щёчного канала. На вход — кроп плюс маска от модели 1</td>
+  <td class="mono">1</td>
+  <td><b>двухэтапная</b></td>
+  <td><span class="pill new">не начата</span></td>
+</tr>
+<tr>
+  <td class="mono">8</td>
+  <td><b>Сегментация пазухи</b><br><span style="color:var(--muted);font-size:13px">КЛКТ, отдельная сеть</span></td>
+  <td>Полость целиком, а не только дно: объём, утолщение слизистой, кисты</td>
+  <td class="mono">3</td>
+  <td>одноэтапная</td>
+  <td><span class="pill wait">нужна разметка</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+  <b>Почему не одна большая сеть на все задачи</b>
+  <p>
+    У многозадачной сети общий ствол: чтобы улучшить поиск MB2, пришлось бы
+    переучивать её целиком — и это роняет качество остальных задач. Для нас
+    цена особенно велика: обучение на этой машине идёт сутками, а размер
+    пакета уже стоит на единице, на пределе видеопамяти. Конвейер позволяет
+    трогать одну задачу, не ломая проверенные.
+  </p>
+</div>
+
+<h2>Три двухэтапные задачи — и почему именно они</h2>
+<p>
+  Двухэтапная логика нужна там, где искомое <b>мельче, чем шум вокруг него</b>.
+  Сеть, которой скормили снимок целиком, тонет в контексте; сеть, которой дали
+  вырезанный зуб, смотрит только на него.
+</p>
+<pre>кариес и эндо на панораме   зубы накладываются, корни фронта размыты
+пародонт на панораме        точность падает с 0.94 до 0.77 на целом снимке
+MB2 на КЛКТ                 сегментацией 53.8%, классификацией среза до 92%</pre>
+<p>
+  Общее правило каскада: второй сети подаётся <b>не голый кроп, а кроп вместе
+  с маской от первой</b>. Тогда она опирается на анатомию, а не выносит о ней
+  собственное суждение — и спорить двум моделям не о чем.
+</p>
+
+<h2>Мощности: что потянет процессор, а что нет</h2>
+<p>Замерено на этой машине, 24 ядра:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Модель</th><th>Видеокарта</th><th>Процессор, 24 ядра</th><th>Процессор на сервере, 4–8 ядер</th></tr></thead>
+<tbody>
+<tr><td>nnU-Net 3D (КЛКТ)</td><td class="mono">~3 мин</td><td class="mono">~6 мин</td><td class="mono">20–40 мин</td></tr>
+<tr><td>YOLO на панораме</td><td class="mono">доли секунды</td><td class="mono">0.83 с</td><td class="mono">2–4 с</td></tr>
+<tr><td>DGCNN (скан)</td><td class="mono">секунды</td><td class="mono">минуты</td><td class="mono">минуты</td></tr>
+<tr><td>Классификаторы на кропах</td><td class="mono">мгновенно</td><td class="mono">мгновенно</td><td class="mono">мгновенно</td></tr>
+<tr><td>Геометрия и находки</td><td>—</td><td class="mono">секунды</td><td class="mono">секунды</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+  <b>Ограничение жёстче времени — оперативная память</b>
+  <p>
+    На процессоре карта вероятностей держится в оперативной памяти целиком:
+    335 × 516 × 516 вокселей × 47 классов × 4 байта — это <b>около 17 ГБ</b>
+    только на неё. Сервер нужен не меньше чем на 32 ГБ, иначе процесс уйдёт в
+    подкачку и встанет. Это ровно та ловушка, что уже была у нас с
+    видеопамятью: система не сообщает об исчерпании, а молча заменяет память
+    диском, и единственный симптом — скорость.
+  </p>
+</div>
+
+<p>
+  <b>Вывод по серверу.</b> Видеокарта нужна только для КЛКТ. Три четверти
+  нагрузки — панорама, скан и геометрия — спокойно живут на процессоре.
+  Разумный старт: сервер на 32 ГБ и 8 ядер, КЛКТ считается фоновой очередью за
+  полчаса. Если это окажется долго, отдельная машина с картой на 12 ГБ
+  сократит его до трёх минут.
+</p>
+
+<h2>Порядок внедрения</h2>
+<ol class="steps">
+  <li><b>Подключить качество кости к находкам</b><span>Модуль написан и проверен: воспроизводит анатомический градиент плотности. Живёт отдельным скриптом, врач его не видит. Новой модели не нужно.</span></li>
+  <li><b>Детектор зубов на панораме (модель 4)</b><span>Данные уже лежат: в DENTEX у каждой аннотации есть номер зуба, и мы его до сих пор выбрасывали. Открывает следующие два шага.</span></li>
+  <li><b>Классификатор зуба (модель 5)</b><span>Глубина кариеса и состояние канала на кропе. Закрывает три пункта из списка врача разом.</span></li>
+  <li><b>Ключевые точки пародонта (модель 6)</b><span>Перенос того, что уже работает на КЛКТ, на панораму. Алгоритм известен, меняется только способ поиска точек.</span></li>
+  <li><b>MB2 (модель 7)</b><span>Классификатор срезов корня, не сегментация. Потолок на нашем разрешении — около 72–92%.</span></li>
+  <li><b>Пазуха (модель 8)</b><span>Упирается не в алгоритм, а в разметку: нужны размеченные томы от клиники.</span></li>
+</ol>
+
+<p class="stamp" style="margin-top:44px">
+  Не входит в план: диагностика ВНЧС. Сустав лежит выше поля зрения на всех
+  наших снимках — это решается протоколом съёмки, а не моделью.
+</p>
+
+</div>
+
+</body>
+</html>

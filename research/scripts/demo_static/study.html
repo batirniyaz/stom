@@ -1,0 +1,397 @@
+<meta charset="utf-8">
+<title>Stomadent — Снимок</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/app.css">
+<style>
+  .ctx {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+    border-bottom: 1px solid var(--line); background: var(--panel-2);
+  }
+  .ctx b { font-size: 13.5px; }
+  .wrap { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - 104px); }
+  @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; height: auto; } }
+
+  .stage {
+    position: relative; overflow: auto; display: grid; place-items: center;
+    background: radial-gradient(120% 100% at 50% 0%, var(--panel-2) 0%, var(--bg) 72%);
+    padding: 16px;
+  }
+  .shot { position: relative; line-height: 0; }
+  .shot img { max-width: 100%; height: auto; border-radius: 8px; display: block; }
+  .box {
+    position: absolute; border: 2px solid var(--warn); border-radius: 3px;
+    pointer-events: none;
+  }
+  .box span {
+    position: absolute; top: -19px; left: -2px; font-size: 10.5px;
+    background: var(--warn); color: #17130a; padding: 1px 5px; border-radius: 4px;
+    white-space: nowrap; line-height: 1.5;
+  }
+  .box.c0 { border-color: #a78bfa; } .box.c0 span { background: #a78bfa; }
+  .box.c1 { border-color: #e5a53f; } .box.c1 span { background: #e5a53f; }
+  .box.c2 { border-color: #e0796c; } .box.c2 span { background: #e0796c; }
+  .box.c3 { border-color: #f0803c; } .box.c3 span { background: #f0803c; }
+
+  .side { border-left: 1px solid var(--line); background: var(--panel);
+          overflow: auto; padding: 14px 15px; }
+  .sum-row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--line); font-size: 13px;
+  }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-row b { font-weight: 600; }
+  .find {
+    border-left: 2px solid var(--line-2); padding: 7px 0 7px 11px;
+    margin-bottom: 7px; font-size: 12.5px;
+  }
+  .find .conf { color: var(--dim); font-size: 11px; }
+  .ctrl { display: flex; align-items: center; gap: 9px; margin: 10px 0 14px;
+          font-size: 12.5px; color: var(--muted); }
+  .ctrl input[type=range] { flex: 1; accent-color: var(--cyan); }
+
+  /* ---- зубы: карта и находки на зуб ---- */
+  .tbox { position: absolute; pointer-events: none; border-radius: 4px;
+          border: 1.5px solid rgba(148,163,184,.6); }
+  .tbox span { position: absolute; left: -1px; bottom: 100%; font-size: 10.5px;
+               line-height: 1.4; padding: 0 4px; border-radius: 3px;
+               background: rgba(15,23,42,.85); color: #e2e8f0; }
+  .tbox.sel { border: 2px solid var(--cyan); box-shadow: 0 0 14px var(--cyan); z-index: 3; }
+  .tbox.sel span { background: var(--cyan); color: #06222a; font-weight: 600; }
+  /* Рамки зубов — поверх рамок ансамбля, иначе номера прячутся под
+     подписями «Кариес NN%». Пока номера включены, ансамбль приглушён:
+     врач в этот момент ищет зуб, а не находку. */
+  .tbox { z-index: 2; }
+  .shot.nums .box { opacity: .35; }
+  .tchart { margin: 6px 0 10px; }
+  .trow { display: flex; justify-content: center; gap: 2px; }
+  .trow + .trow { margin-top: 3px; }
+  .tgap { width: 8px; }
+  .tc { width: 20px; height: 26px; border-radius: 5px; font-size: 9.5px;
+        display: grid; place-items: center; cursor: pointer; padding: 0;
+        border: 1px solid var(--line-2); background: rgba(245,240,230,.08);
+        color: var(--text); font-variant-numeric: tabular-nums; }
+  .tc.miss { background: none; border-style: dashed; color: var(--dim); }
+  .tc.warn { border-color: #f59e0b; background: rgba(245,158,11,.16); }
+  .tc.alert { border-color: #ef4444; background: rgba(239,68,68,.18); }
+  .tc.sel { box-shadow: 0 0 0 2px var(--cyan); }
+  .tlegend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11px;
+             color: var(--muted); margin-bottom: 8px; }
+  .tlegend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+               margin-right: 4px; vertical-align: -1px; }
+  .tlist-h { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+             color: var(--muted); margin: 12px 0 5px; }
+  .titem { display: flex; gap: 9px; align-items: baseline; padding: 5px 8px;
+           margin-bottom: 3px; border-radius: 7px; cursor: pointer; font-size: 12.5px;
+           border-left: 3px solid var(--c); background: rgba(255,255,255,.03); }
+  .titem:hover, .titem.sel { background: rgba(53,201,224,.12); }
+  .titem b { min-width: 22px; font-variant-numeric: tabular-nums; }
+  .tempty { font-size: 12px; color: var(--dim); padding: 1px 0 3px; }
+  .tswitch { display: flex; gap: 7px; align-items: center; font-size: 12.5px;
+             color: var(--muted); margin: 2px 0 6px; cursor: pointer; }
+</style>
+
+<script src="/vue.global.prod.js"></script>
+
+<div id="app">
+  <header class="hdr">
+    <div class="mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 12h4l2.5-6 4 12 2.5-6h5" stroke="#fff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Stomadent AI</h1>
+      <p>{{ study ? study.kind_label : 'Снимок' }}</p>
+    </div>
+    <nav class="tabs">
+      <a class="tab" href="/patients">Пациенты</a>
+      <a class="tab" href="/2d">2D ОПТГ</a>
+      <a class="tab" href="/cbct">3D КЛКТ</a>
+      <a class="tab" href="/ios">Скан</a>
+      <a class="tab" href="/logs">Журнал</a>
+    </nav>
+  </header>
+
+  <div class="ctx" v-if="patient">
+    <a class="btn-ghost" :href="'/patients/' + patient.id" style="padding:5px 11px">←</a>
+    <b>{{ patient.display }}</b>
+    <span class="sub" style="margin:0">
+      <template v-if="patient.age">{{ patient.age }} лет</template>
+      <template v-if="patient.card_no"> · карта {{ patient.card_no }}</template>
+    </span>
+    <span class="sub" style="margin:0 0 0 auto">{{ shotDate }}</span>
+  </div>
+
+  <div class="empty" v-if="error">{{ error }}</div>
+
+  <div class="wrap" v-else-if="result">
+    <div class="stage">
+      <div :class="['shot', { nums: showNums }]" ref="shot">
+        <img :src="'/api/studies/' + sid + '/image'" @load="onLoad" alt="Снимок">
+        <template v-if="teeth">
+          <div v-for="t in teeth.teeth" :key="'t' + t.fdi"
+               v-show="showNums || t.fdi === selTooth"
+               :class="['tbox', { sel: t.fdi === selTooth }]"
+               :ref="el => { if (el) toothEls[t.fdi] = el }"
+               :style="toothStyle(t)"><span>{{ t.fdi }}</span></div>
+        </template>
+        <div v-for="(f, i) in visible" :key="i" class="box"
+             :style="{ ...boxStyle(f), borderColor: f.color }">
+          <span :style="{ background: f.color, color: '#12100e' }"
+            >{{ f.class_ru }} {{ pct(f) }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="card-t">Зубы
+        <span class="dim" v-if="teeth">· найдено {{ teeth.teeth.length }}</span></div>
+      <div class="tempty" v-if="teethLoading">Нумеруем зубы и смотрим каждый…</div>
+      <div class="tempty" v-else-if="teethError">{{ teethError }}</div>
+      <template v-else-if="teeth">
+        <label class="tswitch"><input type="checkbox" v-model="showNums">
+          Номера зубов на снимке</label>
+        <div class="tchart">
+          <div class="trow" v-for="(row, r) in ROWS" :key="r">
+            <template v-for="(half, h) in row" :key="h">
+              <div class="tgap" v-if="h"></div>
+              <button v-for="n in half" :key="n" :class="toothClass(n)"
+                      :title="toothTitle(n)" @click="pick(n)">{{ n }}</button>
+            </template>
+          </div>
+        </div>
+        <div class="tlegend">
+          <span><i style="background:#ef4444"></i>обе схемы</span>
+          <span><i style="background:#f59e0b"></i>под вопросом</span>
+          <span><i style="border:1px dashed var(--dim)"></i>не найден</span>
+        </div>
+
+        <template v-for="sec in sections" :key="sec.title">
+          <div class="tlist-h">{{ sec.title }}</div>
+          <div v-for="it in sec.items" :key="sec.title + it.tooth"
+               :class="['titem', { sel: it.tooth === selTooth }]"
+               :style="{ '--c': sec.color }" @click="pick(it.tooth)">
+            <b>{{ it.tooth }}</b><span>{{ it.text }}</span>
+          </div>
+          <div class="tempty" v-if="!sec.items.length">{{ sec.empty }}</div>
+        </template>
+        <div class="draft" style="margin-top:12px">{{ teeth.note }}</div>
+      </template>
+
+      <div class="card-t" style="margin-top:18px">Сводка находок</div>
+      <div class="sum-row" v-for="(n, name) in result.summary" :key="name">
+        <span>{{ name }}</span><b>{{ n }}</b>
+      </div>
+      <div class="sum-row" v-if="!Object.keys(result.summary || {}).length">
+        <span class="dim">Патологий не найдено</span>
+      </div>
+
+      <div class="ctrl">
+        <span>Порог</span>
+        <input type="range" min="5" max="90" v-model.number="thr">
+        <b>{{ thr }}%</b>
+      </div>
+
+      <div class="draft">
+        Результат нейросети — не диагноз. Порог показывает, насколько уверенно
+        модель отмечает находку; окончательное заключение ставит врач.
+      </div>
+
+      <div class="card-t">Найденные патологии</div>
+      <div class="find" v-for="(f, i) in visible" :key="i"
+           :style="{ borderLeftColor: f.color }">
+        {{ f.class_ru }}
+        <span class="conf">· уверенность {{ pct(f) }}%</span>
+        <div class="conf" v-if="f.location">{{ f.location }}</div>
+      </div>
+      <div class="empty" v-if="!visible.length" style="padding:12px 0">
+        При пороге {{ thr }}% находок нет
+      </div>
+
+      <div class="sub" style="margin-top:14px">
+        Модель: {{ result.model_label }}<template v-if="result.inference_ms">
+        · {{ (result.inference_ms / 1000).toFixed(1) }} с</template>
+      </div>
+    </aside>
+  </div>
+  <div class="empty" v-else>Загрузка…</div>
+</div>
+
+<script>
+const { createApp, reactive, computed, onMounted, toRefs, watch } = Vue;
+
+createApp({
+  setup() {
+    const sid = location.pathname.split("/").filter(Boolean).pop();
+    const state = reactive({
+      sid, study: null, patient: null, result: null, error: "",
+      thr: 25, imgW: 0, imgH: 0, boxW: 0, boxH: 0,
+      teeth: null, teethLoading: false, teethError: "",
+      showNums: false, selTooth: 0,
+    });
+    const toothEls = {};
+
+    /* Адрес отражает экран: ?numbers=1 — номера на снимке, ?tooth=<FDI> —
+       выбранный зуб. Врачу — ссылка «смотри 46», нам — проверка без кликов. */
+    const q0 = new URLSearchParams(location.search);
+    state.showNums = q0.get("numbers") === "1";
+    const toothFromUrl = parseInt(q0.get("tooth"), 10) || 0;
+    watch(() => [state.showNums, state.selTooth], ([nums, tooth]) => {
+      const q = new URLSearchParams(location.search);
+      nums ? q.set("numbers", "1") : q.delete("numbers");
+      tooth ? q.set("tooth", tooth) : q.delete("tooth");
+      const qs = q.toString();
+      history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
+    });
+
+    /* Зубы считаются отдельным запросом: для снимков, загруженных до
+       появления зубной карты, это первый расчёт и он занимает секунды —
+       основной результат не должен его ждать. */
+    async function loadTeeth() {
+      state.teethLoading = true;
+      try {
+        const r = await fetch(`/api/studies/${sid}/teeth`);
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || `Ошибка ${r.status}`);
+        state.teeth = d;
+        if (toothFromUrl) pick(toothFromUrl);
+      } catch (e) {
+        state.teethError = "Не удалось пронумеровать зубы: " + e.message;
+      } finally { state.teethLoading = false; }
+    }
+
+    const ROWS = [
+      [[18, 17, 16, 15, 14, 13, 12, 11], [21, 22, 23, 24, 25, 26, 27, 28]],
+      [[48, 47, 46, 45, 44, 43, 42, 41], [31, 32, 33, 34, 35, 36, 37, 38]],
+    ];
+    const STATE_RU = {
+      endo_treated: "канал запломбирован", restoration: "пломба",
+      prosthesis: "коронка или протез", implant: "имплант",
+      impacted: "ретенция", root_fragment: "фрагмент корня",
+    };
+
+    const byTooth = computed(() => {
+      const m = {};
+      for (const f of state.teeth?.findings || []) (m[f.tooth] = m[f.tooth] || []).push(f);
+      return m;
+    });
+    const present = computed(() =>
+      new Set((state.teeth?.teeth || []).map(t => t.fdi)));
+
+    function toothClass(n) {
+      const fs = byTooth.value[n] || [];
+      const hard = fs.some(f => f.level === "confident" || f.apical_level === "confident");
+      const soft = fs.some(f => f.level === "possible" || f.apical_level === "possible");
+      return ["tc", present.value.has(n) ? "" : "miss",
+              hard ? "alert" : soft ? "warn" : "", n === state.selTooth ? "sel" : ""];
+    }
+    function toothTitle(n) {
+      if (!present.value.has(n)) return `Зуб ${n} — на снимке не найден`;
+      const fs = byTooth.value[n] || [];
+      const parts = [];
+      for (const f of fs) {
+        if (f.code === "caries") parts.push((f.deep ? "глубокий кариес" : "кариес")
+          + (f.level === "confident" ? "" : " под вопросом"));
+        if (f.apical_level) parts.push("очаг у верхушки"
+          + (f.apical_level === "confident" ? "" : " под вопросом"));
+        for (const x of f.states || []) parts.push(STATE_RU[x] || x);
+      }
+      return `Зуб ${n}` + (parts.length ? ": " + parts.join(", ") : "");
+    }
+
+    /* Списки. Отрицательного заключения не даём: «ничего не отметили»,
+       а не «кариеса нет» — полнота по панораме около 0.8. */
+    const sections = computed(() => {
+      const all = state.teeth?.findings || [];
+      const car = all.filter(f => f.code === "caries");
+      return [
+        { title: "Кариес — обе схемы согласны", color: "#ef4444",
+          empty: "обе схемы ничего не отметили",
+          items: car.filter(f => f.level === "confident").map(f => ({
+            tooth: f.tooth, text: f.deep ? "глубокий кариес" : "кариес" })) },
+        { title: "Кариес — под вопросом", color: "#f59e0b", empty: "нет",
+          items: car.filter(f => f.level === "possible").map(f => ({
+            tooth: f.tooth,
+            text: f.by_detector ? "отметил поиск по снимку" : "отметил анализ зуба" })) },
+        { title: "Очаг у верхушки корня", color: "#e0796c", empty: "не отмечен",
+          items: all.filter(f => f.apical_level).map(f => ({
+            tooth: f.tooth,
+            text: f.apical_level === "confident" ? "обе схемы согласны" : "под вопросом" })) },
+        { title: "Состояние зубов", color: "#35c9e0", empty: "не найдено",
+          items: all.filter(f => (f.states || []).length).map(f => ({
+            tooth: f.tooth, text: f.states.map(x => STATE_RU[x] || x).join(", ") })) },
+      ];
+    });
+
+    function toothStyle(t) {
+      const W = state.teeth?.width || state.imgW, H = state.teeth?.height || state.imgH;
+      if (!W || !state.boxW) return { display: "none" };
+      const kx = state.boxW / W, ky = state.boxH / H;
+      const [x1, y1, x2, y2] = t.box;
+      return { left: (x1 * kx) + "px", top: (y1 * ky) + "px",
+               width: ((x2 - x1) * kx) + "px", height: ((y2 - y1) * ky) + "px" };
+    }
+
+    function pick(n) {
+      state.selTooth = state.selTooth === n ? 0 : n;
+      const el = toothEls[state.selTooth];
+      if (el) Vue.nextTick(() => el.scrollIntoView({ block: "center", inline: "center",
+                                                    behavior: "smooth" }));
+    }
+
+    onMounted(async () => {
+      try {
+        const r = await fetch(`/api/studies/${sid}/result`);
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || `Ошибка ${r.status}`);
+        state.study = d.study;
+        state.patient = d.patient;
+        state.result = d.result;
+        if (["opg", "periapical"].includes(d.study?.kind)) loadTeeth();
+      } catch (e) { state.error = e.message; }
+    });
+
+    /* Координаты находок приходят в пикселях исходного снимка, а показываем
+       мы его вписанным по ширине. Пересчитываем в доли, иначе рамки уезжают
+       при любом размере окна. */
+    function onLoad(e) {
+      state.imgW = state.result.width || e.target.naturalWidth;
+      state.imgH = state.result.height || e.target.naturalHeight;
+      state.boxW = e.target.clientWidth;
+      state.boxH = e.target.clientHeight;
+      addEventListener("resize", () => {
+        state.boxW = e.target.clientWidth;
+        state.boxH = e.target.clientHeight;
+      });
+    }
+
+    function boxStyle(f) {
+      if (!state.imgW || !state.boxW) return { display: "none" };
+      const kx = state.boxW / state.imgW, ky = state.boxH / state.imgH;
+      const [x1, y1, x2, y2] = f.box;
+      return {
+        left: (x1 * kx) + "px", top: (y1 * ky) + "px",
+        width: ((x2 - x1) * kx) + "px", height: ((y2 - y1) * ky) + "px",
+      };
+    }
+
+    /* В находке поле называется `confidence`; допускаем и `conf` на случай
+       файлов, записанных другой версией. */
+    const pct = f => Math.round((f.confidence ?? f.conf ?? 0) * 100);
+    const visible = computed(() =>
+      (state.result?.findings || []).filter(f => pct(f) >= state.thr));
+
+    const shotDate = computed(() => {
+      const iso = state.study?.taken_at || state.study?.uploaded_at;
+      if (!iso) return "";
+      const d = new Date(iso);
+      return isNaN(d) ? "" : d.toLocaleDateString("ru-RU",
+        { day: "2-digit", month: "2-digit", year: "numeric" });
+    });
+
+    return { ...toRefs(state), visible, shotDate, onLoad, boxStyle, pct,
+             ROWS, sections, toothClass, toothTitle, toothStyle, pick, toothEls };
+  },
+}).mount("#app");
+</script>

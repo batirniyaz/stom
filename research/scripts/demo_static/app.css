@@ -1,0 +1,158 @@
+/* Общий стиль всех экранов Stomadent.
+ *
+ * Зачем отдельный файл. Раньше палитра и типографика были скопированы в
+ * каждую страницу, и они уже начали расходиться: врач ходит между списком
+ * пациентов и вьюером десятки раз за приём, а смена оттенка на полпути
+ * читается как переход в другую программу.
+ *
+ * Тема тёмная и единственная — это решение, а не упущение: рентген и 3D
+ * читаются на тёмном фоне, так устроены все клинические вьюеры.
+ *
+ * Нейтрали тёплые (фон почти без синевы, текст — тёплый белый), а акцент
+ * оставлен холодным намеренно: жёлтый и красный у нас уже означают
+ * «внимание» и «тревогу», и тёплый акцент спорил бы с ними за внимание.
+ */
+
+@import url("/fonts/onest.css");
+
+:root {
+  --bg: #0c0b0e;
+  --panel: #16151a;
+  --panel-2: #1c1a21;
+  --panel-3: #24212b;
+  --line: rgba(255, 247, 237, .09);
+  --line-2: rgba(255, 247, 237, .16);
+  --text: #ede9e3;
+  --muted: #a9a29a;
+  --dim: #7b736b;
+  --cyan: #35c9e0;
+  --indigo: #7d7ae8;
+  --grad: linear-gradient(92deg, #35c9e0, #7d7ae8);
+  --ok: #7cc98a;
+  --warn: #e5a53f;
+  --bad: #e0796c;
+  --r: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 14px/1.55 Onest, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Миллиметры и перцентили стоят в колонках — без табличных цифр они
+     скачут по ширине и колонка перестаёт читаться. */
+  font-variant-numeric: tabular-nums;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* ---------------- шапка ---------------- */
+.hdr {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 20px; border-bottom: 1px solid var(--line);
+  background: rgba(22, 21, 26, .92); backdrop-filter: blur(8px);
+  position: sticky; top: 0; z-index: 30;
+}
+.mark {
+  width: 34px; height: 34px; border-radius: 9px; flex: none;
+  background: var(--grad); display: grid; place-items: center;
+}
+.brand h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+.brand p { margin: 1px 0 0; font-size: 11.5px; color: var(--dim); }
+
+.tabs {
+  display: flex; gap: 3px; margin-left: 14px; padding: 3px;
+  background: rgba(169, 162, 154, .08); border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.tab {
+  background: transparent; border: 1px solid transparent; color: var(--muted);
+  border-radius: 7px; padding: 5px 13px; font-size: 12.5px;
+  display: inline-flex; align-items: center; text-decoration: none;
+  transition: color .15s, background .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.on { color: #10161c; background: var(--grad); font-weight: 600; }
+
+.hdr-right { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+#lang-switch { display: flex; gap: 3px; }
+.lang-btn {
+  background: rgba(255, 247, 237, .05); color: var(--dim); cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 3px 9px; font-size: 10.5px; letter-spacing: .04em;
+}
+.lang-btn.on {
+  background: rgba(53, 201, 224, .13); color: var(--cyan);
+  border-color: rgba(53, 201, 224, .4);
+}
+
+/* ---------------- общие элементы ---------------- */
+.page { max-width: 1240px; margin: 0 auto; padding: 20px; }
+
+.btn {
+  background: var(--grad); border: none; color: #10161c; font-weight: 600;
+  padding: 10px 15px; border-radius: 10px; font-size: 13.5px;
+}
+.btn:disabled { opacity: .55; cursor: default; }
+.btn-ghost {
+  background: rgba(255, 247, 237, .05); border: 1px solid var(--line);
+  color: var(--text); padding: 9px 14px; border-radius: 10px; font-size: 13px;
+}
+.btn-ghost:hover { border-color: var(--line-2); }
+
+.field {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 13px; color: var(--text); font: inherit; width: 100%;
+}
+.field:focus { outline: none; border-color: rgba(53, 201, 224, .45); }
+
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 15px 16px; margin-bottom: 12px;
+}
+.card-t {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--dim); margin-bottom: 11px; font-weight: 600;
+}
+.sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.dim { color: var(--dim); }
+
+.chip {
+  font-size: 10.5px; padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
+}
+.chip.cbct { color: #9ec5f5; border-color: rgba(158, 197, 245, .4); }
+.chip.ios { color: #86d7ab; border-color: rgba(134, 215, 171, .4); }
+.chip.opg { color: #e5c46a; border-color: rgba(229, 196, 106, .4); }
+.chip.periapical { color: #e6a3bf; border-color: rgba(230, 163, 191, .4); }
+
+.st { font-size: 11px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.st-ready { color: var(--ok); background: rgba(124, 201, 138, .13); }
+.st-processing, .st-queued { color: var(--warn); background: rgba(229, 165, 63, .13); }
+.st-error { color: var(--bad); background: rgba(224, 121, 108, .13); }
+.st-uploaded { color: var(--dim); background: rgba(169, 162, 154, .12); }
+
+.empty { color: var(--muted); font-size: 13px; padding: 24px; text-align: center; }
+
+.draft {
+  font-size: 11.5px; color: var(--warn); background: rgba(229, 165, 63, .08);
+  border: 1px solid rgba(229, 165, 63, .22); border-radius: 9px;
+  padding: 8px 10px; margin-bottom: 12px; line-height: 1.45;
+}
+
+.spin {
+  width: 13px; height: 13px; border: 2px solid rgba(255, 247, 237, .15);
+  border-top-color: var(--cyan); border-radius: 50%; flex: none;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+/* Широкое содержимое (таблицы измерений, срезы) прокручивается внутри себя:
+   горизонтальная прокрутка всей страницы во вьюере ломает работу с мышью. */
+.scroll-x { overflow-x: auto; }

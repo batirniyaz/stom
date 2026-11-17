@@ -1,0 +1,923 @@
+<meta charset="utf-8">
+<link rel="stylesheet" href="/app.css">
+<title>Stomadent — 3D интраоральный скан</title>
+<style>
+  /* Палитра и шрифт — из /app.css, одни на все экраны (см. комментарий там).
+     Здесь остаётся только имя, которого в общем наборе нет. */
+  :root { --border: var(--line-2); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: Onest, "Segoe UI", system-ui, sans-serif;
+    display: grid; grid-template-columns: 1fr 292px; height: 100vh;
+  }
+  #gl-wrap { position: relative; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #loading {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; background: rgba(11,15,22,.8);
+    color: var(--cyan); font-size: 14px;
+  }
+  #loading.hidden { display: none; }
+  #hint {
+    position: absolute; left: 16px; bottom: 14px; font-size: 11.5px;
+    color: #64748b; pointer-events: none;
+  }
+  aside {
+    background: var(--panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .aside-head { padding: 14px 18px 0; }
+  .back-home {
+    display: inline-block; margin-bottom: 8px; font-size: 11.5px;
+    color: var(--muted); text-decoration: none;
+  }
+  .back-home:hover { color: var(--cyan); }
+  /* Вкладки, а не одна лента: у панели три разных читателя — тот, кто крутит
+     модель, тот, кто читает находки, и тот, кто смотрит план. */
+  .tabs {
+    display: flex; gap: 4px; padding: 12px 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs button {
+    flex: 1; padding: 8px 4px 9px; font-size: 12px; cursor: pointer;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); position: relative; top: 1px;
+   white-space: nowrap; }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.on { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .cnt {
+    display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 4px;
+    border-radius: 8px; background: rgba(148,163,184,.18); font-size: 10.5px;
+    color: var(--text);
+  }
+  .tabs button.on .cnt { background: rgba(34,211,238,.22); color: var(--cyan); }
+  .pane { flex: 1; overflow-y: auto; padding: 4px 18px 18px; min-height: 0; }
+  .pane .title:first-child { margin-top: 12px; }
+  .share {
+    margin: 10px 18px 12px; padding: 7px 9px; border-radius: 8px;
+    border: 1px solid var(--border); background: rgba(148,163,184,.05);
+    font-size: 11px; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 7px; justify-content: center;
+  }
+  .share:hover { background: rgba(34,211,238,.1); color: var(--cyan);
+                 border-color: rgba(34,211,238,.35); }
+  h1 { font-size: 15px; margin: 0 0 3px; }
+  .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .title {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--muted); margin: 18px 0 8px;
+  }
+  .seg { display: flex; gap: 4px; }
+  .seg button {
+    flex: 1; padding: 7px 4px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: rgba(148,163,184,.05);
+    color: var(--muted); border-radius: 8px;
+  }
+  .seg button.on { background: rgba(34,211,238,.13); color: var(--cyan);
+                   border-color: rgba(34,211,238,.4); }
+  .quad-h { font-size: 11px; color: var(--muted); margin: 10px 0 5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    padding: 4px 9px; border-radius: 7px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: rgba(148,163,184,.06);
+    user-select: none; transition: background .12s;
+  }
+  .chip:hover { background: rgba(148,163,184,.16); }
+  .chip.off { opacity: .28; text-decoration: line-through; }
+  .chip.sel { background: rgba(255,140,0,.22); border-color: #ff8c00; color: #ffd7a8; }
+  .row {
+    display: flex; align-items: center; gap: 9px; font-size: 13px;
+    padding: 5px 0; cursor: pointer;
+  }
+  .row input { accent-color: var(--cyan); width: 15px; height: 15px; }
+  input[type=range] { width: 100%; accent-color: var(--cyan); }
+  .val { float: right; color: var(--muted); font-size: 12px; }
+  button.wide {
+    width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px;
+    border: 1px solid var(--border); background: rgba(148,163,184,.07);
+    color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  button.wide:hover { background: rgba(148,163,184,.16); }
+  .note { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 16px; }
+  /* явный display у .seg/#contact-legend перебил бы атрибут hidden */
+  [hidden] { display: none !important; }
+  .seg.wrap { flex-wrap: wrap; }
+  .seg.wrap button { flex: 1 1 44%; }
+  #contact-legend { margin-top: 9px; display: grid; gap: 4px; }
+  .lg { display: flex; align-items: center; gap: 8px; font-size: 11.5px;
+        color: var(--muted); }
+  .lg i { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+  .find {
+    border-left: 2px solid var(--border); padding: 6px 0 6px 9px;
+    margin-bottom: 7px; font-size: 12px; line-height: 1.5;
+  }
+  .find.warning { border-left-color: #f59e0b; }
+  .find .act { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+  .stage { margin-top: 12px; }
+  .stage-h {
+    font-size: 12px; color: var(--text); font-weight: 600;
+    display: flex; align-items: baseline; gap: 7px;
+  }
+  .stage-h i { font-style: normal; color: var(--cyan); font-size: 11px; }
+  .stage-note { font-size: 11px; color: var(--muted); margin: 2px 0 6px; }
+  .proc {
+    border-left: 2px solid rgba(34,211,238,.35); padding: 5px 0 5px 9px;
+    margin-bottom: 6px; font-size: 12px; line-height: 1.45;
+  }
+  .proc .teeth { color: var(--cyan); font-size: 11.5px; }
+  .proc .why { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .stage-empty { font-size: 11.5px; color: var(--muted); padding-left: 9px; }
+  #lang-switch { display: flex; gap: 3px; }
+  .lang-btn {
+    background: rgba(255,255,255,.05); color: var(--muted); cursor: pointer;
+    border: 1px solid rgba(255,255,255,.09); border-radius: 6px;
+    padding: 2px 8px; font-size: 10.5px; letter-spacing: .04em;
+  }
+  .lang-btn.on { background: rgba(34,211,238,.13); color: var(--cyan);
+                 border-color: rgba(34,211,238,.4); }
+  .draft {
+    font-size: 11px; color: #fbbf24; background: rgba(251,191,36,.09);
+    border: 1px solid rgba(251,191,36,.25); border-radius: 7px;
+    padding: 7px 9px; margin-bottom: 10px; line-height: 1.45;
+  }
+</style>
+
+<script src="/i18n.js"></script>
+<script src="/patient-bar.js"></script>
+
+<div id="gl-wrap">
+  <canvas id="c"></canvas>
+  <div id="loading">Загрузка скана…</div>
+  <div id="hint">ЛКМ — вращать · колесо — приблизить · ПКМ — сдвинуть</div>
+</div>
+
+<aside>
+  <div class="aside-head">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <a class="back-home" href="/patients">&larr; Пациенты</a>
+      <div id="lang-switch"></div>
+    </div>
+    <h1 data-i18n>Интраоральный скан</h1>
+    <div class="sub" id="meta">—</div>
+    <div id="case-pick" hidden></div>
+    <div class="seg" id="src-seg">
+      <button data-src="seg" class="on" data-i18n>Сегментация</button>
+      <button data-src="raw" data-i18n>Исходный скан</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button data-tab="model" class="on" data-i18n>Модель</button>
+    <button data-tab="findings"><span data-i18n>Находки</span><span class="cnt" id="cnt-find">·</span></button>
+    <button data-tab="plan"><span data-i18n>План</span><span class="cnt" id="cnt-plan">·</span></button>
+  </div>
+
+  <div class="pane" id="pane-model">
+  <div id="seg-controls">
+  <div class="title" data-i18n>Раскраска</div>
+  <div class="seg wrap" id="mode-seg">
+    <button data-mode="natural" class="on" data-i18n>Естественная</button>
+    <button data-mode="quad" data-i18n>Квадранты</button>
+    <button data-mode="tooth" data-i18n>По зубам</button>
+    <button data-mode="real" data-i18n>Как на скане</button>
+    <button data-mode="contact" id="mode-contact" hidden data-i18n>Контакты</button>
+  </div>
+  <div id="contact-legend" hidden></div>
+
+  <div class="title" data-i18n>Челюсти и десна</div>
+  <label class="row"><input type="checkbox" id="up" checked> <span data-i18n>Верхняя челюсть</span></label>
+  <label class="row"><input type="checkbox" id="lo" checked> <span data-i18n>Нижняя челюсть</span></label>
+  <label class="row"><input type="checkbox" id="gum" checked> <span data-i18n>Десна</span></label>
+  <label class="row"><input type="checkbox" id="arch"> <span data-i18n>Симметричная линия дуги</span></label>
+  <div style="margin-top:4px">
+    <span data-i18n>Прозрачность десны</span> <span class="val" id="gum-out">100%</span>
+    <input type="range" id="gum-op" min="10" max="100" value="100">
+  </div>
+
+  <div class="title" data-i18n>Зубы</div>
+  <div id="teeth"></div>
+  </div><!-- /seg-controls -->
+
+  <button class="wide" id="reset" data-i18n>Сбросить вид</button>
+  <div class="note">
+    Клик по номеру — подсветить зуб и подвести камеру, повторный клик снимает.
+    Правая кнопка по номеру — спрятать зуб.
+    Обе челюсти показаны в координатах сканера, поэтому смыкание видно как есть.
+  </div>
+  </div><!-- /pane-model -->
+
+  <div class="pane" id="pane-findings" hidden>
+    <div id="occl-findings"><span class="stage-empty">Считаем…</span></div>
+  </div>
+
+  <div class="pane" id="pane-plan" hidden>
+    <div id="plan"><span class="stage-empty">Считаем…</span></div>
+  </div>
+
+  <div class="share" id="share" data-i18n>Скопировать ссылку на этот экран</div>
+</aside>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const $ = id => document.getElementById(id);
+
+/* ---------- адрес экрана: /ios/<кейс>/<режим>?tab=... ----------
+   Врачу отдаётся ссылка, а не инструкция «нажмите сюда, потом сюда».
+   Поддерживаем и старый вид ?case=, чтобы прежние ссылки не умерли. */
+function readUrl() {
+  const parts = location.pathname.replace(/^\/ios\/?/, "")
+    .split("/").filter(Boolean).map(decodeURIComponent);
+  const q = new URLSearchParams(location.search);
+  return {
+    caseId: parts[0] || q.get("case") || "",
+    src: (parts[1] || q.get("mode") || "seg").toLowerCase() === "raw"
+      ? "raw" : "seg",
+    tab: ["model", "findings", "plan"].includes(q.get("tab"))
+      ? q.get("tab") : "model",
+    // Раскраска в адресе: врач присылает коллеге ссылку на то, что видит сам
+    // («смотри, как выглядит на самом деле»), а не объясняет, куда нажать.
+    // Тот же принцип, что с вкладкой и номером зуба.
+    paint: ["natural", "quad", "tooth", "real", "contact"].includes(q.get("paint"))
+      ? q.get("paint") : "natural",
+  };
+}
+
+const URL0 = readUrl();
+const CASE = URL0.caseId;
+let curSrc = URL0.src, curTab = URL0.tab;
+
+function writeUrl() {
+  const p = new URLSearchParams();
+  if (curTab !== "model") p.set("tab", curTab);
+  if (mode !== "natural") p.set("paint", mode);
+  const q = p.toString() ? `?${p}` : "";
+  history.replaceState(null, "",
+    `/ios/${encodeURIComponent(CASE)}/${curSrc}${q}`);
+}
+
+// Панель пациента монтируется ЗДЕСЬ, до первого использования
+// `patientBarReady`. Объявление ниже места вызова — временная мёртвая зона,
+// которая роняет весь модуль: в этом файле так уже терялась вся сцена.
+// Вставляем в боковую панель, а не в body: у страницы grid из двух колонок.
+const patientBarReady = window.patientBar
+  ? patientBar.mount(CASE, document.querySelector("aside"))
+  : Promise.resolve(null);
+
+// Список ВСЕХ сканов на диске — запасной переключатель для случая, когда
+// исследование не привязано к пациенту (демо-кейсы, прямая ссылка). Если
+// панель пациента есть, список не нужен: он занимает пол-экрана чужими
+// кейсами, а врач пришёл смотреть своего.
+patientBarReady.then(bar => {
+  if (bar) return;
+  fetch("/api/ios/cases").then(r => r.json()).then(({ cases }) => {
+  if (!cases || cases.length < 2) return;
+  const box = document.getElementById("case-pick");
+  box.className = "seg wrap";
+  box.hidden = false;
+  box.innerHTML = cases.map(c =>
+    `<button data-case="${c}"${c === CASE ? ' class="on"' : ""}>${c}</button>`
+  ).join("");
+  box.querySelectorAll("button").forEach(b => {
+    b.onclick = () => { location.href = `/ios/${encodeURIComponent(b.dataset.case)}`; };
+  });
+  }).catch(() => {});
+});
+
+// Без кейса в адресе открываем первый доступный: /ios должен что-то показать.
+if (!CASE) {
+  fetch("/api/ios/cases").then(r => r.json()).then(({ cases }) => {
+    location.replace(cases && cases.length ? `/ios/${cases[0]}` : "/");
+  }).catch(() => { location.replace("/"); });
+}
+
+const ENAMEL = 0xf2ebdd;                       // естественный цвет зуба
+const GUM_COLOR = 0xbe7b7b;
+const QUAD = { 1: 0x7ab8ff, 2: 0x4fd6a9, 3: 0xf2c14e, 4: 0xf08bb0 };
+// Полосы зазора до зуба-антагониста. Именно полосы, а не плавный градиент:
+// расстояние считается до выборки точек и завышено примерно на 0.03 мм
+// (см. ios_occlusion_map), поэтому плавная шкала обещала бы точность, которой
+// нет. Границы совпадают с порогами счётного модуля.
+const GAP_BANDS = [
+  { max: 0.10, hex: 0xef4444, label: "плотный контакт &middot; &lt; 0.1 мм" },
+  { max: 0.30, hex: 0xf97316, label: "контакт &middot; 0.1&ndash;0.3 мм" },
+  { max: 0.60, hex: 0xeab308, label: "неполное смыкание &middot; 0.3&ndash;0.6 мм" },
+  { max: 1.20, hex: 0x22d3ee, label: "нет контакта &middot; 0.6&ndash;1.2 мм" },
+  { max: 1e9,  hex: 0x94a3b8, label: "далеко &middot; &gt; 1.2 мм" },
+];
+// различимая палитра для режима «по зубам» — соседние зубы разного тона
+const TOOTH_PALETTE = [0x8ecae6, 0xffb703, 0x90be6d, 0xf4978e, 0xb8a1ff,
+                       0x48cae4, 0xffd166, 0x9bf6ff];
+
+const renderer = new THREE.WebGLRenderer({ canvas: $("c"), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0f16);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.09;
+
+scene.add(new THREE.HemisphereLight(0xdfeaf7, 0x2b2020, 1.15));
+const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(1, 1.7, 1.2);
+const fill = new THREE.DirectionalLight(0xbcd4ff, 0.6); fill.position.set(-1.3, 0.4, -1);
+const rim = new THREE.DirectionalLight(0xffffff, 0.4); rim.position.set(0, -1, -0.6);
+scene.add(key, fill, rim);
+
+function resize() {
+  const w = $("gl-wrap").clientWidth, h = $("gl-wrap").clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+(function loop() {
+  requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera);
+})();
+
+const teeth = {}, gums = {};
+let archRoot = null;             // симметричная линия дуги и средняя линия
+let archLines = {};              // линия каждой челюсти отдельно: прячется вместе с ней
+
+// Линия строится по симметризованным парам зубов: правый и отражённый левый
+// дают одну точку. Показывает не «как должно быть у здорового», а как выглядел
+// бы РЯД ЭТОГО пациента, будь он симметричен — с ней и сравнивают фактическое
+// положение зубов. Рисуется в тех же координатах, что и меши (scan.glb).
+function buildArchLines() {
+  if (archRoot) { scene.remove(archRoot); archRoot = null; }
+  // Молчащая галочка — худший вид поломки: врач ставит её и не понимает,
+  // сломано ли это или у кейса просто нет данных. Поэтому при отсутствии
+  // линии тумблер гасится и подписывается причиной.
+  const lines = fnd && fnd.arch_lines;
+  const box = $("arch").parentElement;
+  if (!lines || !Object.keys(lines).length) {
+    $("arch").disabled = true;
+    $("arch").checked = false;
+    box.style.opacity = ".5";
+    box.title = fnd ? "Для этого кейса симметрия дуги не посчитана: "
+                    + "нужны одноимённые пары зубов с надёжной сегментацией"
+                    : "Находки по этому кейсу ещё не посчитаны";
+    return;
+  }
+  $("arch").disabled = false;
+  box.style.opacity = "";
+  box.title = "";
+  archRoot = new THREE.Group();
+  archLines = {};
+  for (const jaw of Object.keys(lines)) {
+    const L = lines[jaw];
+    if (!L || !L.points || L.points.length < 2) continue;
+    const col = jaw === "upper" ? 0x63d2ff : 0xffc861;
+    const mk = (pts, opacity) => {
+      const g = new THREE.BufferGeometry().setFromPoints(
+        pts.map(q => new THREE.Vector3(q[0], q[1], q[2])));
+      // depthTest ВКЛЮЧЁН. С выключенным линия рисовалась поверх всей сцены и
+      // была видна сквозь модель даже при взгляде снизу: врач видел дугу
+      // верхней челюсти, глядя на нижнюю, и не понимал, с какой стороны
+      // смотреть. Теперь линия честно прячется за геометрией.
+      const m = new THREE.LineBasicMaterial({
+        color: col, transparent: true, opacity });
+      return new THREE.Line(g, m);
+    };
+    const grp = new THREE.Group();
+    grp.add(mk(L.points, 0.95));
+    if (L.midline && L.midline.length === 2) grp.add(mk(L.midline, 0.45));
+    archLines[jaw] = grp;
+    archRoot.add(grp);
+  }
+  archRoot.visible = $("arch").checked;
+  syncArchVisibility();
+  scene.add(archRoot);
+}
+let home = null, selected = null, mode = URL0.paint;
+let occl = null;                 // ответ /api/ios/occlusion
+let fnd = null;                  // ответ /api/ios/findings
+const gapAttr = {};              // fdi -> BufferAttribute с цветом по зазору
+let segRoot = null;   // корень сегментированной сцены (нужен переключателю)
+
+function frame(box, mult = 1.0) {
+  const c = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3()).length();
+  controls.target.copy(c);
+  let dir = camera.position.clone().sub(c);
+  if (dir.lengthSq() < 1e-6) dir = new THREE.Vector3(0, 0.55, 1);
+  camera.position.copy(c.clone().add(dir.normalize().multiplyScalar(size * mult)));
+  camera.near = Math.max(size / 500, 0.01); camera.far = size * 30;
+  camera.updateProjectionMatrix();
+}
+
+/* Режим «Как на скане»: цвет берётся из вершин, а не из палитры.
+ *
+ * Врач просил смотреть настоящий вид, не теряя фильтров сегментации — скрыть
+ * челюсть, погасить десну, спрятать отдельный зуб. Поэтому это именно режим
+ * раскраски той же модели, а не отдельная сцена: все переключатели работают
+ * как работали.
+ *
+ * `emissive` гасим: подсветка выбранного зуба в этом режиме врала бы о цвете. */
+function paintReal(mesh, highlight = false) {
+  const nat = mesh.userData.natColor;
+  const m = mesh.material;
+  if (!nat) { m.color.setHex(ENAMEL); return; }
+  mesh.geometry.setAttribute("color", nat);
+  if (!m.vertexColors) { m.vertexColors = true; m.needsUpdate = true; }
+  m.color.setHex(0xffffff);
+  m.emissive.setHex(highlight ? 0x553311 : 0x000000);
+}
+
+function applyMode() {
+  // Десна тоже переключается: иначе натуральные зубы стояли бы в условно
+  // розовой десне, и картинка читалась бы как наполовину раскрашенная.
+  for (const g of Object.values(gums)) {
+    if (mode === "real") paintReal(g);
+    else {
+      g.geometry.deleteAttribute("color");
+      if (g.material.vertexColors) {
+        g.material.vertexColors = false; g.material.needsUpdate = true;
+      }
+      g.material.color.setHex(GUM_COLOR);
+    }
+  }
+  const fdis = Object.keys(teeth).map(Number).sort((a, b) => a - b);
+  fdis.forEach((f, i) => {
+    const mesh = teeth[f], m = mesh.material;
+    const gap = mode === "contact" && gapAttr[f];
+    // В режиме контактов цвет берётся из вершин, а material.color на него
+    // умножается — поэтому база белая, а выделение зуба даётся свечением.
+    if (gap) mesh.geometry.setAttribute("color", gapAttr[f]);
+    else mesh.geometry.deleteAttribute("color");
+    if (m.vertexColors !== !!gap) { m.vertexColors = !!gap; m.needsUpdate = true; }
+    m.emissive.setHex(gap && f === selected ? 0x552b00 : 0x000000);
+    if (gap) { m.color.setHex(0xffffff); return; }
+    // В режиме «как на скане» выбранный зуб подсвечиваем СВЕЧЕНИЕМ, а не
+    // заливкой: заливка оранжевым скрыла бы ровно то, ради чего режим и нужен.
+    if (mode === "real") { paintReal(mesh, f === selected); return; }
+    if (f === selected) { m.color.setHex(0xff9a3c); return; }
+    if (mode === "natural") m.color.setHex(ENAMEL);
+    else if (mode === "quad") m.color.setHex(QUAD[(f / 10) | 0] || 0xffffff);
+    else m.color.setHex(TOOTH_PALETTE[i % TOOTH_PALETTE.length]);
+  });
+}
+
+function buildGapColors() {
+  // Цвет строим через THREE.Color: он переводит sRGB-константу в рабочее
+  // линейное пространство, иначе заливка выйдет заметно светлее задуманной.
+  const lut = [];
+  for (let b = 0; b < 256; b++) {
+    const mm = b / 100;                      // байт = сотые доли миллиметра
+    lut.push(new THREE.Color(GAP_BANDS.find(x => mm <= x.max).hex));
+  }
+  for (const [name, b64] of Object.entries(occl.vertex_gap_b64 || {})) {
+    const fdi = +name.split("_")[1];
+    const mesh = teeth[fdi];
+    if (!mesh) continue;
+    const bin = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+    const n = mesh.geometry.attributes.position.count;
+    if (bin.length !== n) {   // порядок вершин разошёлся — красить нечем
+      console.warn(name + ": зазоров " + bin.length + ", вершин " + n + " — пропуск");
+      continue;
+    }
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const c = lut[bin[i]];
+      arr[i * 3] = c.r; arr[i * 3 + 1] = c.g; arr[i * 3 + 2] = c.b;
+    }
+    gapAttr[fdi] = new THREE.BufferAttribute(arr, 3);
+  }
+}
+
+function renderPlan(plan) {
+  if (!plan || !plan.stages) return;
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  let html = plan.draft
+    ? '<div class="draft">Черновик: правила и пороги врачом не подтверждены. ' +
+      'Это не план лечения, а материал для приёма.</div>' : "";
+  if (plan.sources && plan.sources.length)
+    html += '<div class="stage-note">источники: ' +
+            plan.sources.map(esc).join(", ") + '</div>';
+
+  for (const st of plan.stages) {
+    html += '<div class="stage"><div class="stage-h"><i>ЭТАП ' + st.num +
+            '</i>' + esc(st.label) + '</div>' +
+            '<div class="stage-note">' + esc(st.note) + '</div>';
+    if (!st.procedures.length) {
+      html += '<div class="stage-empty">показаний не выявлено</div></div>';
+      continue;
+    }
+    for (const pr of st.procedures) {
+      const conf = pr.confidence === "high" ? ""
+        : ' <span style="color:#64748b">(доверие: ' +
+          (pr.confidence === "medium" ? "среднее" : "низкое") + ')</span>';
+      html += '<div class="proc">' + esc(pr.name) + conf +
+              (pr.teeth && pr.teeth.length
+                ? '<div class="teeth">&times;' + pr.count + '  зубы: ' +
+                  pr.teeth.join(", ") + '</div>'
+                : '<div class="teeth">на всю челюсть</div>') +
+              '<div class="why">' + esc(pr.why) + '</div>' +
+              (pr.note ? '<div class="why">! ' + esc(pr.note) + '</div>' : "") +
+              '</div>';
+    }
+    html += '</div>';
+  }
+
+  if (plan.not_determined && plan.not_determined.length) {
+    html += '<div class="stage"><div class="stage-h">По этим данным не ' +
+            'определяется</div>';
+    for (const [what, need] of plan.not_determined)
+      html += '<div class="proc">' + esc(what) +
+              '<div class="why">' + esc(need) + '</div></div>';
+    html += '</div>';
+  }
+  $("plan").innerHTML = html;
+  $("cnt-plan").textContent =
+    plan.stages.reduce((s, st) => s + st.procedures.length, 0) || "0";
+}
+
+function renderOcclusion() {
+  $("mode-contact").hidden = false;
+  $("contact-legend").innerHTML = GAP_BANDS.map(b =>
+    '<div class="lg"><i style="background:#' +
+    b.hex.toString(16).padStart(6, "0") + '"></i>' + b.label + '</div>').join("");
+}
+
+/** Одна панель на все специальности: прикус и геометрия дуги считаются
+ *  разными модулями, но врачу нужен один список, разложенный по ролям. */
+function renderReport() {
+  const src = [occl, fnd].filter(Boolean);
+  if (!src.length) return;
+
+  const routes = new Map();
+  for (const s of src)
+    for (const r of s.routes || []) routes.set(r.key, r);
+  const byRoute = {};
+  for (const s of src)
+    for (const f of [...(s.findings || []), ...(s.quality || [])])
+      (byRoute[f.route] ||= []).push(f);
+
+  let html = src.some(s => s.draft)
+    ? '<div class="draft">Черновик: пороги врачом не подтверждены. ' +
+      'Это материал для приёма, а не заключение.</div>' : "";
+  for (const r of [...routes.values()].sort((a, b) => a.order - b.order)) {
+    const items = byRoute[r.key];
+    if (!items) continue;
+    // сначала предупреждения, внутри — по номеру зуба
+    items.sort((a, b) => (a.severity !== "warning") - (b.severity !== "warning")
+                         || ((a.teeth || [])[0] || 0) - ((b.teeth || [])[0] || 0));
+    html += '<div class="quad-h">' + r.label + '</div>';
+    for (const f of items) {
+      const conf = f.confidence === "high" ? ""
+        : ' <span style="color:#64748b">(доверие: ' +
+          (f.confidence === "medium" ? "среднее" : "низкое") + ')</span>';
+      html += '<div class="find ' + f.severity + '">' + f.text + conf +
+              (f.action ? '<div class="act">&rarr; ' + f.action + '</div>' : "") +
+              '</div>';
+    }
+  }
+  // «Находок не выявлено» и «находки не считались» — РАЗНЫЕ вещи, и путать их
+  // нельзя: первое врач прочтёт как заключение о пациенте. Тот же принцип, по
+  // которому мы не пишем «дентиклей не найдено» там, где мы их не ищем.
+  $("occl-findings").innerHTML = html || (
+    (fnd || occl)
+      ? '<span class="stage-empty">Находок не выявлено</span>'
+      : '<span class="stage-empty">Находки по этому кейсу не посчитаны — '
+        + 'запустите ios_findings.py для него</span>');
+  const n = Object.values(byRoute).reduce((s, a) => s + a.length, 0);
+  $("cnt-find").textContent = n || "0";
+}
+
+/* Панель пациента — общая для обоих вьюеров (/patient-bar.js): имя, возраст
+   и переключатель его же исследований. Без неё просмотр это тупик: врач
+   видит зубы и не может ни свериться с карточкой, ни перейти к КЛКТ. */
+new GLTFLoader().loadAsync(`/api/ios/mesh/${CASE}`).then(gltf => {
+  const root = gltf.scene;
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    // Скан — ОТКРЫТАЯ оболочка, а не замкнутое тело. С односторонним
+    // материалом при взгляде спереди передняя стенка отсекается и видно
+    // изнанку — именно это и выглядело как «дырявая каша».
+    const common = { side: THREE.DoubleSide, flatShading: false };
+    if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+
+    /* Натуральный цвет со скана лежит в вершинах GLB. Сохраняем ссылку до
+       того, как режимы раскраски начнут удалять атрибут: режим контактов
+       кладёт в `color` свои значения, а прочие удаляют его вовсе, и вернуть
+       исходный было бы уже неоткуда. */
+    if (o.geometry.attributes.color) o.userData.natColor = o.geometry.attributes.color;
+
+    const name = o.name || (o.parent && o.parent.name) || "";
+    if (name.startsWith("tooth_")) {
+      const fdi = parseInt(name.split("_")[1], 10);
+      o.material = new THREE.MeshStandardMaterial({
+        ...common, color: ENAMEL, roughness: 0.42, metalness: 0.02 });
+      o.renderOrder = 1;
+      teeth[fdi] = o;
+    } else if (name.startsWith("gum_")) {
+      o.material = new THREE.MeshStandardMaterial({
+        ...common, color: GUM_COLOR, roughness: 0.92, metalness: 0.0,
+        transparent: true, opacity: 1 });
+      gums[name.split("_")[1]] = o;
+    }
+  });
+  segRoot = root;
+  /* СЕГМЕНТАЦИЯ ОБЯЗАНА УЧИТЫВАТЬ УЖЕ ВЫБРАННЫЙ ИСТОЧНИК.
+   *
+   * Это была причина «паутины» на исходном скане, из-за которой врач говорил,
+   * что оригинального цвета не видно. При открытии сразу по адресу
+   * /ios/<кейс>/raw порядок такой: `showSource("raw")` срабатывает, когда
+   * сегментация ещё грузится и `segRoot` равен null — прятать нечего; потом
+   * сегментация приходит и добавляется в сцену ВИДИМОЙ. В кадре оказываются
+   * ДВЕ почти совпадающие поверхности, они борются за глубину, и эта борьба
+   * рисует по модели сетку.
+   *
+   * Диагностировать было тяжело: правки цвета исходного скана ничего не
+   * меняли, потому что поверх него лежала сегментация. Помог тест краской —
+   * скан покрасили в чистый зелёный, и на экране он проступил сквозь
+   * серо-розовую модель именно сеткой. */
+  root.visible = curSrc !== "raw";
+  scene.add(root);
+  resize();
+  home = new THREE.Box3().setFromObject(root);
+  camera.position.set(0, 0.6, 1);
+  frame(home, 1.15);
+  buildPanel();
+  applyMode();
+  $("loading").classList.add("hidden");
+  // Обе сводки необязательны: кейс мог быть собран до их появления.
+  fetch(`/api/ios/occlusion/${CASE}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) return;
+      occl = data; buildGapColors(); renderOcclusion(); renderReport();
+    })
+    .catch(() => {});
+  fetch(`/api/ios/findings/${CASE}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => { if (data) { fnd = data; renderReport(); buildArchLines(); } })
+    .catch(() => {});
+  // План собирается сервером из тех же находок, но в том виде, в каком
+  // клиника выдаёт его пациенту: услуги по этапам, а не список измерений.
+  fetch(`/api/plan?ios_case=${encodeURIComponent(CASE)}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(renderPlan)
+    .catch(() => {});
+  fetch(`/api/ios/info/${CASE}`).then(r => r.json()).then(info => {
+    $("meta").textContent =
+      `${Object.keys(teeth).length} зубов · ${info.glb_mb} МБ · сегментация DGCNN`;
+  }).catch(() => { $("meta").textContent = `${Object.keys(teeth).length} зубов`; });
+}).catch(e => {
+  $("loading").innerHTML = "<span style='color:#f87171'>Не удалось загрузить скан</span>";
+  console.error(e);
+});
+
+function buildPanel() {
+  const box = $("teeth");
+  box.innerHTML = "";
+  for (const q of [1, 2, 4, 3]) {
+    const list = Object.keys(teeth).map(Number)
+      .filter(f => ((f / 10) | 0) === q).sort((a, b) => a - b);
+    if (!list.length) continue;
+    const h = document.createElement("div");
+    h.className = "quad-h";
+    h.textContent = `квадрант ${q} · ${q < 3 ? "верх" : "низ"} ${q === 1 || q === 4 ? "справа" : "слева"}`;
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    for (const fdi of list) {
+      const el = document.createElement("span");
+      el.className = "chip"; el.textContent = fdi; el.dataset.fdi = fdi;
+      el.onclick = () => select(fdi);
+      el.oncontextmenu = ev => { ev.preventDefault(); toggle(fdi, el); };
+      chips.appendChild(el);
+    }
+    box.appendChild(h); box.appendChild(chips);
+  }
+}
+
+function toggle(fdi, el) {
+  teeth[fdi].visible = !teeth[fdi].visible;
+  el.classList.toggle("off", !teeth[fdi].visible);
+}
+
+function select(fdi) {
+  document.querySelectorAll(".chip.sel").forEach(c => c.classList.remove("sel"));
+  if (selected === fdi) { selected = null; applyMode(); frame(home, 1.15); return; }
+  selected = fdi;
+  document.querySelector(`.chip[data-fdi="${fdi}"]`).classList.add("sel");
+  applyMode();
+  frame(new THREE.Box3().setFromObject(teeth[fdi]), 3.2);
+}
+
+// Только кнопки раскраски: селектор ".seg button" ловил ещё и «Что показывать»,
+// из-за чего переключение на исходный скан обнуляло режим цвета в undefined.
+document.querySelectorAll("#mode-seg button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("#mode-seg button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    mode = b.dataset.mode;
+    $("contact-legend").hidden = mode !== "contact";
+    applyMode();
+    writeUrl();          // раскраска попадает в адрес вместе с вкладкой
+  };
+});
+
+// Кнопка из адреса подсвечивается сразу: иначе экран в режиме «Как на скане»
+// показывал бы активной «Естественную», и врач не понял бы, что видит.
+{
+  const b0 = document.querySelector(`#mode-seg button[data-mode="${mode}"]`);
+  if (b0) {
+    document.querySelectorAll("#mode-seg button").forEach(x => x.classList.remove("on"));
+    b0.classList.add("on");
+  }
+}
+// ?arch=1 в адресе — чтобы линию можно было показать ССЫЛКОЙ, как вкладку и
+// зуб на КЛКТ: врач пишет коллеге «смотри дугу», а не «включи галочку».
+// Читается СРАЗУ, до прихода находок: иначе состояние экрана зависело бы от
+// того, успел ли ответ сервера, и ссылка срабатывала бы через раз.
+if (new URLSearchParams(location.search).get("arch") === "1")
+  $("arch").checked = true;
+// Линия челюсти прячется вместе с самой челюстью: иначе дуга висит в пустоте
+// над скрытым рядом и читается как ошибка построения.
+function syncArchVisibility() {
+  for (const [jaw, grp] of Object.entries(archLines))
+    grp.visible = $(jaw === "upper" ? "up" : "lo").checked;
+}
+$("arch").onchange = e => {
+  if (archRoot) { archRoot.visible = e.target.checked; syncArchVisibility(); }
+};
+$("gum").onchange = e => {
+  for (const [j, g] of Object.entries(gums))
+    g.visible = e.target.checked && $(j === "upper" ? "up" : "lo").checked;
+};
+$("gum-op").oninput = e => {
+  const v = +e.target.value;
+  $("gum-out").textContent = v + "%";
+  for (const g of Object.values(gums)) {
+    g.material.opacity = v / 100;
+    g.material.depthWrite = v >= 100;
+  }
+};
+function jawToggle(id, jaw, quads) {
+  $(id).onchange = e => {
+    const on = e.target.checked;
+    if (gums[jaw]) gums[jaw].visible = on && $("gum").checked;
+    for (const [f, m] of Object.entries(teeth))
+      if (quads.includes((+f / 10) | 0)) m.visible = on;
+    syncArchVisibility();
+  };
+}
+jawToggle("up", "upper", [1, 2]);
+jawToggle("lo", "lower", [3, 4]);
+$("reset").onclick = () => { selected = null; applyMode(); if (home) frame(home, 1.15); };
+
+/* ---- исходный скан: грузим по первому требованию ---- */
+let rawRoot = null, rawLoading = false;
+
+async function showSource(src) {
+  const raw = src === "raw";
+  // прячем только органы управления сегментацией; находки и план остаются
+  $("seg-controls").style.display = raw ? "none" : "";
+  if (segRoot) segRoot.visible = !raw;
+  if (!raw) { if (rawRoot) rawRoot.visible = false; return; }
+
+  if (rawRoot) { rawRoot.visible = true; return; }
+  if (rawLoading) return;
+  rawLoading = true;
+  $("loading").textContent = "Загрузка исходного скана…";
+  $("loading").classList.remove("hidden");
+  try {
+    const gltf = await new GLTFLoader().loadAsync(`/api/ios/raw/${CASE}`);
+    rawRoot = gltf.scene;
+    rawRoot.traverse(o => {
+      if (!o.isMesh) return;
+      if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+
+      /* РОДНУЮ ТЕКСТУРУ НЕ ВЫБРАСЫВАЕМ. Здесь материал заменялся на
+         vertexColors безусловно — это осталось с тех пор, когда цвет
+         запекался в вершины. Когда сборщик стал класть настоящую текстуру,
+         вьюер её игнорировал, вершинных цветов уже не было, и скан выходил
+         чёрным в крапинку. Врач это и увидел. */
+      const tex = o.material && o.material.map;
+      if (tex) {
+        // Мипмапы для атласа вредны: сканер пакует текстуру тысячами мелких
+        // квадратов с чёрными промежутками, и усреднение соседних текселей
+        // подмешивает в цвет эти промежутки.
+        /* МИПМАПЫ ОБЯЗАТЕЛЬНЫ, и их отключение было ошибкой.
+         *
+         * Текстура сканера 6348x6008, а челюсть на экране занимает пару сотен
+         * пикселей — то есть выборка идёт с уменьшением примерно в двадцать
+         * раз. Без мипмапов каждый пиксель экрана берёт ОДИН случайный тексель
+         * из области 20x20, и соседние пиксели попадают в разные фрагменты
+         * атласа. Именно это давало «мозаику» на десне, из-за которой скан
+         * выглядел мультяшным: не цвет был неверный, а выборка шумела.
+         *
+         * Отключал я их из опасения, что усреднение по площади затянет в
+         * фрагмент соседний. Опасение верное по механике, но цена несравнима:
+         * лёгкое смешение на границах против шума по всей поверхности.
+         *
+         * Анизотропия нужна отдельно: десна видна под острым углом, и без неё
+         * мипмап берёт слишком грубый уровень, размывая её в кашу. */
+        tex.generateMipmaps = true;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+
+        /* ИСХОДНЫЙ СКАН РИСУЕМ БЕЗ ОСВЕЩЕНИЯ.
+         *
+         * Врач смотрит сюда за одним — «увидеть реальный вид зубов, без
+         * насыщения и красок», когда КЛКТ вызывает сомнения. Любой
+         * освещённый материал этому мешает по устройству: свет сцены
+         * добавляет свою яркость и свой оттенок, блики выбеливают эмаль, а
+         * затенённые участки уходят в серое. Цвет на экране перестаёт быть
+         * тем, что снял сканер.
+         *
+         * MeshBasicMaterial выводит тексель как есть — это фотография,
+         * натянутая на форму. Объём при этом не теряется: интраоральный
+         * сканер снимает со вспышкой в упор, и собственные тени объекта уже
+         * записаны в саму текстуру.
+         *
+         * Для СЕГМЕНТАЦИИ так делать нельзя — там цвет условный (номер зуба),
+         * и форму читают именно по светотени. Поэтому правило только здесь. */
+        o.material = new THREE.MeshBasicMaterial({
+          map: tex, side: THREE.DoubleSide, toneMapped: false });
+        return;
+      }
+      /* Цвет в вершинах — тоже БЕЗ ОСВЕЩЕНИЯ, по той же причине, что и
+       * текстура.
+       *
+       * Это была причина «белой крапинки» на десне, которую врач видел даже
+       * после исправления цвета. Данные всё это время были верны: в модели
+       * 79% розовых вершин против 76.9% розового в самой текстуре, белых
+       * 4.1% против 3.0%. Портил картинку освещённый материал: десна
+       * бугристая (сосочки, складки), и MeshStandardMaterial ставил блик на
+       * каждый бугорок — четыре процента белых вершин превращались в треть
+       * белой площади.
+       *
+       * Скан снят вспышкой в упор, собственные тени уже записаны в цвет,
+       * поэтому добавлять к ним свет сцены — значит освещать дважды. */
+      const hasVC = !!o.geometry.attributes.color;
+      o.material = hasVC
+        ? new THREE.MeshBasicMaterial({
+            vertexColors: true, side: THREE.DoubleSide, toneMapped: false })
+        : new THREE.MeshStandardMaterial({
+            color: 0xc8c8c8, side: THREE.DoubleSide,
+            roughness: 0.75, metalness: 0.0 });
+    });
+    scene.add(rawRoot);
+  } catch (e) {
+    $("loading").innerHTML =
+      "<span style='color:#f87171'>Исходный скан недоступен</span>";
+    console.error(e); rawLoading = false; return;
+  }
+  $("loading").classList.add("hidden");
+  rawLoading = false;
+}
+
+document.querySelectorAll("#src-seg button").forEach(b => {
+  b.classList.toggle("on", b.dataset.src === curSrc);
+  b.onclick = () => {
+    document.querySelectorAll("#src-seg button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    curSrc = b.dataset.src;
+    showSource(curSrc);
+    writeUrl();
+  };
+});
+
+function selectTab(name) {
+  curTab = name;
+  document.querySelectorAll("#tabs button").forEach(b =>
+    b.classList.toggle("on", b.dataset.tab === name));
+  for (const k of ["model", "findings", "plan"])
+    $("pane-" + k).hidden = k !== name;
+  writeUrl();
+}
+document.querySelectorAll("#tabs button").forEach(b => {
+  b.onclick = () => selectTab(b.dataset.tab);
+});
+selectTab(curTab);
+if (curSrc === "raw") showSource("raw");
+
+$("share").onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    $("share").textContent = "Ссылка скопирована";
+  } catch (e) {
+    $("share").textContent = location.href;   // не дали буфер — показываем текст
+  }
+  setTimeout(() => { $("share").textContent =
+    "Скопировать ссылку на этот экран"; }, 2500);
+};
+</script>
