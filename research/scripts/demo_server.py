@@ -734,11 +734,39 @@ async def cbct_findings(case_id: str):
     return cbct.apply_review(res, cbct.review_for(c), drop_rejected=False)
 
 
+def _cached_findings(c: dict) -> dict | None:
+    """Посчитанный слой находок кейса, если он не устарел по версии правил.
+
+    Только из кэша: пересчёт занимает минуты, а отметка врача и подпись
+    должны отвечать сразу. Модель берём из самого кэша, а не из
+    `mask_model_for`: у фикстуры (кейс без тома и маски) модели нет вовсе,
+    а находки есть — и работать с ними врач имеет право.
+    """
+    cached = c.get("findings") or {}
+    if cbct.findings_stale(cached, cached.get("model")):
+        return None
+    return cached
+
+
+def _cached_finding(c: dict, key: str) -> dict | None:
+    """Одна находка по ключу из посчитанного слоя. None — нет в кэше."""
+    cached = _cached_findings(c) or {}
+    for f in (cached.get("findings") or []) + (cached.get("quality") or []):
+        if cbct.finding_key(f) == key:
+            return f
+    return None
+
+
 @app.post("/api/cbct/review/{case_id}")
 async def cbct_review(case_id: str, body: dict = Body(...)):
     """Отметка врача по одной находке: подтверждена / отклонена / снята.
 
     Отклонённая находка не попадает в план — ради этого проверка и нужна.
+
+    При ПОДТВЕРЖДЕНИИ обязателен комментарий своими словами (§7 спеки):
+    подпись без собственных слов — это кнопка «ок», а не проверка. При
+    отклонении комментарий не обязателен: «не вижу этого на срезе» и так
+    понятно, а лишнее поле на пути к «нет» заставляет соглашаться.
     """
     c = cbct.get_case(case_id)
     if c is None:
@@ -750,7 +778,22 @@ async def cbct_review(case_id: str, body: dict = Body(...)):
     if state is not None and state not in cbct.REVIEW_STATES:
         return JSONResponse({"error": "state: confirmed | rejected | null"},
                             status_code=400)
-    rev = cbct.set_review(c, key, state, str(body.get("by") or ""))
+
+    comment = str(body.get("comment") or "")
+    level = body.get("level") or None
+    text = body.get("text") or None
+
+    bad = cbct.level_override_problem(level)
+    if bad:
+        return JSONResponse({"error": bad, "field": "level"}, status_code=400)
+    if state == "confirmed":
+        bad = cbct.comment_problem(comment, _cached_finding(c, key))
+        if bad:
+            return JSONResponse({"error": bad, "field": "comment"},
+                                status_code=400)
+
+    rev = cbct.set_review(c, key, state, str(body.get("by") or ""),
+                          comment=comment, level=level, text=text)
     return {"case_id": case_id, "review": rev}
 
 
@@ -773,9 +816,15 @@ async def cbct_chat(case_id: str, body: dict = Body(...)):
     if not question.strip():
         return JSONResponse({"error": "нужен question"}, status_code=400)
     import case_chat
+    # Жалобы — из карточки визита; телом запроса их можно ПЕРЕопределить
+    # (кейс без визита, проба из консоли), но по умолчанию источник один,
+    # тот же, что у отчёта.
+    complaints = body.get("complaints")
+    if complaints is None:
+        complaints = complaints_for_case(case_id)
     try:
         return case_chat.chat(case_id, question, body.get("model"),
-                              body.get("complaints"))
+                              complaints)
     except RuntimeError as exc:
         # Нет ключа, провайдер не ответил, обезличивание не прошло — всё это
         # причины, которые должен видеть разработчик, а не «500».
@@ -798,9 +847,11 @@ async def cbct_summary(case_id: str, body: dict = Body(None)):
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
     body = body or {}
     import case_chat
+    complaints = body.get("complaints")
+    if complaints is None:
+        complaints = complaints_for_case(case_id)
     try:
-        return case_chat.summary(case_id, body.get("model"),
-                                 body.get("complaints"))
+        return case_chat.summary(case_id, body.get("model"), complaints)
     except RuntimeError as exc:
         return JSONResponse({"error": str(exc)}, status_code=503)
 
@@ -812,6 +863,10 @@ async def cbct_sign(case_id: str, body: dict = Body(...)):
     Это ОТМЕТКА, а не электронная подпись: аутентификации в демо нет, имя
     врач вводит сам. Так и подписано в интерфейсе — выдавать её за
     юридически значимую нельзя.
+
+    Подписать можно только РАЗОБРАННЫЙ набор: пока по находке нет решения,
+    непонятно, под чем стоит подпись. Это та же проверка, что гасит кнопку
+    отчёта, но на сервере — кнопку легко обойти прямым запросом.
     """
     c = cbct.get_case(case_id)
     if c is None:
@@ -819,8 +874,67 @@ async def cbct_sign(case_id: str, body: dict = Body(...)):
     by = str(body.get("by") or "").strip()
     if not by:
         return JSONResponse({"error": "нужно имя врача"}, status_code=400)
+    cached = _cached_findings(c)
+    if cached is None:
+        return JSONResponse(
+            {"error": "Находки ещё не посчитаны — подписывать нечего"},
+            status_code=409)
+    st = cbct.apply_review(cached, cbct.review_for(c),
+                           drop_rejected=False)["review"]
+    if not st["report_ready"]:
+        return JSONResponse(
+            {"error": f'Не разобрано находок: {st["pending"]} из '
+                      f'{st["total"]}. Подпись — после решения по каждой.',
+             "review": st}, status_code=409)
     rev = cbct.sign_case(c, by, str(body.get("note") or "").strip())
     return {"case_id": case_id, "review": rev}
+
+
+@app.get("/api/cbct/report/{case_id}")
+async def cbct_report_pdf(case_id: str, kind: str = Query("doctor"),
+                          force: int = Query(0)):
+    """PDF-заключение: `kind=doctor` врачу, `kind=patient` пациенту.
+
+    GET, потому что это ссылка, которую врач открывает и сохраняет. Жалобы
+    в адрес не кладём — сервер берёт их сам из карточки визита.
+
+    ОТЧЁТ ТОЛЬКО ПОСЛЕ РАЗБОРА ВСЕХ НАХОДОК (спека §7). `force=1` оставлен
+    для разработки и прямо помечает бумагу черновиком — в интерфейсе эта
+    кнопка просто не нажимается, пока чек-лист не закрыт.
+    """
+    from fastapi.concurrency import run_in_threadpool
+    c = cbct.get_case(case_id)
+    if c is None:
+        return JSONResponse({"error": "Кейс не найден"}, status_code=404)
+    if kind not in ("doctor", "patient"):
+        return JSONResponse({"error": "kind: doctor | patient"},
+                            status_code=400)
+    cached = _cached_findings(c)
+    if cached is None:
+        return JSONResponse({"error": "Находки ещё не посчитаны"},
+                            status_code=409)
+    st = cbct.apply_review(cached, cbct.review_for(c),
+                           drop_rejected=False)["review"]
+    if not st["report_ready"] and not force:
+        return JSONResponse(
+            {"error": f'Отчёт — после разбора всех находок. Осталось: '
+                      f'{st["pending"]} из {st["total"]}.', "review": st},
+            status_code=409)
+
+    import cbct_report
+    build = (cbct_report.build_patient_report if kind == "patient"
+             else cbct_report.build_report)
+    try:
+        path = await run_in_threadpool(
+            build, case_id, cached.get("model"), None,
+            complaints_for_case(case_id))
+    except Exception as exc:                               # noqa: BLE001
+        return JSONResponse({"error": f"Не удалось собрать отчёт: {exc}"},
+                            status_code=500)
+    # Имя файла латиницей: в заголовке Content-Disposition кириллица
+    # требует отдельного кодирования, а часть программ его не понимает.
+    name = f'stomadent_{kind}_{case_id}.pdf'
+    return FileResponse(path, media_type="application/pdf", filename=name)
 
 
 @app.get("/api/cbct/slice/{case_id}")
@@ -1959,6 +2073,39 @@ def api_study(sid: str) -> dict:
     return {"study": st, "patient": pat.get_patient(st["patient_id"])}
 
 
+@app.post("/api/studies/{sid}/complaints")
+async def api_study_complaints(sid: str, body: dict = Body(...)):
+    """Жалобы и самочувствие на этот визит, словами врача.
+
+    POST с телом, а не параметр в адресе: жалоба — это сведения о здоровье,
+    а строка адреса попадает в журнал сервера и в историю браузера. То же
+    правило, по которому POST стоит у сводки чата.
+
+    Пустая строка разрешена: врач вправе стереть то, что записал по ошибке.
+    """
+    st = pat.get_study(sid)
+    if st is None:
+        return JSONResponse({"error": "Исследование не найдено"},
+                            status_code=404)
+    text = str(body.get("complaints") or "").strip()[:pat.COMPLAINTS_MAX]
+    pat.update_study(sid, complaints=text)
+    return {"study_id": sid, "complaints": text}
+
+
+def complaints_for_case(case_id: str) -> str:
+    """Жалобы пациента по кейсу КЛКТ. Пусто — кейс не привязан к визиту.
+
+    Нужна, чтобы чат брал жалобы ИЗ БАЗЫ, а не из тела запроса: иначе
+    сводка зависит от того, не забыл ли фронт их переслать, и в отчёте
+    оказалось бы одно, а в чате другое.
+    """
+    try:
+        st = pat.find_by_case(case_id)
+    except Exception:                                      # noqa: BLE001
+        return ""
+    return str((st or {}).get("complaints") or "")
+
+
 # ================= адресация экранов по URL =================
 #
 # Врачу нужно давать ССЫЛКУ, а не инструкцию «нажмите сюда, потом сюда».
@@ -2053,6 +2200,11 @@ def main() -> None:
     stuck = jobs.reset_stuck()
     if stuck:
         print(f"прервано перезапуском: {stuck} исследований — нужен повтор")
+    # На пустой базе (проект взят из git, снимков нет) заводим карточку для
+    # кейса из fixtures: иначе сценарий показа начинается с пустого списка
+    # пациентов, хотя смотреть есть что.
+    if pat.seed_fixture_patient():
+        print("заведён пациент-пример для кейса из fixtures/")
     print(f"Пациенты: {len(pat.list_patients(limit=10000))} "
           f"(хранилище {pat.DATA_DIR})")
 

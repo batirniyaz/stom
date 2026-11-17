@@ -27,6 +27,10 @@ from pathlib import Path
 import numpy as np
 import SimpleITK as sitk
 
+# Справочник ролей и уровней критичности. Модуль без зависимостей — импорт
+# тут безопасен и до возни с env для nnU-Net.
+import clinic_routes
+
 R3D = Path(__file__).resolve().parents[2] / "research_3d"
 CASES_DIR = R3D / "web_cases"
 
@@ -690,15 +694,30 @@ def _new_case(case_id: str, name: str, volume: Path,
 
 
 def _save_meta(c: dict) -> None:
-    d = CASES_DIR / c["case_id"]
+    # Пишем ТУДА, ОТКУДА ЧИТАЛИ (`case_dir`), а не всегда в web_cases.
+    # Иначе состояние фикстуры (отметки врача, подпись) уезжало в
+    # web_cases/<id>/meta.json, и при следующем запуске этот огрызок —
+    # без тома, без меша, но с тем же case_id — ЗАТЕНЯЛ саму фикстуру:
+    # `register_fixtures` видел занятый id и молча её пропускал, а список
+    # примеров оказывался пуст. Ровно так и произошло 17.11.
+    #
+    # Да, у фикстуры при этом меняется файл, лежащий в гите: отметки врача
+    # на демо-кейсе видны в `git status`. Это осознанно — одна правда о
+    # кейсе дороже чистого diff, а снимок разбора можно и закоммитить
+    # (показ начинается с уже проверенного кейса).
+    d = case_dir(c)
     d.mkdir(parents=True, exist_ok=True)
     (d / "meta.json").write_text(json.dumps(
         {k: c.get(k) for k in ("case_id", "name", "volume", "masks", "model",
-                               "example", "shape", "spacing", "info",
+                               "example", "fixture", "shape", "spacing", "info",
                                "findings", "review", "panorama", "meshes",
                                "scanner", "sides_applied", "sides_uncertain",
                                "sides_vote", "created_at")},
-        ensure_ascii=False), encoding="utf-8")
+        # С отступами, а не одной строкой: meta.json фикстуры лежит в гите,
+        # и после одного клика в демо diff показывал «1722 строки удалено,
+        # 1 добавлена» вместо трёх строк отметки врача. Лишние килобайты
+        # дешевле нечитаемой истории.
+        ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def _load_persisted() -> None:
@@ -819,7 +838,18 @@ def register_fixtures() -> None:
         except (OSError, json.JSONDecodeError):
             continue
         cid = c.get("case_id")
-        if not cid or cid in cases:
+        if not cid:
+            continue
+        if cid in cases:
+            # Настоящий кейс с тем же номером перевешивает — но МОЛЧА этого
+            # делать нельзя. Кейс из web_cases не помечен примером, поэтому
+            # из списка примеров выпадает и он, и затенённая им фикстура:
+            # на машине без снимков список оказывается пуст, и проект
+            # выглядит сломанным. Ровно это и случилось 17.11 в клоне, где
+            # от сборки фикстуры осталась пустышка meta.json.
+            print(f"[fixtures] {cid} не зарегистрирован: кейс с таким id "
+                  f"уже есть в {CASES_DIR.name}. Фикстура {meta.parent} "
+                  f"затенена — список примеров может оказаться пустым.")
             continue
         c["fixture"] = True
         c["has_volume"] = False
@@ -1897,8 +1927,23 @@ def _arrays_for(c: dict, model: str, canals: bool = True) -> tuple[np.ndarray, n
     """
     key = f'{c["case_id"]}:{model}:{int(canals)}'
     if _arr_cache["key"] != key:
-        vol = sitk.GetArrayFromImage(sitk.ReadImage(c["volume"]))
-        mimg = sitk.ReadImage(c["masks"][model])
+        # Проверяем ПУТИ, а не надеемся на исключение: SimpleITK при
+        # `ReadImage(None)` роняет процесс сегфолтом (access violation в
+        # SetFileNames), а не бросает ошибку. Поэтому `try/except` вокруг
+        # вызова не спасает — падает весь сервер. Так и случилось на
+        # фикстуре: у кейса без тома (`volume: None`) сборка отчёта
+        # обрывалась без следа в логе.
+        vol_path = c.get("volume")
+        mask_path = (c.get("masks") or {}).get(model)
+        if not vol_path or not Path(vol_path).is_file():
+            raise FileNotFoundError(
+                f'у кейса {c["case_id"]} нет тома — измерения по вокселям '
+                f'(срезы, панорама, карточка зуба) недоступны')
+        if not mask_path or not Path(mask_path).is_file():
+            raise FileNotFoundError(
+                f'у кейса {c["case_id"]} нет маски модели {model}')
+        vol = sitk.GetArrayFromImage(sitk.ReadImage(vol_path))
+        mimg = sitk.ReadImage(mask_path)
         mask = sitk.GetArrayFromImage(mimg)
         # Сторону выправляем ЗДЕСЬ, а не только при инференсе: маски, уже
         # лежащие на диске, посчитаны до этой правки и зеркальны. Проверка
@@ -1995,6 +2040,78 @@ def overlay_contour(rgb: np.ndarray, m: np.ndarray, focus=()) -> np.ndarray:
 # врача живёт в meta.json рядом с самими находками и переживает перезапуск.
 REVIEW_STATES = ("confirmed", "rejected")
 
+# Комментарий врача при подтверждении обязателен: подпись без собственных
+# слов — это кнопка «ок», а не проверка. Порог 10 символов взят из спеки
+# (решение команды 17.11), но длина сама по себе почти ничего не отсекает:
+# «подтверждаю» — это 11 символов. Реально фильтруют два правила ниже.
+REVIEW_COMMENT_MIN = 10
+REVIEW_TEXT_MAX = 400      # правка диагноза врачом: строка, а не трактат
+
+# Слова чистого согласия. Если ПОСЛЕ их удаления не осталось ни одного
+# слова, комментарий не несёт наблюдения — отклоняем. Так надёжнее списка
+# готовых фраз: «ок», «ок согласен», «да, всё верно» — это одна и та же
+# пустота в трёх видах, а перечислить все сочетания нельзя.
+REVIEW_ASSENT_WORDS = {
+    "ок", "окей", "ok", "okey", "да", "ага", "угу", "так", "это", "всё",
+    "все", "верно", "правильно", "согласен", "согласна", "согласны",
+    "подтверждаю", "подтверждено", "принято", "плюс", "норм", "нормально",
+    "хорошо", "ясно", "понятно", "точно", "именно", "и", "а", "но", "же",
+}
+
+
+def _norm_text(s: str) -> str:
+    """Текст без регистра, знаков и повторных пробелов — для сравнения."""
+    return " ".join(re.sub(r"[^\w\s]", " ", str(s or "").lower()).split())
+
+
+def comment_problem(comment: str, finding: dict | None = None) -> str | None:
+    """Почему комментарий врача не принят. None — принят.
+
+    Возвращается ГОТОВАЯ фраза для врача, а не код ошибки: «текст слишком
+    короткий» без объяснения, чего от него хотят, заставляет угадывать.
+    """
+    c = str(comment or "").strip()
+    if len(c) < REVIEW_COMMENT_MIN:
+        return (f"Комментарий короче {REVIEW_COMMENT_MIN} символов. "
+                "Напишите своими словами, что увидели на снимке.")
+
+    if not [w for w in _norm_text(c).split() if w not in REVIEW_ASSENT_WORDS]:
+        return ("В комментарии только согласие, нет ни одного слова по "
+                "существу. Напишите, ЧТО видно: «зона разрежения у верхушки "
+                "36, периодонтальная щель расширена».")
+
+    if finding:
+        # Копия объяснения ИИ — это не проверка, а пересылка. Сверяем и с
+        # текстом находки, и с её основанием: врач видит на экране обе
+        # строки и скопировать мог любую.
+        mine = _norm_text(c)
+        ai = [_norm_text(finding.get("text"))]
+        for b in (finding.get("basis") or []):
+            ai.append(_norm_text(
+                f'{b.get("label", "")} {b.get("value", "")} {b.get("rule", "")}'
+                if isinstance(b, dict) else b))
+        for a in ai:
+            # Короткие строки основания («1.2 мм») сравнивать бессмысленно:
+            # они законно встречаются в собственном тексте врача.
+            if len(a) >= 12 and (mine in a or a in mine):
+                return ("Это копия объяснения ИИ. Нужен ваш собственный "
+                        "вывод: с чем согласны и что увидели сами.")
+    return None
+
+
+def level_override_problem(level) -> str | None:
+    """Проверка уровня, выставленного врачом вручную.
+
+    Защита от невозможного значения: уровней ровно три, и чужое слово из
+    запроса не должно попасть в meta.json — оттуда оно уехало бы и в
+    карточку, и в PDF, а подписи для него нет.
+    """
+    if level in (None, ""):
+        return None
+    if level not in clinic_routes.LEVELS:
+        return "Уровень может быть только: " + " | ".join(clinic_routes.LEVELS)
+    return None
+
 
 def finding_key(f: dict) -> str:
     """Устойчивый ключ находки: код плюс зубы, к которым она относится.
@@ -2020,19 +2137,35 @@ def review_for(c: dict) -> dict:
     return {"items": r.get("items") or {}, "signed": r.get("signed")}
 
 
-def set_review(c: dict, key: str, state: str | None, by: str = "") -> dict:
+def set_review(c: dict, key: str, state: str | None, by: str = "",
+               comment: str = "", level: str | None = None,
+               text: str | None = None) -> dict:
     """Отметить находку подтверждённой или отклонённой. state=None — снять.
 
     ПОДПИСЬ ПРИ ЭТОМ СНИМАЕТСЯ. Подписанный план не имеет права молча
     измениться под подписью: если врач меняет решение по находке, план
     пересобирается и подписывать его надо заново.
+
+    `comment` — собственные слова врача, `level` и `text` — его правка уровня
+    и формулировки диагноза. Правка хранится ЗДЕСЬ, рядом с отметкой, а не
+    внутри находки: находки пересчитываются при смене `FINDINGS_VERSION`, и
+    написанное врачом пропало бы вместе с кэшем. Проверка значений — на
+    вызывающей стороне (`comment_problem`, `level_override_problem`), чтобы
+    ошибку можно было вернуть врачу текстом, а не исключением.
     """
     r = review_for(c)
     if state is None:
         r["items"].pop(key, None)
     else:
-        r["items"][key] = {"state": state, "by": by,
-                           "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        item = {"state": state, "by": by,
+                "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        if str(comment or "").strip():
+            item["comment"] = str(comment).strip()
+        if level:
+            item["level"] = level
+        if str(text or "").strip():
+            item["text"] = str(text).strip()[:REVIEW_TEXT_MAX]
+        r["items"][key] = item
     r["signed"] = None
     c["review"] = r
     _save_meta(c)
@@ -2072,7 +2205,29 @@ def apply_review(res: dict, rev: dict, drop_rejected: bool = True) -> dict:
         # Ключ отдаём фронту готовым: если бы он считал его сам, две реализации
         # разъехались бы, и отметка врача легла бы не на ту находку.
         k = finding_key(f)
-        return dict(f, key=k, review=(items.get(k) or {}).get("state"))
+        it = items.get(k) or {}
+        out = dict(f, key=k, review=it.get("state"),
+                   comment=it.get("comment") or "")
+        # Уровень критичности: слово для бейджа и цвет считаются ОДИН раз
+        # здесь. Если бы их собирал фронт, в PDF и в чате оказались бы свои
+        # копии таблицы — ровно та болезнь, от которой лечит clinic_routes.
+        out["level"] = clinic_routes.level_of(f.get("severity"))
+        # Надёжность — словом. Процента у находки нет и быть не может:
+        # вероятности мы не считаем. Измеренная точность системы идёт
+        # отдельной строкой (`/api/metrics/segmentation`), а не здесь.
+        out["trust"] = clinic_routes.confidence_of(f.get("confidence"))
+        # Правка врача не затирает исходное: в отчёте обязано быть видно, что
+        # нашёл ИИ и что изменил человек. Иначе проверка превращается в
+        # переписывание истории.
+        if it.get("level") and it["level"] != f.get("severity"):
+            out["level_ai"] = out["level"]
+            out["level"] = clinic_routes.level_of(it["level"])
+            out["level_by_doctor"] = True
+        if it.get("text") and it["text"] != f.get("text"):
+            out["text_ai"] = f.get("text")
+            out["text"] = it["text"]
+            out["text_by_doctor"] = True
+        return out
 
     tagged = [tag(f) for f in (res.get("findings") or [])]
     kept = [f for f in tagged if f["review"] != "rejected"] \
@@ -2080,13 +2235,27 @@ def apply_review(res: dict, rev: dict, drop_rejected: bool = True) -> dict:
     out = dict(res)
     out["findings"] = kept
     out["quality"] = [tag(f) for f in (res.get("quality") or [])]
+    confirmed = sum(1 for f in tagged if f["review"] == "confirmed")
+    rejected = sum(1 for f in tagged if f["review"] == "rejected")
+    pending = len(tagged) - confirmed - rejected
     out["review"] = {
         "items": items, "signed": rev.get("signed"),
-        "rejected": sum(1 for f in tagged if f["review"] == "rejected"),
-        "confirmed": sum(1 for f in tagged if f["review"] == "confirmed"),
+        "rejected": rejected,
+        "confirmed": confirmed,
         "total": len(tagged),
+        # Чек-лист в сайдбаре: «4 из 5». Считаем ТОЛЬКО клинические находки.
+        # Раздел ручной проверки (`quality`) в счётчик не входит намеренно:
+        # «канал слева не сегментирован» врач решением не закрывает, и отчёт
+        # был бы заблокирован навсегда.
+        "reviewed": confirmed + rejected,
+        "pending": pending,
+        # Отчёт только после разбора ВСЕХ находок — требование спеки §7.
+        # У кейса без находок (здоровый пациент) отчёт разрешён: проверять
+        # нечего, и запрет читался бы как сбой.
+        "report_ready": pending == 0,
         "findings_version": FINDINGS_VERSION,
     }
+    out["levels"] = clinic_routes.level_list()
     return out
 
 

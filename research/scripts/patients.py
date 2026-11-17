@@ -68,6 +68,12 @@ STUDY_KINDS = {
 # «третий в очереди» — иначе пустой экран выглядит как поломка.
 STUDY_STATUS = ("uploaded", "queued", "processing", "ready", "error")
 
+# Жалобы — свободный текст, но не бесконечный: он уходит и в контекст модели,
+# и в шапку отчёта. 500 символов это 3-4 фразы врача, больше в жалобу не
+# пишут. Предел ОДИН на всё: база, API и сборка контекста чата ссылаются
+# сюда, иначе длинная жалоба обрезалась бы в трёх местах по-разному.
+COMPLAINTS_MAX = 500
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS patients (
     id          TEXT PRIMARY KEY,
@@ -103,6 +109,15 @@ CREATE TABLE IF NOT EXISTS studies (
     -- Какой моделью посчитано. Нужна в ссылке: вьюер КЛКТ без модели в
     -- адресе открывает модель по умолчанию и начинает считать заново.
     model       TEXT NOT NULL DEFAULT '',
+    -- Жалобы и самочувствие НА ЭТОТ ВИЗИТ, словами врача («болит слева
+    -- снизу на холодное»). У визита, а не у пациента: в тот и есть смысл
+    -- истории — на следующем снимке жалоба другая, и сравнивать надо их.
+    --
+    -- Зачем в базе, а не параметром из фронта: с жалобой сводка отвечает на
+    -- вопрос, с которым пришёл человек («проверьте сначала 36 и 37»), и она
+    -- же попадает в отчёт. Храним как текст: разбирать её на симптомы — это
+    -- отдельная задача, а врач пишет свободно.
+    complaints  TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS studies_patient ON studies(patient_id, uploaded_at);
@@ -168,10 +183,12 @@ def connect() -> sqlite3.Connection:
     con.executescript(SCHEMA)
     # База могла быть создана до появления колонки: ALTER молча пропускаем,
     # иначе демо не поднимется на уже существующих данных.
-    try:
-        con.execute("ALTER TABLE studies ADD COLUMN model TEXT NOT NULL DEFAULT ''")
-    except sqlite3.OperationalError:
-        pass
+    for col in ("model TEXT NOT NULL DEFAULT ''",
+                "complaints TEXT NOT NULL DEFAULT ''"):
+        try:
+            con.execute(f"ALTER TABLE studies ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
     return con
 
 
@@ -282,7 +299,8 @@ def patient_dir(pid: str) -> Path:
 
 def create_study(patient_id: str, kind: str, *, taken_at: str | None = None,
                  scanner: str = "", note: str = "", status: str = "uploaded",
-                 legacy_case: str = "", legacy_kind: str = "") -> str:
+                 legacy_case: str = "", legacy_kind: str = "",
+                 complaints: str = "") -> str:
     if kind not in STUDY_KINDS:
         raise ValueError(f"неизвестный тип исследования: {kind}")
     if status not in STUDY_STATUS:
@@ -294,10 +312,10 @@ def create_study(patient_id: str, kind: str, *, taken_at: str | None = None,
     with connect() as con:
         con.execute(
             "INSERT INTO studies (id, patient_id, kind, status, taken_at,"
-            " uploaded_at, scanner, note, legacy_case, legacy_kind, created_at)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            " uploaded_at, scanner, note, legacy_case, legacy_kind,"
+            " complaints, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (sid, patient_id, kind, status, taken_at, t, scanner, note,
-             legacy_case, legacy_kind, t))
+             legacy_case, legacy_kind, (complaints or "").strip(), t))
     if not legacy_case:                       # у примеров данные лежат на месте
         (study_dir(sid) / "source").mkdir(parents=True, exist_ok=True)
         (study_dir(sid) / "derived").mkdir(parents=True, exist_ok=True)
@@ -312,7 +330,7 @@ def update_study(sid: str, **fields) -> bool:
     его с исследованием надо сразу, иначе результат осиротеет.
     """
     allowed = {"kind", "taken_at", "scanner", "note", "legacy_case",
-               "legacy_kind", "model"}
+               "legacy_kind", "model", "complaints"}
     sets = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if not sets:
         return False
@@ -546,6 +564,47 @@ def migrate_examples() -> dict:
                          legacy_kind=kind)
             made["studies"] += 1
     return made
+
+
+# Жалоба демо-пациента. Она НЕ случайная: сводка чата обязана учитывать
+# жалобу («проверьте сначала 36 и 37»), и показать это можно только на
+# кейсе, у которого жалоба есть. Пациент вымышленный, набор публичный
+# (CC BY 4.0) — настоящих данных в демо нет.
+FIXTURE_COMPLAINTS = "ноет слева снизу при накусывании, третий день"
+
+
+def seed_fixture_patient() -> str | None:
+    """Пациент-пример для кейса из `fixtures/`. None — не понадобилось.
+
+    Зачем. Сценарий показа начинается со СПИСКА ПАЦИЕНТОВ, а на машине,
+    взятой из git, снимков нет вовсе — список пуст, и демо начинается с
+    пустого экрана. Фикстура даёт кейс, но не даёт визита: кейс сам по себе
+    в карточке не появляется, их связывает `legacy_case`.
+
+    Срабатывает ТОЛЬКО на пустой базе: у клиники свои пациенты, и
+    подкладывать им демо-карточку нельзя.
+    """
+    fixtures = REPO / "fixtures"
+    if not fixtures.is_dir():
+        return None
+    with connect() as con:
+        if con.execute("SELECT 1 FROM patients LIMIT 1").fetchone():
+            return None
+    for meta in sorted(fixtures.glob("*/meta.json")):
+        try:
+            cid = (json.loads(meta.read_text(encoding="utf-8")) or {}).get("case_id")
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not cid:
+            continue
+        pid = create_patient("Демонстрационный", "пациент", is_example=True,
+                             card_no="DEMO-001",
+                             note="кейс из публичного набора (CC BY 4.0), "
+                                  "не настоящий пациент")
+        create_study(pid, "cbct", status="ready", legacy_case=cid,
+                     legacy_kind="cbct", complaints=FIXTURE_COMPLAINTS)
+        return pid
+    return None
 
 
 # -------------------------------------------------------------------- CLI
