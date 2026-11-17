@@ -144,11 +144,15 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .scn .pnl label{display:flex;justify-content:space-between;gap:8px;margin:6px 0;color:var(--text)}
 .scn .pnl input[type=range]{width:100%;accent-color:var(--accent)}
 .mm{position:absolute;right:12px;bottom:12px;background:rgba(17,21,27,.82);border:1px solid var(--line);border-radius:10px;padding:7px 8px;z-index:3}
-.mm .r{display:grid;grid-template-columns:repeat(16,17px);gap:2px;margin-bottom:2px}
-.mm .r.g{margin-bottom:6px}
-.mm button{padding:2px 0;font:500 9px var(--mono);border:1px solid #2a323d;border-radius:3px;background:#161b22;color:#6d7886}
-.mm button.k{background:var(--crit);color:#10141a;border-color:var(--crit)}.mm button.v{background:var(--warn);color:#10141a;border-color:var(--warn)}.mm button.n{background:var(--info);color:#10141a;border-color:var(--info)}
-.mm button.sel{outline:2px solid #fff;outline-offset:1px}
+.mm .r{display:grid;grid-template-columns:repeat(16,20px);gap:1px}
+.mm .r.g{margin-bottom:4px}
+.mm button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;cursor:pointer;--tf:#161b22;--ts:#3a4452;--tn:#6d7886}
+.mm button i{font:500 8.5px var(--mono);font-style:normal;color:var(--tn);line-height:11px}
+.mm button svg{width:19px;height:28px;display:block;overflow:visible}
+.mm button.lo svg{transform:scaleY(-1)}
+.mm button path{fill:var(--tf);stroke:var(--ts);stroke-width:1.1;stroke-linejoin:round;transition:fill .2s,stroke .2s}
+.mm button.k{--tf:var(--crit);--ts:var(--crit);--tn:var(--crit)}.mm button.v{--tf:var(--warn);--ts:var(--warn);--tn:var(--warn)}.mm button.n{--tf:var(--info);--ts:var(--info);--tn:var(--info)}
+.mm button.sel path{stroke:#fff;stroke-width:2}.mm button.sel i{color:#fff}
 .handle{width:6px;cursor:col-resize;background:var(--line);flex:none;transition:background .15s}.handle:hover{background:var(--accent)}
 .col{width:var(--colw,38%);min-width:320px;max-width:86vw;display:flex;flex-direction:column;background:var(--surface);flex:none;min-height:0}
 .tabs{display:flex;border-bottom:1px solid var(--line);flex:none;align-items:center}
@@ -255,7 +259,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .fcard{transition:border-color .25s,opacity .25s,background .25s}
 .f3{animation:vin .3s both}
 .form{animation:vin .3s both}
-.mm button{transition:transform .15s,background .2s}.mm button:hover{transform:scale(1.25)}
+.mm button{transition:transform .15s}.mm button:hover{transform:scale(1.2)}
 .drawer{animation:slin .35s cubic-bezier(.2,.7,.2,1)}
 .shade:not([hidden]){animation:fadein .25s}
 .modal:not([hidden]) .mbox{animation:pop .3s both}
@@ -981,13 +985,13 @@ function drawFind(){
       var c=el('div','fcard'+(open?' open':'')+(r==='ok'?' ok':'')+(r==='rej'?' rej':''));
       c.innerHTML='<div class="f1"><div class="hd"><span class="lv '+lv+'">'+LV[lv]+'</span> <span class="tn">зуб '+f.tooth+'</span><span class="tx">'+esc(ftext(f))+'</span></div>'+(ro?'':'<div class="ic"><button class="y'+(r==='ok'?' on':'')+'" title="Подтвердить" aria-label="Подтвердить">✓</button><button class="x'+(r==='rej'?' on':'')+'" title="Отклонить" aria-label="Отклонить">✕</button></div>')+'</div>'
        +'<div class="f2"><div class="rel">надёжность измерения: '+f.rel+'</div>'+(r&&C.comm[f.id]?'<div class="fc">Врач: '+esc(C.comm[f.id])+'</div>':'')+'</div>'
-       +(open?'<div class="f3"><div class="acts"><button class="btn sm" data-a="show">Показать на модели</button><button class="btn sm" data-a="iso">'+(isolated===f.tooth?'Показать все зубы':'Изолировать зуб')+'</button></div><details><summary>На чём основано</summary><p style="margin:6px 0 0">'+esc(f.why)+'</p><p style="margin:6px 0 0;color:var(--muted)">Оговорка: '+esc(f.cav)+'</p></details></div>':'')
+       +(open?'<div class="f3"><div class="acts"><button class="btn sm" data-a="iso">'+(isolated===f.tooth?'Показать все зубы':'Изолировать зуб')+'</button></div><details><summary>На чём основано</summary><p style="margin:6px 0 0">'+esc(f.why)+'</p><p style="margin:6px 0 0;color:var(--muted)">Оговорка: '+esc(f.cav)+'</p></details></div>':'')
        +(fo?'<div class="form"><label>Ваш комментарий (от 10 символов)</label><textarea id="cmt" placeholder="Что вы увидели и почему так решили"></textarea><label>Уровень</label><select id="lvSel"><option value="k">Крит</option><option value="v">Важн</option><option value="n">Незнач</option></select><label class="cb"><input type="checkbox" id="fixT"> Поправить формулировку</label><input type="text" id="fixV" hidden><div class="err" id="err"></div><button class="btn pri sm" id="sv">'+(openForm.kind==='ok'?'Подтвердить':'Отклонить')+'</button> <button class="btn sm ghost" id="cn">Отмена</button></div>':'');
       c.style.setProperty('--i',fi++);p.appendChild(c);
       $('.hd',c).addEventListener('click',function(){if(open){sel=null;applyMode();drawFind();drawMap()}else select(f.id)});
       if(!ro)$('.y',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'ok'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
       if(!ro)$('.x',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'rej'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
-      $$('[data-a]',c).forEach(function(b){b.addEventListener('click',function(){if(b.dataset.a==='show')flyTo(f.tooth);else{isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth)}})});
+      $$('[data-a]',c).forEach(function(b){b.addEventListener('click',function(){isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth)})});
       if(fo){$('#cmt',c).value=C.comm[f.id]||'';$('#lvSel',c).value=lv;$('#fixV',c).value=ftext(f);
         $('#fixT',c).addEventListener('change',function(){$('#fixV',c).hidden=!this.checked});
         $('#cn',c).addEventListener('click',function(){openForm=null;drawFind()});
@@ -1006,11 +1010,16 @@ function drawFind(){
   findAnim=false;
   if(!ro){$('#pdfD').addEventListener('click',function(){showDocs('d')});$('#pdfP').addEventListener('click',function(){showDocs('p')})}
 }
-var UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+var TSH={inc:'M7.5 1.5Q10 -0.5 12.5 1.5L13 12Q16.5 13 16 19L15 25.5Q10 28 5 25.5L4 19Q3.5 13 7 12Z',
+ can:'M7.5 1.5Q10 -1 12.5 1.5L13 11Q16 12.5 15.5 18L12.5 27Q10 30 7.5 27L4.5 18Q4 12.5 7 11Z',
+ pre:'M7.5 1.5Q9.5 -0.5 11.5 1.5L12 11Q17 12 16.5 18Q16 24 13.5 26.5Q11.5 25 10 26Q8.5 25 6.5 26.5Q4 24 3.5 18Q3 12 8 11Z',
+ mol:'M4.5 11L5 3Q6.3 0.5 7.8 3L9.2 11L10.8 11L12.2 3Q13.7 0.5 15 3L15.5 11Q19 12.5 18.5 19Q18 25 15.5 26.5Q13.5 25 10 26Q6.5 25 4.5 26.5Q2 25 1.5 19Q1 12.5 4.5 11Z'},
+UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 function drawMap(){
   if(!cur)return;
-  function row(a,cl){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n);return '<button type="button" data-n="'+n+'" class="'+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+n+'</button>'}).join('')+'</div>'}
-  $('#mm').innerHTML=row(UP,'g')+row(LO,'');$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
+  function row(a,cl,low){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n),d=n%10,sh=d<3?TSH.inc:d===3?TSH.can:d<6?TSH.pre:TSH.mol,sv='<svg viewBox="-1 -2 22 33" aria-hidden="true"><path d="'+sh+'"/></svg>';
+    return '<button type="button" data-n="'+n+'" class="'+(low?'lo ':'')+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+(low?sv+'<i>'+n+'</i>':'<i>'+n+'</i>'+sv)+'</button>'}).join('')+'</div>'}
+  $('#mm').innerHTML=row(UP,'g',false)+row(LO,'',true);$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
 }
 $('#pp').addEventListener('click',function(){paused=!paused;controls.autoRotate=!paused&&V.speed>0;this.textContent=paused?'▶ вращение':'❚❚ вращение'});
 $('#scnBtn').addEventListener('click',function(){$('#pnl').hidden=!$('#pnl').hidden});
