@@ -252,7 +252,7 @@ footer{margin-top:40px;font-size:13px;color:var(--muted)}
         <li>Перед подтверждением можно сменить уровень или поправить диагноз.</li>
         <li>Отклонённая находка остаётся зачёркнутой и в отчёт как диагноз не попадает.</li>
         <li>Любая правка после подписи снимает подпись.</li>
-        <li>Комментарий обязателен: своими словами, что увидел и почему согласен. Проверка в MVP: не короче 20 символов и не копия объяснения ИИ.</li>
+        <li>Комментарий обязателен: своими словами, что увидел и почему согласен. Проверка в MVP: не короче 10 символов и не копия объяснения ИИ.</li>
       </ul>
       <div class="grid g2" style="margin-top:10px">
         <div class="card"><b style="color:var(--crit)">Так нельзя</b><p class="small">«ок», «согласен», «+», скопированный или пересказанный текст ИИ.</p></div>
@@ -343,7 +343,7 @@ var TASKS=[
  {n:2,st:'today',title:'Шкала Крит / Важн / Незнач',s:'todo',pr:'MVP',where:'фронт; из поля <code>severity</code>',done:'Каждая находка с цветным бейджем, зубы в 3D окрашены по уровню.'},
  {n:3,st:'today',title:'Уверенность на карточке',s:'todo',pr:'MVP',where:'зависит от вопроса В1',done:'На карточке есть число или категория, решение по В1 принято.'},
  {n:4,st:'today',title:'Врач меняет уровень и правит диагноз',s:'todo',pr:'MVP',where:'<code>demo_server.py</code>, <code>meta.json</code>',done:'Изменение сохраняется и попадает в отчёт.'},
- {n:5,st:'today',title:'Обязательный комментарий при подтверждении',s:'todo',pr:'MVP',where:'<code>/api/cbct/review</code>, фронт',done:'Без комментария от 20 символов и не копии ИИ подтвердить нельзя.'},
+ {n:5,st:'today',title:'Обязательный комментарий при подтверждении',s:'todo',pr:'MVP',where:'<code>/api/cbct/review</code>, фронт',done:'Без комментария от 10 символов и не копии ИИ подтвердить нельзя.'},
  {n:6,st:'today',title:'Чат: интерфейс, жалобы в контексте',s:'part',pr:'MVP',where:'<code>case_chat.py</code>, фронт',done:'Бэкенд готов: план в контексте, язык вопроса. Остался интерфейс и жалобы пациента.'},
  {n:7,st:'today',title:'Сводка первым сообщением после разбора',s:'part',pr:'MVP',where:'<code>summary()</code> в <code>case_chat.py</code>',done:'Функция есть, счётчики считает код. Остался вывод в интерфейсе.'},
  {n:8,st:'today',title:'PDF для врача: уровни, уверенность, комментарии, модели ИИ, ФИО врача',s:'part',pr:'MVP',where:'<code>cbct_report.py</code>',done:'PDF строится из командной строки. Нужны новые поля и кнопка в вебе.'},
@@ -474,7 +474,7 @@ function drawDetail(){
    +'<p class="muted small" style="margin-top:4px">Уверенность '+f.conf+'</p>'
    +'<details class="why"><summary>Почему ИИ так решил</summary><p style="margin-top:6px">'+f.why+'</p></details>'
    +'<label for="dSel">Уровень</label><select id="dSel"><option value="k">Критичная</option><option value="v">Важная</option><option value="n">Незначительная</option></select>'
-   +'<label for="dCom">Комментарий врача (от 20 символов, своими словами)</label><textarea id="dCom" placeholder="Что увидели и почему согласны"></textarea>'
+   +'<label for="dCom">Комментарий врача (от 10 символов, своими словами)</label><textarea id="dCom" placeholder="Что увидели и почему согласны"></textarea>'
    +'<div class="err" id="dErr"></div>'
    +'<div class="btns"><button class="btn pri" id="dOk" type="button">Подтвердить</button><button class="btn bad" id="dRej" type="button">Отклонить</button>'+(rev[f.id]?'<button class="btn" id="dUn" type="button">Снять решение</button>':'')+'</div>';
   $('#dSel').value=lv;
@@ -482,7 +482,7 @@ function drawDetail(){
   function norm(s){return s.toLowerCase().replace(/[^a-zа-я0-9]/g,'')}
   function decide(kind){
     var c=$('#dCom').value.trim(),e=$('#dErr');
-    if(c.length<20){e.textContent='Комментарий короче 20 символов. Напишите, что увидели и почему согласны.';return}
+    if(c.length<10){e.textContent='Комментарий короче 10 символов. Напишите, что увидели и почему согласны.';return}
     if(norm(c).indexOf(norm(f.ai))===0&&norm(c).length<norm(f.ai).length+8){e.textContent='Это повторяет текст ИИ. Опишите своими словами.';return}
     rev[f.id]=kind;refresh();
   }
