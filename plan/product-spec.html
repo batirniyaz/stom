@@ -55,6 +55,8 @@ main{padding-block:20px 60px}
 .chip{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:999px;white-space:nowrap}
 .chip.done{background:var(--ok-soft);color:var(--ok)} .chip.part{background:var(--warn-soft);color:var(--warn)}
 .chip.todo{background:var(--info-soft);color:var(--info)} .chip.hold{background:var(--surface2);color:var(--muted)}
+button.chip{border:0;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+button.chip::after{content:" ▾";opacity:.6}
 .chip.new{background:var(--accent-soft);color:var(--accent)}
 
 .seg{display:flex;flex-wrap:wrap;gap:8px}
@@ -297,7 +299,7 @@ footer{margin-top:40px;font-size:13px;color:var(--muted)}
 </section>
 
 <section class="view" id="v-progress" hidden>
-  <header><h2>Что сделано, что нет</h2><p class="muted small">На 17.11, вечер, по коду в <code>main</code>. Нажмите на счётчик, чтобы отфильтровать.</p></header>
+  <header><h2>Что сделано, что нет</h2><p class="muted small">На 17.11, вечер, по коду в <code>main</code>. Нажмите на счётчик, чтобы отфильтровать. Нажмите на статус задачи, чтобы сменить его: смена видна всей команде.</p></header>
   <div class="bar" id="pbar" aria-hidden="true"></div>
   <div class="counts" id="counts"></div>
   <div class="card table"><table>
@@ -356,6 +358,19 @@ var TASKS=[
  {n:17,st:'later',title:'Агент на Anthropic Managed Agents и skill для чтения 3D',s:'hold',pr:'потом',where:'—',done:'Следующий уровень после MVP.'},
  {n:18,st:'later',title:'Мобильные приложения',s:'hold',pr:'в конце',where:'—',done:'100% будем делать, но в конце. Как внедрять, решим позже.'}
 ];
+var db=null,ORDER=['todo','part','done','hold'];
+function chipEl(t){
+  if(!db){return el('span','chip '+t.s,SL[t.s])}
+  var b=el('button','chip '+t.s,SL[t.s]);b.type='button';b.title='Нажмите, чтобы сменить статус';
+  b.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var next=ORDER[(ORDER.indexOf(t.s)+1)%ORDER.length];
+    t.s=next;redrawTasks();
+    db.doc('taskstatus/t'+t.n).set({s:next}).catch(function(){});
+  });
+  return b;
+}
+function redrawTasks(){drawTasks();drawProgress()}
 var SL={done:'Сделано',part:'Частично',todo:'Не начато',hold:'Отложено'};
 var STAGES=[
  {id:'today',when:'Сегодня до 22:00–23:00',sum:'MVP: задачи 1–10 на одном демо-кейсе'},
@@ -552,7 +567,8 @@ function drawTasks(){
   if(!list.length){root.appendChild(el('p','muted small','В этом этапе нет задач с таким статусом.'));return}
   list.forEach(function(t){
     var d=el('details','task');
-    d.innerHTML='<summary><span class="num">'+t.n+'</span><span class="tt">'+t.title+'</span><span class="chip '+t.s+'">'+SL[t.s]+'</span></summary><div class="body"><span><b>Готово, когда:</b> '+t.done+'</span><span><b>Где в коде:</b> '+t.where+'</span><span><b>Приоритет:</b> '+t.pr+'</span></div>';
+    d.innerHTML='<summary><span class="num">'+t.n+'</span><span class="tt">'+t.title+'</span><span data-chip></span></summary><div class="body"><span><b>Готово, когда:</b> '+t.done+'</span><span><b>Где в коде:</b> '+t.where+'</span><span><b>Приоритет:</b> '+t.pr+'</span></div>';
+    var h=$('[data-chip]',d);h.parentNode.replaceChild(chipEl(t),h);
     root.appendChild(d);
   });
 }
@@ -575,7 +591,8 @@ function drawProgress(){
   var tb=$('#ptable');tb.innerHTML='';
   core.forEach(function(t){
     if(pf!=='all'&&t.s!==pf)return;
-    tb.appendChild(el('tr',null,'<td>'+t.n+'</td><td>'+t.title+'</td><td><span class="chip '+t.s+'">'+SL[t.s]+'</span></td><td class="muted small">'+t.done+'</td>'));
+    tb.appendChild(el('tr',null,'<td>'+t.n+'</td><td>'+t.title+'</td><td data-chip></td><td class="muted small">'+t.done+'</td>'));
+    var tr=tb.lastChild,h=$('[data-chip]',tr);h.appendChild(chipEl(t));
   });
   [['#extra',EXTRA],['#nocode',NOCODE]].forEach(function(p){
     var u=$(p[0]);u.innerHTML='';p[1].forEach(function(x){u.appendChild(el('li',null,'<span class="chip '+x[0]+'">'+SL[x[0]]+'</span> '+x[1]))});
@@ -625,6 +642,21 @@ function drawQ(){
 }
 drawQ();
 
+(function(){
+  var t=setTimeout(function(){},10000);
+  if(!window.claude||!window.claude.use)return;
+  window.claude.use('db').then(function(d){
+    clearTimeout(t);if(!d)return;db=d;
+    d.collection('taskstatus').onSnapshot(function(snap){
+      snap.docs.forEach(function(x){
+        var n=parseInt(x.id.slice(1),10),v=x.data()&&x.data().s;
+        TASKS.forEach(function(k){if(k.n===n&&SL[v])k.s=v});
+      });
+      redrawTasks();
+    },function(){});
+    redrawTasks();
+  }).catch(function(){});
+})();
 refresh();
 var h=(location.hash||'').slice(1);show(VIEWS.indexOf(h)>=0?h:'vision');
 })();
