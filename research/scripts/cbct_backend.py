@@ -1380,6 +1380,14 @@ def _run_inference(c: dict, model: str) -> Path:
     возвращает данные как есть — каста нет, пик втрое ниже. Маску возвращаем
     к исходной геометрии сами, ближайшим соседом: это uint8, стоит копейки.
     """
+    # Без тома сегментировать нечего, и проверить это надо ЗДЕСЬ: дальше
+    # SimpleITK роняет процесс сегфолтом, а не исключением, и с ним весь
+    # сервер. Так и падало демо на кейсе из `fixtures/`: фронт запускал
+    # сегментацию, у кейса тома нет — и демо просто исчезало.
+    if not c.get("volume") or not Path(c["volume"]).is_file():
+        raise FileNotFoundError(
+            f'у кейса {c["case_id"]} нет исходного тома — пересегментировать '
+            f'его нельзя; показываются готовые находки и 3D')
     orig_img = sitk.ReadImage(c["volume"])
     sitk_img = orig_img
     target = (_target_spacing(model)
@@ -1503,6 +1511,20 @@ def build_combo_mask(c: dict) -> Path:
 
 def _segment_worker(c: dict, model: str) -> None:
     try:
+        # Кейс БЕЗ ТОМА (`fixtures/`): пересчитывать нечего и нечем — том в
+        # репозиторий не кладётся. Если меш и находки для этой модели уже
+        # посчитаны, кейс просто готов. Раньше фронт на таком кейсе запускал
+        # сегментацию, она падала сегфолтом в SimpleITK и уносила весь
+        # сервер: демо открывалось «строим 3D…» и исчезало.
+        if not c.get("volume") or not Path(c["volume"]).is_file():
+            glb = case_dir(c) / f"mesh_{model}.glb"
+            if glb.is_file() and not findings_stale(c.get("findings"), model):
+                c["stage"] = "done"
+                c["detail"] = ""
+                return
+            raise FileNotFoundError(
+                f'у кейса {c["case_id"]} нет исходного тома, а готового '
+                f'разбора моделью {model} рядом не лежит')
         mpath = c["masks"].get(model)
         if mpath and Path(mpath).is_file():
             c["stage"] = "meshing"

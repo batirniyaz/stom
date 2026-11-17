@@ -710,6 +710,10 @@ def cbct_info(case_id: str):
     out = dict(c["info"])
     out["scanner"] = c.get("scanner") or {}
     out["sides"] = cbct.scanner_sides_state(c)
+    # Есть ли по кейсу воксели. Фронт по этому полю НЕ ПОКАЗЫВАЕТ срезы,
+    # панораму и карточку зуба, а не ловит 409 по факту клика: пустая
+    # вкладка с ошибкой читается как поломка, хотя кейс исправен.
+    out["has_voxels"] = _voxel_model(c) is not None
     return out
 
 
@@ -720,6 +724,10 @@ async def cbct_findings(case_id: str):
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
+    # Здесь НЕ `_voxel_model`: находки лежат посчитанными в meta.json, и
+    # кейсу из `fixtures/` (без тома) они доступны — на этом и держится
+    # весь демо-сценарий. Проверка вокселей тут однажды уже оказалась по
+    # ошибке и погасила ленту находок целиком.
     model = cbct.mask_model_for(c)
     if model is None:
         return JSONResponse({"error": "Сегментация ещё не выполнена"},
@@ -937,6 +945,32 @@ async def cbct_report_pdf(case_id: str, kind: str = Query("doctor"),
     return FileResponse(path, media_type="application/pdf", filename=name)
 
 
+def _voxel_model(c: dict) -> str | None:
+    """Модель для измерений ПО ВОКСЕЛЯМ или None, если считать нечем.
+
+    Мало проверить, что сегментация выполнена: у кейса из `fixtures/` маска
+    и том в репозиторий не кладутся (сотни мегабайт), и файлов на диске нет.
+    Раньше такой кейс доходил до SimpleITK и ронял процесс сегфолтом —
+    падал весь сервер, а не один запрос. Проверяем файлы заранее и отвечаем
+    понятным 409.
+    """
+    model = cbct.mask_model_for(c)
+    if model is None:
+        return None
+    vol = c.get("volume")
+    mask = (c.get("masks") or {}).get(model)
+    if not vol or not Path(vol).is_file():
+        return None
+    if not mask or not Path(mask).is_file():
+        return None
+    return model
+
+
+NO_VOXELS = {"error": "У этого кейса нет исходного тома: срезы, панорама и "
+                      "карточка зуба по нему недоступны. 3D-модель, находки "
+                      "и план работают."}
+
+
 @app.get("/api/cbct/slice/{case_id}")
 async def cbct_slice(case_id: str, axis: str = Query("z"),
                      idx: int = Query(0),
@@ -945,10 +979,9 @@ async def cbct_slice(case_id: str, axis: str = Query("z"),
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     if axis not in ("x", "y", "z"):
         axis = "z"
     if overlay not in ("contour", "fill", "none"):
@@ -966,10 +999,9 @@ async def cbct_teeth(case_id: str):
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     teeth = await run_in_threadpool(cbct.teeth_present, c, model)
     return {"case_id": case_id, "model": model, "teeth": teeth}
 
@@ -981,10 +1013,9 @@ async def cbct_tooth_card(case_id: str, fdi: int):
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     info = await run_in_threadpool(cbct.tooth_card, c, model, fdi)
     if info is None:
         return JSONResponse({"error": f"Зуб {fdi} не найден в маске"},
@@ -1006,10 +1037,9 @@ async def cbct_tooth_slice(case_id: str, fdi: int, plane: str,
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
     if plane not in cbct_tooth.PLANES:
         return JSONResponse({"error": "Неизвестная плоскость"}, status_code=400)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     # Сдвиг ограничиваем: дальше 15 мм от зуба уже чужая анатомия, а поле
     # кадра осталось бы прежним — врач смотрел бы на соседний зуб, думая,
     # что смотрит на этот.
@@ -1033,10 +1063,9 @@ async def cbct_panorama_png(case_id: str):
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     try:
         png, _meta = await run_in_threadpool(cbct.panorama_for, c, model)
     except Exception as exc:  # noqa: BLE001
@@ -1052,10 +1081,9 @@ async def cbct_panorama_meta(case_id: str):
     c = cbct.get_case(case_id)
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
-    model = cbct.mask_model_for(c)
+    model = _voxel_model(c)
     if model is None:
-        return JSONResponse({"error": "Сегментация ещё не выполнена"},
-                            status_code=409)
+        return JSONResponse(NO_VOXELS, status_code=409)
     try:
         _png, meta = await run_in_threadpool(cbct.panorama_for, c, model)
     except Exception as exc:  # noqa: BLE001
