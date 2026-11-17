@@ -509,7 +509,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
       <div class="loading" id="loading">Загрузка 3D-модели…</div>
       <button class="pp" id="pp" title="Пауза / вращение">❚❚ вращение</button>
       <div id="lbls"></div>
-      <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span></div>
+      <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span><span><i style="background:var(--accent)"></i>Выбранный зуб</span></div>
       <div class="scn"><div class="pnl" id="pnl" hidden>
         <div class="ph"><b>Сцена</b><button class="btn sm ghost" id="scReset">Сбросить</button></div>
         <details open><summary>Слои</summary><div>
@@ -806,7 +806,7 @@ function runProcess(id){
 }
 
 /* ---------- 3D (одна сцена на главную и разбор) ---------- */
-var scene,camera,renderer,controls,model,teethMesh={},G={maxilla:[],mandible:[],nerve:[],sinus:[],pulp:[],canal:[],resto:[],airway:[]},tc={},lblEl={},origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null,shotReq=false;
+var selMeshes=[],scene,camera,renderer,controls,model,teethMesh={},G={maxilla:[],mandible:[],nerve:[],sinus:[],pulp:[],canal:[],resto:[],airway:[]},tc={},lblEl={},origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null,shotReq=false;
 var cur=null,sel=null,HERO={36:'k',16:'k',37:'v',46:'v',26:'v',47:'v'};
 var V0={maxilla:true,mandible:true,nerve:true,sinus:false,pulp:false,canal:false,resto:false,airway:false,teeth:true,boneOp:.22,toothOp:1,color:'lvl',jaw:'all',only:false,wire:false,labels:false,speed:1.2};
 var V=Object.assign({},V0);
@@ -835,7 +835,10 @@ function ensure3d(){
   renderer.domElement.addEventListener('dblclick',function(e){if(mode!=='case'||!model)return;var n=hit(e);if(n){isolate(n);flyTo(n)}});
   var lastN=0;
   (function loop(){requestAnimationFrame(loop);
-    if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*(3-2*k);camera.position.lerpVectors(anim.p0,anim.p1,e);controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
+    if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*k*(k*(6*k-15)+10);
+      if(anim.pm){var u=1-e;camera.position.set(u*u*anim.p0.x+2*u*e*anim.pm.x+e*e*anim.p1.x,u*u*anim.p0.y+2*u*e*anim.pm.y+e*e*anim.p1.y,u*u*anim.p0.z+2*u*e*anim.pm.z+e*e*anim.p1.z)}else camera.position.lerpVectors(anim.p0,anim.p1,e);
+      controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
+    if(selMeshes.length&&mode==='case'){var pl=0.55+0.45*Math.sin(performance.now()/260);selMeshes.forEach(function(m){m.material.emissiveIntensity=pl})}
     if(curHost&&curHost.offsetParent!==null){controls.update();renderer.render(scene,camera);
       if(shotReq){shotReq=false;var a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='actina-'+(cur||'scene')+'.png';a.click();toast('Снимок экрана сохранён')}
       if(mode==='case'&&V.labels&&model){var w=curHost.clientWidth,h=curHost.clientHeight;
@@ -872,12 +875,14 @@ function applyMode(){
   function vis(g){return home?(g==='maxilla'||g==='mandible'||g==='nerve'):(!iso&&V[g])}
   ['maxilla','mandible'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g);m.material.opacity=home?0.1:(sel?Math.min(V.boneOp,0.1):V.boneOp);m.material.wireframe=!home&&V.wire})});
   ['nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g)})});
-  Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
+  selMeshes=[];
+  Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),isSel=!home&&!!sel&&!!f2&&f2.id===sel,useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
     var show=home||(V.teeth&&(!iso||isolated===kk)&&(V.jaw==='all'||(V.jaw==='up')===(kk<30))&&(!V.only||!!f2));
     var tr=!home&&V.toothOp<1;
     teethMesh[k].forEach(function(m){var c=new THREE.Color(V.color==='anat'&&!home?ANAT[kk%10]:0xefeadf);
       if(useLvl&&lvl)c.lerp(new THREE.Color(COL[lvl]),(!home&&f2&&C.rev[f2.id]==='rej')?0.25:0.95);
-      m.material.color.copy(c);m.material.emissive=new THREE.Color(!home&&sel&&f2&&f2.id===sel?0x4a2a1a:0x000000);
+      if(isSel){c.set(0x2fe3cf);selMeshes.push(m)}
+      m.material.color.copy(c);m.material.emissive=new THREE.Color(isSel?0x0e8a7c:0x000000);m.material.emissiveIntensity=isSel?.8:1;
       if(m.material.transparent!==tr){m.material.transparent=tr;m.material.depthWrite=!tr;m.material.needsUpdate=true}
       m.material.opacity=tr?V.toothOp:1;m.visible=show});
     var e=lblEl[k];if(e){e.className='lbl '+(lvl&&!home?lvl:'')}});
@@ -897,7 +902,10 @@ function flyTo(n){
   var ms=teethMesh[n];if(!ms||!camera)return;
   var b=new THREE.Box3();ms.forEach(function(m){b.expandByObject(m)});
   var c=b.getCenter(new THREE.Vector3()),dir=c.clone().sub(origTarget);dir.y=0;if(dir.length()<1)dir.set(0,0,1);dir.normalize();
-  controls.autoRotate=false;anim={t:0,n:40,p0:camera.position.clone(),p1:c.clone().add(dir.multiplyScalar(60)).add(new THREE.Vector3(0,12,0)),c0:controls.target.clone(),c1:c};holdThenSpin()}
+  var p0=camera.position.clone(),p1=c.clone().add(dir.clone().multiplyScalar(85)).add(new THREE.Vector3(0,16,0));
+  var mid=p0.clone().add(p1).multiplyScalar(.5),out=mid.clone().sub(origTarget);out.y=0;if(out.length()<1)out.set(0,0,1);out.normalize();
+  var kk=Math.max(35,p0.distanceTo(p1)*.55),pm=mid.add(out.multiplyScalar(kk)).add(new THREE.Vector3(0,kk*.45,0));
+  controls.autoRotate=false;anim={t:0,n:85,p0:p0,pm:pm,p1:p1,c0:controls.target.clone(),c1:c};holdThenSpin()}
 function resetView(){if(!origCam)return;isolated=null;applyMode();fit(false);anim={t:0,n:40,p0:camera.position.clone(),p1:origCam.clone(),c0:controls.target.clone(),c1:origTarget.clone()};holdThenSpin()}
 function viewTo(name){
   if(!origCam)return;if(name==='all'){resetView();drawFind();return}
