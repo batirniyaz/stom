@@ -331,15 +331,35 @@ async function hero(caseId) {
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(35, host.clientWidth / host.clientHeight, 1, 4000);
+  /* ОРТОГРАФИЧЕСКАЯ камера: перспективы нет вовсе.
 
-  /* Модель стоит В ЦЕНТРЕ кадра, а вбок сдвигается САМ КАДР.
-     Первая версия отодвигала модель (`pivot.position.x`), и та уходила с
-     оптической оси: у перспективной камеры всё, что уехало к краю кадра,
-     растягивается. При вращении искажение ползёт по модели и читается как
-     деформация с определённых точек — так и было видно на заставке.
-     `setViewOffset` сдвигает окно проекции, а камера продолжает смотреть
-     по оси. На узком экране смещения нет: текст там сверху, а не слева. */
+     Перспективная камера раздувает ближнее и сжимает дальнее. На челюсти
+     это читается как деформация кости: у носа она «шире», к затылку
+     сходится в точку. Виновата не модель — замер по мешу показывает, что
+     зубы сидят в кости (медиана 2.0 мм, максимум 3.1). Виноват объектив:
+     расстояние камеры считается от зубов, а череп вдвое больше, и ближний
+     край оказывался крупнее дальнего в 1.8 раза.
+
+     Длинный объектив (18°) снижал раздутие до 1.34, но не убирал.
+     Ортографическая проекция убирает полностью: все части модели в
+     одном масштабе независимо от удалённости. Для анатомии это вернее
+     и привычнее — так рисуют рентген и технические виды. */
+  const vw = host.clientWidth || 1, vh = host.clientHeight || 1;
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4000, 6000);
+
+  /* Рамка ортокамеры: половина ширины по короткой стороне кадра, чтобы
+     модель не менялась в размере при смене пропорций окна. */
+  let orthoHalf = 1;
+  function orthoFrame(half) {
+    if (half) orthoHalf = half;
+    const w = host.clientWidth || 1, h = host.clientHeight || 1;
+    const a = w / h;
+    camera.left = -orthoHalf * a;
+    camera.right = orthoHalf * a;
+    camera.top = orthoHalf;
+    camera.bottom = -orthoHalf;
+  }
+
   function frameShift() {
     const w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return;
@@ -403,15 +423,25 @@ async function hero(caseId) {
           color: 0xf6f3ee, roughness: 0.38, metalness: 0,
         })
       : new THREE.MeshStandardMaterial({
-          // Кость СКЛАДЫВАЕТСЯ со сценой, а не затемняет её. Обычная
-          // полупрозрачность здесь не годится: оболочка челюсти это
-          // десятки налегающих друг на друга поверхностей, и каждая
-          // умножает затемнение — зубы за ними уходили в чёрное.
-          color: 0x8fa0b2, roughness: 0.8, metalness: 0,
-          transparent: true, opacity: 0.085, depthWrite: false,
-          blending: THREE.AdditiveBlending, side: THREE.FrontSide,
+          /* Рисуем ТОЛЬКО ДАЛЬНЮЮ стенку кости (`BackSide`). Два других
+             варианта проверены и оба врут о данных:
+
+             - обычная полупрозрачность: оболочка челюсти это десятки
+               налегающих поверхностей, каждая умножает затемнение, и зубы
+               за ними уходят в чёрное;
+             - аддитивное смешивание на малой прозрачности: толстые ветви
+               челюсти светятся, а ТОНКАЯ альвеолярная кость вокруг корней
+               исчезает совсем — зубы выглядят висящими в воздухе, хотя в
+               данных они сидят в кости (замер по мешу: медиана 2.0 мм до
+               кости, максимум 3.1, дальше 6 мм ни одного).
+
+             Дальняя стенка не закрывает зубы вовсе и при этом даёт кости
+             силуэт и глубину: видно, что зубы стоят В челюсти. */
+          color: 0xa8b4c2, roughness: 0.85, metalness: 0,
+          transparent: true, opacity: 0.30, depthWrite: false,
+          side: THREE.BackSide,
         });
-    if (!tooth) o.renderOrder = 2;
+    if (!tooth) o.renderOrder = -1;   // кость — фоном, до зубов
   });
 
   /* Кадр строим ПО ЗУБАМ, а не по всей модели. В нашем меше лежит ещё и
@@ -435,13 +465,36 @@ async function hero(caseId) {
   scene.add(pivot);
 
   // Трёхчетвертной вид: прямо в лоб челюсть читается плоско.
-  const d = Math.max(size.x, size.z) * 3.1;
-  camera.position.set(d * 0.50, d * 0.30, d * 0.80);
+  const half = Math.max(size.x, size.z) * 0.95;   // половина видимой ширины
+  const d = Math.max(size.x, size.z) * 6.2;       // у орто расстояние только
+  camera.position.set(d * 0.50, d * 0.30, d * 0.80);   // задаёт ракурс
   camera.lookAt(0, 0, 0);
+  orthoFrame(half);
   frameShift();
   camera.updateProjectionMatrix();
 
   $("hload").hidden = true;
+
+  /* Отладочный замер перспективы. Искажение «ближнее раздувается» зависит
+     не от угла обзора самого по себе, а от того, во сколько раз дальний
+     край объекта дальше ближнего: при 2.7 кость у носа вдвое крупнее
+     такой же кости у затылка, при 1.4 разница уже не читается. */
+  {
+    const full = new THREE.Box3().setFromObject(root);
+    const fs = full.getSize(new THREE.Vector3());
+    const dist = camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
+    const depth = Math.max(fs.x, fs.y, fs.z);
+    window.__heroDbg = {
+      камера: camera.isOrthographicCamera ? "ортографическая" : camera.fov,
+      расстояние: Math.round(dist),
+      габарит_всей_модели: Math.round(depth),
+      габарит_зубов: Math.round(Math.max(size.x, size.y, size.z)),
+      ближний: Math.round(dist - depth / 2),
+      дальний: Math.round(dist + depth / 2),
+      раздутие: camera.isOrthographicCamera ? 1
+        : +((dist + depth / 2) / Math.max(1, dist - depth / 2)).toFixed(2),
+    };
+  }
 
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   (function loop() {
@@ -454,7 +507,7 @@ async function hero(caseId) {
     const w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+    orthoFrame();
     frameShift();                 // смещение кадра пересчитывается от ширины
     camera.updateProjectionMatrix();
   });

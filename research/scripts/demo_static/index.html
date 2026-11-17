@@ -1026,6 +1026,55 @@
   }
   .pp input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
 
+  /* Заключение поверх экрана разбора. */
+  .rep-modal {
+    position: absolute; inset: 0; z-index: 20; display: grid;
+    place-items: center; padding: 18px; background: rgba(6, 9, 13, .72);
+  }
+  .rep-modal[hidden] { display: none; }
+  .rep-box {
+    width: min(980px, 100%); height: min(92%, 980px); display: flex;
+    flex-direction: column; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  }
+  .rep-head {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    border-bottom: 1px solid var(--line); flex: none;
+  }
+  .rep-tabs { display: flex; gap: 4px; }
+  .rep-tabs button {
+    border: 1px solid var(--line); background: var(--panel-2);
+    color: var(--muted); border-radius: 9px; padding: 6px 14px; font-size: 13px;
+  }
+  .rep-tabs button.on {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+    font-weight: 600;
+  }
+  #rep-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #fff; }
+
+  /* Карточка структуры. Под легендой слева: там уже «читальный» угол
+     экрана, и врачу не приходится искать ответ в другом месте. */
+  .obj-card {
+    position: absolute; left: 12px; top: 92px; z-index: 4; width: 288px;
+    background: rgba(17, 21, 27, .96); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px; font-size: 12.5px;
+    line-height: 1.5; color: var(--muted);
+  }
+  .obj-card[hidden] { display: none; }
+  .obj-card b { color: var(--text); font-size: 13.5px; display: block; }
+  .obj-card small { color: var(--dim); display: block; margin-top: 1px; }
+  .obj-card p { margin: 8px 0 0; }
+  .obj-card .obj-no { color: var(--warn); }
+  .obj-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 3px;
+    margin-right: 7px; vertical-align: 1px;
+  }
+  .obj-card .x {
+    position: absolute; right: 6px; top: 6px; border: 0; background: none;
+    color: var(--dim); font-size: 13px; padding: 4px 7px; border-radius: 7px;
+  }
+  .obj-card .x:hover { color: var(--text); background: var(--panel-2); }
+
   .scn { position: absolute; left: 12px; bottom: 12px; z-index: 3; }
   .scn > button {
     background: rgba(17, 21, 27, .85); border: 1px solid var(--line);
@@ -1098,6 +1147,7 @@
 <div class="grid-bg"></div>
 
 <script src="/i18n.js"></script>
+<script src="/doctor.js"></script>
 <script src="/patient-bar.js"></script>
 
 <!-- Шапка по макету: знак, путь к пациентам, врач. Вкладок модальностей
@@ -1359,6 +1409,10 @@
             <button id="scn-btn" data-i18n>⚙ Сцена</button>
           </div>
 
+          <!-- Что это за структура: ответ на клик по нерву, пазухе или
+               челюсти. Накладной, закрывается крестиком. -->
+          <div class="obj-card" id="obj-card" hidden></div>
+
           <!-- Зубная карта на самой сцене: врач выбирает зуб, не уводя
                глаза со снимка. -->
           <div class="mm" id="tooth-chart"></div>
@@ -1445,6 +1499,25 @@
       <!-- Чем посчитано и с какой измеренной точностью. Строка приходит с
            сервера той же функцией, что печатает её в PDF. -->
       <footer class="cfoot" id="cbct-foot"></footer>
+
+      <!-- Заключение прямо на экране. Врач показывает его пациенту, не
+           уходя со снимка и не копаясь в папке «Загрузки». Внутри —
+           НАСТОЯЩИЙ PDF с сервера, а не его пересказ: второй вёрстки того
+           же документа в проекте быть не должно. -->
+      <div class="rep-modal" id="rep-modal" hidden>
+        <div class="rep-box">
+          <div class="rep-head">
+            <div class="rep-tabs">
+              <button data-kind="doctor" class="on">Врачу</button>
+              <button data-kind="patient">Пациенту</button>
+            </div>
+            <span style="flex:1"></span>
+            <a class="btn-ghost sm" id="rep-open" target="_blank" rel="noopener">Открыть отдельно</a>
+            <button class="btn-ghost sm" id="rep-close">Закрыть</button>
+          </div>
+          <iframe id="rep-frame" title="Заключение"></iframe>
+        </div>
+      </div>
     </section>
   </div><!-- /view-cbct -->
 </main>
@@ -2533,6 +2606,10 @@ function renderCbctPlan(plan) {
    план не идёт; любая правка отметок СНИМАЕТ подпись, иначе под подписью
    молча оказался бы другой план. */
 function doctorName() {
+  // Имя берём из профиля врача (doctor.js): он один на все экраны, и
+  // раньше одно и то же имя писалось в отчётах по-разному, потому что
+  // вводилось заново под каждым кейсом.
+  if (window.actinaDoctor) return actinaDoctor.name();
   try { return localStorage.getItem("stomadent-doctor") || ""; }
   catch (e) { return ""; }
 }
@@ -2693,6 +2770,17 @@ function progressHtml(rv) {
     </div>
   </div>`;
 }
+
+/* Кнопки отчёта открывают окно, а не скачивают файл. Делегируем: лента
+   находок перерисовывается при каждой отметке врача, и обработчики на
+   самих кнопках пришлось бы навешивать заново. */
+document.addEventListener("click", ev => {
+  const a = ev.target.closest && ev.target.closest(".pdf-btn");
+  if (!a || a.getAttribute("aria-disabled") === "true") return;
+  const kind = a.href.includes("kind=patient") ? "patient" : "doctor";
+  ev.preventDefault();
+  openReport(kind);
+});
 
 function renderSignBox(review) {
   const box = $c("cbct-sign");
@@ -3595,6 +3683,152 @@ function toothMeshAt(ev) {
   return hit ? hit.object : null;
 }
 
+/* ================= заключение на экране =================
+
+   Кнопки «PDF врачу» и «PDF пациенту» раньше вели в загрузку файла: врач
+   уходил со снимка, искал файл в папке и возвращался. Теперь документ
+   открывается поверх разбора, а внутри — ТОТ ЖЕ PDF с сервера. Второй
+   вёрстки того же заключения в проекте быть не должно: она разойдётся с
+   первой, и врач подпишет не то, что увидел. */
+function openReport(kind) {
+  if (!curCase) return;
+  const box = $c("rep-modal");
+  const url = `/api/cbct/report/${encodeURIComponent(curCase)}?kind=${kind}`;
+  $c("rep-frame").src = url;
+  $c("rep-open").href = url;
+  box.querySelectorAll(".rep-tabs button").forEach(b =>
+    b.classList.toggle("on", b.dataset.kind === kind));
+  box.hidden = false;
+}
+
+(() => {
+  const box = $c("rep-modal");
+  if (!box) return;
+  box.querySelectorAll(".rep-tabs button").forEach(b => {
+    b.onclick = () => openReport(b.dataset.kind);
+  });
+  $c("rep-close").onclick = () => { box.hidden = true; $c("rep-frame").src = ""; };
+  // Клик по тёмному фону закрывает: привычный жест, и у окна всегда должен
+  // быть выход, кроме единственной кнопки.
+  box.addEventListener("click", ev => {
+    if (ev.target === box) { box.hidden = true; $c("rep-frame").src = ""; }
+  });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && !box.hidden) {
+      box.hidden = true; $c("rep-frame").src = "";
+    }
+  });
+})();
+
+/* ================= карточка объекта сцены =================
+
+   Клик по нерву, пазухе или челюсти раньше не делал ничего: луч целился
+   только в зубы. Врач тыкал в красный тяж и не получал ответа — а это
+   первый вопрос, который задаёт и он, и пациент: «что это?».
+
+   Карточка отвечает тем же, чем весь интерфейс: что это за структура,
+   ЧТО по ней считается и чего мы НЕ считаем. Последнее важнее: «объём
+   пазухи не оцениваем» честнее пустого места, из которого читается
+   «пазуха в норме». */
+const OBJ_CARDS = {
+  nerve: {
+    sub: "нижний альвеолярный нерв",
+    text: "Канал, по которому идёт нерв нижней челюсти. Считаем расстояние "
+        + "от корней до канала и долю кортикальной стенки со стороны зуба: "
+        + "её отсутствие поднимает находку до критичной.",
+    no: "Ход канала врачом не размечен — измерения опираются на маску сети.",
+  },
+  sinus: {
+    sub: "гайморова пазуха",
+    text: "Считаем расстояние от корней верхних зубов до ДНА пазухи — именно "
+        + "оно нужно при имплантации в боковом отделе.",
+    no: "Объём пазухи, утолщение слизистой и признаки синусита НЕ оцениваем: "
+      + "в разметке размечено только дно полости.",
+  },
+  mandible: {
+    sub: "нижняя челюсть",
+    text: "Кость, в которой сидят зубы. В лунке отсутствующего зуба считаем "
+        + "долю костной ткани и сравниваем с обычной для этой зоны.",
+    no: "Класс кости D1–D4 не выдаём: пороги Миша определены через единицы "
+      + "Хаунсфилда, а шкала КЛКТ не количественная.",
+  },
+  maxilla: {
+    sub: "верхняя челюсть",
+    text: "Кость верхней челюсти. В лунке отсутствующего зуба считаем долю "
+        + "костной ткани и сравниваем с обычной для этой зоны.",
+    no: "Класс кости D1–D4 не выдаём: шкала КЛКТ не количественная.",
+  },
+  prosthetics: {
+    sub: "коронки, мосты, импланты",
+    text: "Плотные объекты рядом с зубами. Факт наличия реставрации "
+        + "фиксируем и учитываем в плане.",
+    no: "Качество прилегания и состояние под коронкой по КЛКТ не читаются: "
+      + "металл даёт артефакты вокруг себя.",
+  },
+  pulp: {
+    sub: "пульпа и корневые каналы",
+    text: "Полость зуба. По плотности внутри канала отличаем пролеченный "
+        + "зуб от живого: разница с дентином того же зуба выше 300 HU.",
+    no: "Качество пломбирования не оцениваем — зазор до верхушки одинаков "
+      + "у пролеченных и живых зубов, это предел маски, а не недопломбировка.",
+  },
+  incisive: {
+    sub: "резцовый канал",
+    text: "Проходит в передней части нёба. Имплантат во фронтальном отделе "
+        + "ставится рядом с ним, поэтому канал показан отдельным слоем.",
+    no: "",
+  },
+  lingual: {
+    sub: "язычный канал",
+    text: "Канал на внутренней поверхности нижней челюсти, во фронтальном "
+        + "отделе. Показан отдельным слоем по той же причине.",
+    no: "",
+  },
+  pharynx: {
+    sub: "дыхательные пути",
+    text: "Воздушный столб глотки. Показан как ориентир — помогает понять, "
+        + "как ориентирован снимок.",
+    no: "Клинических выводов по нему не делаем.",
+  },
+};
+
+function meshAt(ev, meshes) {
+  if (!meshRoot || !renderer) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  _ptr.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+  _ptr.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+  _ray.setFromCamera(_ptr, camera);
+  const hit = _ray.intersectObjects(meshes.filter(m => m.visible), false)[0];
+  return hit ? hit.object : null;
+}
+
+function groupAt(ev) {
+  const all = [];
+  for (const [key, list] of Object.entries(groupMeshes)) {
+    if (key === "teeth") continue;          // зубы разбираются отдельно
+    for (const m of list) all.push(m);
+  }
+  const mesh = meshAt(ev, all);
+  return mesh ? groupKeyOf(mesh.name) : null;
+}
+
+function showObjectCard(key) {
+  const box = $c("obj-card");
+  if (!box) return;
+  const card = OBJ_CARDS[key];
+  const ginfo = (curInfo && curInfo.groups || []).find(g => g.group === key);
+  if (!card && !ginfo) { box.hidden = true; return; }
+  const title = (ginfo && ginfo.label_ru) || key;
+  const color = (ginfo && ginfo.color) || "var(--muted)";
+  box.innerHTML = `
+    <button class="x" type="button" aria-label="Закрыть">✕</button>
+    <b><span class="obj-dot" style="background:${color}"></span>${title}</b>
+    ${card ? `<small>${card.sub}</small><p>${card.text}</p>` : ""}
+    ${card && card.no ? `<p class="obj-no">${card.no}</p>` : ""}`;
+  box.hidden = false;
+  box.querySelector(".x").addEventListener("click", () => { box.hidden = true; });
+}
+
 function fdiOf(mesh) {
   const n = (mesh && mesh.name) || "";
   return n.startsWith("tooth_") ? parseInt(n.split("_")[1], 10) : 0;
@@ -3649,9 +3883,16 @@ function initPicking() {
     downAt = null;
     if (moved > 5) return;
     const mesh = toothMeshAt(ev);
-    if (!mesh) return;
+    if (!mesh) {
+      // Не попали в зуб — может быть, попали в нерв или пазуху. Молчать
+      // в ответ на клик нельзя: это читается как «не работает».
+      const key = groupAt(ev);
+      if (key) showObjectCard(key); else { const b = $c("obj-card"); if (b) b.hidden = true; }
+      return;
+    }
     const fdi = fdiOf(mesh);
     if (!fdi) return;
+    { const b = $c("obj-card"); if (b) b.hidden = true; }
     // Снять подсветку наведения ДО выбора: иначе focusTooth запомнит как
     // «исходный» цвет бирюзу от hover и вернёт её, когда врач выберет
     // следующий зуб — тот так и останется подсвеченным.
@@ -4125,23 +4366,10 @@ syncAllSliderFills();
 // когда-то её включил, не осталось следа в браузере.
 try { localStorage.removeItem("mirrorOverride"); localStorage.removeItem("swapSides"); } catch (e) {}
 
-/* Кто вошёл. Имени врача у нас нет: настоящей учётной записи не
-   существует, а в подпись под находками врач вводит имя сам. Поэтому в
-   шапке стоит номер, которым вошли, — он хотя бы правда. */
-(() => {
-  const box = $c("who");
-  if (!box) return;
-  const s = window.actinaAuth && actinaAuth.read();
-  if (window.actinaAuth && actinaAuth.isGuest() && !s) {
-    document.body.classList.add("guest");
-    box.innerHTML = '<span class="doc">Режим просмотра по ссылке</span>';
-    return;
-  }
-  if (!s) return;
-  box.innerHTML = `<span class="doc">${(s.phone || "Врач").replace(/[<>&]/g, "")}</span>`
-                + `<button class="out" type="button">Выйти</button>`;
-  box.querySelector(".out").onclick = () => { actinaAuth.end(); location.href = "/"; };
-})();
+/* Блок «кто вошёл» и профиль врача рисует общий doctor.js: он один на
+   список пациентов и на вьюер, копия в каждом файле уже расходилась. */
+actinaDoctor.mountWho("who");
+if (window.actinaAuth && actinaAuth.isGuest()) document.body.classList.add("guest");
 
 /* ================= оболочка экрана разбора =================
    Перенос макета: панель сцены, ширина колонки, подвал с методом.

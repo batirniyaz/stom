@@ -5,6 +5,7 @@
 <!-- Проверка входа — до отрисовки: иначе на долю секунды виден
      чужой экран, а на показе это читается как сбой. -->
 <script src="/auth.js"></script>
+<script src="/doctor.js"></script>
 <script>actinaAuth.guard();</script>
 <style>
   /* Только то, что относится к этому экрану. Общее — в app.css: палитра и
@@ -1357,20 +1358,8 @@ createApp({
 </script>
 
 <script>
-/* Кто вошёл. Имени врача у нас нет: настоящей учётной записи не
-   существует, а в подпись под находками врач вводит имя сам. Поэтому в
-   шапке стоит номер, которым вошли, — он хотя бы правда. */
-(() => {
-  const box = document.getElementById("who");
-  if (!box) return;
-  const ses = window.actinaAuth && actinaAuth.read();
-  if (!ses) {
-    if (window.actinaAuth && actinaAuth.isGuest())
-      box.innerHTML = '<span class="doc">Режим просмотра по ссылке</span>';
-    return;
-  }
-  box.innerHTML = '<span class="doc">' + (ses.phone || "Врач").replace(/[<>&]/g, "") + '</span>'
-                + '<button class="out" type="button">Выйти</button>';
-  box.querySelector(".out").onclick = () => { actinaAuth.end(); location.href = "/"; };
-})();
+/* Блок «кто вошёл» рисует общий doctor.js — после того, как Vue построил
+   шапку: до этого элемента ещё нет, а если нарисовать раньше, Vue затрёт
+   его при первой же отрисовке. */
+actinaDoctor.mountWho("who");
 </script>
