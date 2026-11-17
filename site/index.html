@@ -427,7 +427,8 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .chpane .chfoot{padding:8px 14px 12px}
 .chpane .chfoot .cin textarea{height:42px;font-size:14px;padding:9px 12px}
 @media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
-@media print{.toasts,.mbox .btns,.mtabs{display:none!important}.modal{position:static;background:none}.mbox{border:0;max-height:none;color:#000;background:#fff}body *{visibility:hidden}.mbox,.mbox *{visibility:visible}}
+@page{size:A4;margin:16mm 15mm}
+@media print{html,body{height:auto!important;overflow:visible!important;background:#fff!important}body>*:not(.modal){display:none!important}.modal{position:static!important;display:block!important;background:none!important;padding:0!important;animation:none!important}.modal[hidden]{display:none!important}.mbox{border:0!important;border-radius:0!important;max-height:none!important;max-width:none!important;overflow:visible!important;padding:0!important;color:#000!important;background:#fff!important;animation:none!important;box-shadow:none!important}.mbox>h2,.mbox .btns,.mtabs{display:none!important}.doc{font-size:12pt;color:#000}.doc .m,.doc .foot{color:#444}.doc .foot{border-top-color:#999}.doc li,.doc p{break-inside:avoid}}
 </style>
 </head>
 <body>
