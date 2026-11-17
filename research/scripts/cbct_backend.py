@@ -708,8 +708,16 @@ def _load_persisted() -> None:
             c = json.loads(meta.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        if not Path(c["volume"]).is_file():
-            continue
+        # Кейс БЕЗ ТОМА законен и роняться на нём нельзя. Том весит 300+ МБ и
+        # нужен только для срезов и пересчёта маски; кейс для разработки
+        # (`fixtures/`) состоит из меша и уже посчитанных находок, и этого
+        # хватает для 3D, находок, плана и PDF. Раньше `volume: None` валил
+        # весь модуль на импорте — то есть и весь сервер, — а отсутствующий
+        # файл молча выбрасывал кейс из списка.
+        vol = c.get("volume")
+        c["has_volume"] = bool(vol) and Path(vol).is_file()
+        if not c["has_volume"] and not (c.get("findings") or c.get("meshes")):
+            continue   # ни тома, ни посчитанного — показывать нечего
         # инвалидация устаревшего постпроцессинга: меши/инфо от старых правил
         # Правило сторон изменилось после сборки — всё пересчитывать заново.
         if (c.get("sides_applied") is not None
@@ -779,6 +787,49 @@ def register_examples() -> None:
         _save_meta(c)
 
 
+def case_dir(c: dict) -> Path:
+    """Каталог кейса. У фикстуры он в `fixtures/`, у обычного — в `web_cases`.
+
+    Отдельная функция, потому что путь собирался в шести местах по одному
+    шаблону: пропусти одно — и меш фикстуры «не найден», а причина
+    неочевидна.
+    """
+    d = c.get("dir")
+    return Path(d) if d else CASES_DIR / c["case_id"]
+
+
+def register_fixtures() -> None:
+    """Кейсы из `fixtures/` — чтобы демо было чем наполнить без снимков.
+
+    Разработчику, взявшему проект из git, показывать нечего: снимки пациентов
+    в репозиторий не кладутся. В `fixtures/` лежит кейс из публичного набора
+    (CC BY 4.0) — меш и уже посчитанные находки, без тома. Этого хватает для
+    3D, находок, плана, PDF и чата.
+
+    Регистрируем ЧТЕНИЕМ ИЗ `fixtures/`, не копией в `web_cases`: копия
+    завела бы вторую правду об одном кейсе, а инвалидация кэша удаляла бы
+    файлы, лежащие в гите.
+    """
+    root = R3D.parent / "fixtures"
+    if not root.is_dir():
+        return
+    for meta in sorted(root.glob("*/meta.json")):
+        try:
+            c = json.loads(meta.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        cid = c.get("case_id")
+        if not cid or cid in cases:
+            continue
+        c["fixture"] = True
+        c["has_volume"] = False
+        c["dir"] = str(meta.parent)
+        c["stage"] = "done" if c.get("info") else "ready"
+        c["detail"] = ""
+        with cases_lock:
+            cases[cid] = c
+
+
 def get_case(case_id: str) -> dict | None:
     if not re.fullmatch(r"[\w\-]+", case_id):
         return None
@@ -786,9 +837,16 @@ def get_case(case_id: str) -> dict | None:
 
 
 def list_examples() -> list[dict]:
-    return [{"case_id": c["case_id"], "name": c["name"]}
+    """Примеры для списка на экране — и фикстуры тоже.
+
+    Фикстуру надо показывать: на машине без снимков она единственный кейс, и
+    без неё список примеров пуст. Пустой список читается как «ничего нет и
+    всё сломано», хотя смотреть есть что.
+    """
+    return [{"case_id": c["case_id"], "name": c["name"],
+             "fixture": bool(c.get("fixture"))}
             for c in sorted(cases.values(), key=lambda x: x["case_id"])
-            if c["example"]]
+            if c.get("example") or c.get("fixture")]
 
 
 # ================= загрузка DICOM =================
@@ -1438,7 +1496,7 @@ def _segment_worker(c: dict, model: str) -> None:
             c["masks"][model] = mpath
         # всё для этой модели уже посчитано — открываем мгновенно
         # (список примеров обещает «без ожидания сегментации»)
-        glb = CASES_DIR / c["case_id"] / f"mesh_{model}.glb"
+        glb = case_dir(c) / f"mesh_{model}.glb"
         glb_ok = (glb.is_file()
                   and (c.get("meshes") or {}).get(model) == POSTPROC_VERSION)
         info, found = c.get("info") or {}, c.get("findings") or {}
@@ -2123,3 +2181,5 @@ def mask_model_for(c: dict) -> str | None:
 
 _load_persisted()
 register_examples()
+# Фикстуры последними: настоящий кейс с тем же номером всегда перевешивает.
+register_fixtures()

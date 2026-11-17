@@ -754,6 +754,33 @@ async def cbct_review(case_id: str, body: dict = Body(...)):
     return {"case_id": case_id, "review": rev}
 
 
+@app.post("/api/cbct/chat/{case_id}")
+async def cbct_chat(case_id: str, body: dict = Body(...)):
+    """Вопрос по кейсу: отвечает ТОЛЬКО по находкам этого пациента.
+
+    Вся защита — в `case_chat`: в контекст уходят только находки этого кейса,
+    ФИО и снимки не уходят вовсе, а ответ без опоры на существующую находку
+    не показывается. Здесь остаётся граница HTTP.
+
+    Ответ несёт `used` — ключи находок, те же, что у отметок врача
+    (`finding_key`). Поэтому ссылку под ответом можно сделать кликабельной и
+    вести в ту же строку ленты.
+    """
+    c = cbct.get_case(case_id)
+    if c is None:
+        return JSONResponse({"error": "Кейс не найден"}, status_code=404)
+    question = str(body.get("question") or "")
+    if not question.strip():
+        return JSONResponse({"error": "нужен question"}, status_code=400)
+    import case_chat
+    try:
+        return case_chat.chat(case_id, question, body.get("model"))
+    except RuntimeError as exc:
+        # Нет ключа, провайдер не ответил, обезличивание не прошло — всё это
+        # причины, которые должен видеть разработчик, а не «500».
+        return JSONResponse({"error": str(exc)}, status_code=503)
+
+
 @app.post("/api/cbct/sign/{case_id}")
 async def cbct_sign(case_id: str, body: dict = Body(...)):
     """Подпись врача под текущим набором находок.
@@ -904,7 +931,7 @@ def cbct_mesh(case_id: str, request: Request):
     if c is None:
         return JSONResponse({"error": "Кейс не найден"}, status_code=404)
     model = cbct.mask_model_for(c)
-    gpath = cbct.CASES_DIR / c["case_id"] / f"mesh_{model}.glb" if model else None
+    gpath = cbct.case_dir(c) / f"mesh_{model}.glb" if model else None
     if gpath is None or not gpath.is_file():
         return JSONResponse({"error": "3D-модель ещё не построена"},
                             status_code=409)
