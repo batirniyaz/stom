@@ -1945,8 +1945,15 @@ def api_patient_summary(pid: str) -> dict:
                 for x in f:
                     out.append({**x, "source": "cbct",
                                 "source_label": "КЛКТ", "study_id": st["id"]})
+                # Зубы берём ИЗ СЛОЯ НАХОДОК, а не из info: в маске может
+                # лежать зуб-огрызок, который находки исключают как
+                # недостоверный. Иначе плитка «Зубов» в карточке говорит
+                # 31, а разбор работает с 30 — и врач ищет, где потерялся
+                # зуб.
+                fcache = c.get("findings") or {}
                 info = c.get("info") or {}
-                teeth_present |= set(info.get("teeth_present") or [])
+                teeth_present |= set(fcache.get("teeth_present")
+                                     or info.get("teeth_present") or [])
 
         elif src == "ios" and case:
             # ТА ЖЕ функция, что у плана (`cbct_plan.load_ios`): она читает и

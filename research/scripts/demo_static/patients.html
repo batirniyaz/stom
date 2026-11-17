@@ -29,6 +29,31 @@
     border-color: rgba(47,196,178,.45); background: var(--panel-2);
     transform: translateX(3px);
   }
+  /* ---- боковая панель (новый пациент, новый снимок) ---- */
+  .shade { position: fixed; inset: 0; z-index: 40; background: rgba(6, 9, 13, .6); }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 41;
+    width: min(460px, 100vw); overflow: auto; padding: 20px;
+    background: var(--panel); border-left: 1px solid var(--line);
+    animation: drin .25s cubic-bezier(.2, .7, .2, 1);
+  }
+  @keyframes drin { from { transform: translateX(26px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
+  .dr-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
+  .dr-head h2 { flex: 1; margin: 0; font-size: 19px; font-weight: 600; }
+  .dr-x {
+    border: 0; background: none; color: var(--muted); font-size: 15px;
+    padding: 4px 8px; border-radius: 8px;
+  }
+  .dr-x:hover { background: var(--panel-2); color: var(--text); }
+  /* В панели форма идёт одной колонкой: две колонки на 460 px дают поля
+     по 200 px, в которые не влезает ни адрес, ни название клиники. */
+  .drawer .form { display: block; }
+  .drawer .form label { display: block; margin-top: 12px; font-size: 12.5px;
+                        color: var(--muted); }
+  .drawer .form label .field { margin-top: 4px; }
+  .drawer .form .wide { margin-top: 12px; }
+
   /* ---- карточка пациента ---- */
   .crumb { margin-bottom: 10px; }
   .btn-ghost.sm { padding: 5px 11px; font-size: 12.5px; border-radius: 8px; }
@@ -373,8 +398,15 @@
       <input class="field search" v-model="query" @input="searchDebounced"
              :placeholder="t('Поиск по фамилии или номеру карты')">
 
-      <div class="card" v-if="newOpen">
-        <div class="card-t">{{ t("Новый пациент") }}</div>
+      <!-- Панель справа, а не форма в ленте: список под ней остаётся на
+           месте, и видно, куда вернёшься. Встроенная карточка раздвигала
+           список, и после сохранения врач искал, где он был. -->
+      <div class="shade" v-if="newOpen" @click="newOpen = false"></div>
+      <aside class="drawer" v-if="newOpen" @click.stop>
+        <div class="dr-head">
+          <h2>{{ t("Новый пациент") }}</h2>
+          <button class="dr-x" @click="newOpen = false" aria-label="Закрыть">✕</button>
+        </div>
         <div class="form">
           <label>{{ t("Фамилия") }}<input class="field" v-model="form.last_name"
                  placeholder="обязательно" @keyup.enter="createPatient"></label>
@@ -390,7 +422,7 @@
           </div>
           <div class="wide err" v-if="formError">{{ formError }}</div>
         </div>
-      </div>
+      </aside>
 
       <div class="plist" v-if="patients.length">
         <button class="prow" v-for="p in patients" :key="p.id" @click="open(p.id)">
@@ -462,8 +494,12 @@
           <button class="btn nowrap" @click="upOpen = !upOpen">+ {{ t("Новый снимок") }}</button>
         </div>
 
-        <div class="card" v-if="upOpen">
-          <div class="card-t">{{ t("Новое исследование") }}</div>
+        <div class="shade" v-if="upOpen" @click="upOpen = false"></div>
+        <aside class="drawer" v-if="upOpen" @click.stop>
+          <div class="dr-head">
+            <h2>{{ t("Новый снимок") }}</h2>
+            <button class="dr-x" @click="upOpen = false" aria-label="Закрыть">✕</button>
+          </div>
           <div class="form">
             <div class="drop" :class="{ over: dragOver }"
                  @click="$refs.file.click()"
@@ -494,7 +530,7 @@
             </div>
             <div class="wide err" v-if="upError">{{ upError }}</div>
           </div>
-        </div>
+        </aside>
 
         <div class="ptabs">
           <button class="ptab" :class="{ on: tab === 'overview' }"

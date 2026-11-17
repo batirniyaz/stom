@@ -2518,7 +2518,11 @@ async function showCbctResult(caseId) {
   window.scrollTo({ top: 0 });
   const info = await fetch(`/api/cbct/info/${caseId}`).then(r => r.json());
   curInfo = info;
-  $c("cbct-case-name").textContent = `${info.name} · ${info.model_label}`;
+  // Имя кейса не дублируем, когда рядом стоит полоса пациента: там уже
+  // написано, чей это снимок, а служебное «Пример: пациент 5» на приёме
+  // выглядит как чужая подпись.
+  $c("cbct-case-name").textContent = $c("cbct-patient-bar").children.length
+    ? info.model_label : `${info.name} · ${info.model_label}`;
   renderCbctInfo(info);
   renderCaseFoot(info);
   // У кейса может не быть исходного тома (демо-кейс из fixtures: том весит
