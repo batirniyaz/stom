@@ -363,6 +363,28 @@ def _metrics_line(model: str) -> str | None:
             f"видела при обучении.")
 
 
+def metrics_short(model: str) -> str | None:
+    """То же измерение одной короткой строкой — для подвала экрана.
+
+    Отдельная формулировка, но ТЕ ЖЕ числа из того же файла: в подвале
+    вьюера длинное предложение обрезается многоточием, и обрезается как раз
+    размер выборки, ради которого число и показывают.
+    """
+    if model != "sp" or not METRICS_CI.is_file():
+        return None
+    try:
+        import json
+        d = json.loads(METRICS_CI.read_text(encoding="utf-8"))
+        t = d["всего"]["точность"]
+        n = d["всего"]["пациентов"]
+        teeth = d["всего"]["зубов_в_эталоне"]
+    except (OSError, ValueError, KeyError):
+        return None
+    return (f"точность распознавания зубов {t['значение']:.1f}% "
+            f"(95% ДИ {t['ди_низ']:.1f}–{t['ди_верх']:.1f}), "
+            f"{n} пациентов, {teeth} зуба, внешняя выборка")
+
+
 def _ai_block(rep, data: dict, model: str, signed: dict | None) -> None:
     """Чем посчитано и кто подтвердил. Обязательный блок (спека §8.1).
 

@@ -29,28 +29,28 @@
     el.textContent = `
       .pbar {
         display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-        padding: 8px 14px; border-bottom: 1px solid var(--line, rgba(255,255,255,.09));
-        background: var(--panel-2, #1c1a21); font-size: 13px;
+        padding: 8px 14px; border-bottom: 1px solid var(--line, #242b35);
+        background: var(--panel-2, #1a2028); font-size: 13px;
       }
       .pbar a.pb-back {
-        color: var(--muted, #a9a29a); text-decoration: none; font-size: 12.5px;
-        border: 1px solid var(--line, rgba(255,247,237,.09)); border-radius: 8px;
+        color: var(--muted, #8e99a8); text-decoration: none; font-size: 12.5px;
+        border: 1px solid var(--line, #242b35); border-radius: 8px;
         padding: 4px 9px;
       }
-      .pbar a.pb-back:hover { color: var(--text, #ede9e3); }
-      .pbar .pb-name { font-weight: 600; }
-      .pbar .pb-sub { color: var(--muted, #a9a29a); font-size: 12px; }
+      .pbar a.pb-back:hover { color: var(--text, #e6eaf0); }
+      .pbar .pb-name { font-weight: 600; white-space: nowrap; }
+      .pbar .pb-sub { color: var(--muted, #8e99a8); font-size: 12px; }
       .pbar .pb-studies { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
       .pbar .pb-st {
-        border: 1px solid var(--line, rgba(255,247,237,.09)); border-radius: 8px;
-        padding: 4px 11px; font-size: 12px; color: var(--muted, #a9a29a);
+        border: 1px solid var(--line, #242b35); border-radius: 8px;
+        padding: 4px 11px; font-size: 12px; color: var(--muted, #8e99a8);
         text-decoration: none; white-space: nowrap;
       }
-      .pbar .pb-st:hover { color: var(--text, #ede9e3);
-        border-color: var(--line-2, rgba(255,247,237,.16)); }
+      .pbar .pb-st:hover { color: var(--text, #e6eaf0);
+        border-color: var(--line-2, #35404d); }
       .pbar .pb-st.on {
-        color: var(--cyan, #35c9e0); border-color: rgba(53,201,224,.45);
-        background: rgba(53,201,224,.12);
+        color: var(--accent, #2fc4b2); border-color: rgba(47,196,178,.45);
+        background: rgba(47,196,178,.12);
       }
       /* Исследование, которое ещё считается или упало, кликать незачем —
          показываем состояние, а не ведём в пустой экран. */

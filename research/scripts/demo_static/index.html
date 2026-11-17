@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stomadent AI — Интеллектуальная диагностика панорамных снимков</title>
+<title>Actina — разбор снимков</title>
 <link rel="stylesheet" href="/app.css">
 <style>
   /* Палитра и шрифт приходят из /app.css — одни на все экраны. Своя копия
@@ -42,7 +42,7 @@
     position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
     background-image:
       linear-gradient(rgba(196,186,176,.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148,163,184,.045) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(142,153,168,.045) 1px, transparent 1px);
     background-size: 44px 44px;
     mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 40%, transparent 100%);
   }
@@ -53,7 +53,7 @@
     display: flex; align-items: center; gap: 14px;
     padding: 18px 40px;
     border-bottom: 1px solid var(--border);
-    background: rgba(10, 14, 20, 0.75);
+    background: rgba(10,13,17, 0.75);
     backdrop-filter: blur(14px);
     position: sticky; top: 0; z-index: 50;
   }
@@ -63,18 +63,18 @@
     border: 1px solid rgba(255,255,255,.1); border-radius: 6px;
     padding: 3px 9px; font-size: 11px; letter-spacing: .04em;
   }
-  .lang-btn.on { background: rgba(34,211,238,.13); color: var(--cyan);
-                 border-color: rgba(34,211,238,.4); }
+  .lang-btn.on { background: rgba(47,196,178,.13); color: var(--cyan);
+                 border-color: rgba(47,196,178,.4); }
   .logo-mark {
     width: 42px; height: 42px; border-radius: 12px;
     background: var(--grad);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 24px rgba(34, 211, 238, .45);
+    box-shadow: 0 0 24px rgba(47,196,178, .45);
     flex-shrink: 0;
   }
   .logo-text h1 {
     font-size: 20px; font-weight: 700; letter-spacing: .3px;
-    background: linear-gradient(90deg, #f1f5f9, #7dd3fc);
+    background: linear-gradient(90deg, var(--text), var(--accent));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .logo-text p { font-size: 12px; color: var(--muted); margin-top: 1px;
@@ -90,7 +90,7 @@
   }
   .model-tabs {
     display: flex; gap: 3px; padding: 3px;
-    background: rgba(148,163,184,.07); border: 1px solid var(--border);
+    background: rgba(142,153,168,.07); border: 1px solid var(--border);
     border-radius: 11px;
   }
   .model-tab {
@@ -101,19 +101,19 @@
   }
   .model-tab:hover { color: var(--text); }
   .model-tab.active {
-    color: var(--text); background: rgba(34,211,238,.12);
-    border-color: rgba(34,211,238,.4);
+    color: var(--text); background: rgba(47,196,178,.12);
+    border-color: rgba(47,196,178,.4);
   }
   .model-tab.active.rec {
     background: var(--grad); color: #fff; font-weight: 600;
-    box-shadow: 0 0 14px rgba(34,211,238,.35);
+    box-shadow: 0 0 14px rgba(47,196,178,.35);
   }
   .model-tab .rec-star { font-size: 10px; margin-left: 3px; opacity: .9; }
   .header-badge {
     font-size: 12px; color: var(--cyan);
-    border: 1px solid rgba(34,211,238,.35); border-radius: 999px;
+    border: 1px solid rgba(47,196,178,.35); border-radius: 999px;
     padding: 5px 14px; letter-spacing: .4px; white-space: nowrap;
-    background: rgba(34,211,238,.07);
+    background: rgba(47,196,178,.07);
   }
 
   main { max-width: 1680px; margin: 0 auto; padding: 40px 32px 24px; }
@@ -131,7 +131,7 @@
   .hero p { color: var(--muted); margin-top: 10px; font-size: 15px; }
 
   #dropzone {
-    border: 1.5px dashed rgba(34, 211, 238, .4);
+    border: 1.5px dashed rgba(47,196,178, .4);
     border-radius: 20px;
     background: var(--panel);
     padding: 54px 30px;
@@ -142,13 +142,13 @@
   }
   #dropzone:hover, #dropzone.dragover {
     border-color: var(--cyan);
-    background: rgba(34, 211, 238, .05);
-    box-shadow: 0 0 40px rgba(34, 211, 238, .15), inset 0 0 60px rgba(34, 211, 238, .04);
+    background: rgba(47,196,178, .05);
+    box-shadow: 0 0 40px rgba(47,196,178, .15), inset 0 0 60px rgba(47,196,178, .04);
     transform: translateY(-2px);
   }
   .dz-icon {
     width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 18px;
-    background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.3);
+    background: rgba(47,196,178,.1); border: 1px solid rgba(47,196,178,.3);
     display: flex; align-items: center; justify-content: center;
   }
   #dropzone h3 { font-size: 18px; font-weight: 600; }
@@ -158,8 +158,8 @@
   }
   .dz-formats span {
     font-size: 11px; letter-spacing: .6px; color: var(--cyan);
-    border: 1px solid rgba(34,211,238,.3); border-radius: 6px; padding: 3px 9px;
-    background: rgba(34,211,238,.06);
+    border: 1px solid rgba(47,196,178,.3); border-radius: 6px; padding: 3px 9px;
+    background: rgba(47,196,178,.06);
   }
 
   .examples-title {
@@ -180,8 +180,8 @@
   }
   .example-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(34,211,238,.5);
-    box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 20px rgba(34,211,238,.12);
+    border-color: rgba(47,196,178,.5);
+    box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 20px rgba(47,196,178,.12);
   }
   .example-card img { width: 100%; height: 92px; object-fit: cover; display: block;
                       filter: brightness(.92); transition: filter .25s; }
@@ -200,13 +200,13 @@
     display: flex; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap;
   }
   .btn-ghost {
-    background: rgba(148,163,184,.08); color: var(--text);
+    background: rgba(142,153,168,.08); color: var(--text);
     border: 1px solid var(--border); border-radius: 10px;
     padding: 9px 16px; font-size: 13.5px; cursor: pointer;
     transition: background .2s, border-color .2s;
     font-family: inherit;
   }
-  .btn-ghost:hover { background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.35); }
+  .btn-ghost:hover { background: rgba(142,153,168,.16); border-color: rgba(142,153,168,.35); }
   .infer-time {
     margin-left: auto; font-size: 12.5px; color: var(--muted);
     display: flex; align-items: center; gap: 7px;
@@ -248,11 +248,11 @@
   }
   .zoom-controls button {
     font-family: inherit; font-size: 13px; color: var(--text);
-    background: rgba(10,14,20,.78); border: 1px solid var(--border);
+    background: rgba(10,13,17,.78); border: 1px solid var(--border);
     border-radius: 9px; padding: 6px 11px; cursor: pointer;
     backdrop-filter: blur(6px); transition: background .15s, border-color .15s;
   }
-  .zoom-controls button:hover { background: rgba(34,211,238,.14); border-color: rgba(34,211,238,.4); }
+  .zoom-controls button:hover { background: rgba(47,196,178,.14); border-color: rgba(47,196,178,.4); }
 
   /* оверлей-боксы для подсветки при наведении на карточку */
   .ovl-box {
@@ -270,20 +270,20 @@
   .scanning .scan-overlay { display: block; }
   .scan-line {
     position: absolute; left: 0; right: 0; height: 90px;
-    background: linear-gradient(to bottom, transparent, rgba(34,211,238,.28) 55%, rgba(34,211,238,.9) 98%, var(--cyan));
-    box-shadow: 0 2px 24px rgba(34,211,238,.8);
+    background: linear-gradient(to bottom, transparent, rgba(47,196,178,.28) 55%, rgba(47,196,178,.9) 98%, var(--cyan));
+    box-shadow: 0 2px 24px rgba(47,196,178,.8);
     animation: scan 1.6s ease-in-out infinite;
   }
   .scan-label {
     position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
-    background: rgba(10,14,20,.85); border: 1px solid rgba(34,211,238,.4);
+    background: rgba(10,13,17,.85); border: 1px solid rgba(47,196,178,.4);
     color: var(--cyan); font-size: 13px; border-radius: 999px;
     padding: 8px 18px; display: flex; align-items: center; gap: 9px;
     backdrop-filter: blur(6px); white-space: nowrap;
   }
   .spinner {
     width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid rgba(34,211,238,.25); border-top-color: var(--cyan);
+    border: 2px solid rgba(47,196,178,.25); border-top-color: var(--cyan);
     animation: spin .8s linear infinite;
   }
 
@@ -308,13 +308,13 @@
     display: flex; align-items: center; gap: 9px;
     border-radius: 12px; padding: 9px 13px;
     border: 1px solid; font-size: 13px; cursor: pointer;
-    background: rgba(148,163,184,.05);
+    background: rgba(142,153,168,.05);
     transition: background .18s, box-shadow .18s, transform .18s;
     user-select: none;
   }
-  .sum-chip:hover { transform: translateY(-1px); background: rgba(148,163,184,.1); }
+  .sum-chip:hover { transform: translateY(-1px); background: rgba(142,153,168,.1); }
   .sum-chip.active {
-    background: rgba(34,211,238,.1);
+    background: rgba(47,196,178,.1);
     box-shadow: 0 0 0 1.5px currentColor inset, 0 4px 16px -6px currentColor;
   }
   .sum-chip .cnt { font-size: 19px; font-weight: 700; }
@@ -328,43 +328,43 @@
   }
   input[type="range"] {
     flex: 1; appearance: none; -webkit-appearance: none; height: 5px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--cyan) var(--fill, 22%), rgba(148,163,184,.2) var(--fill, 22%));
+    background: linear-gradient(90deg, var(--cyan) var(--fill, 22%), rgba(142,153,168,.2) var(--fill, 22%));
     outline: none; cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
     appearance: none; -webkit-appearance: none; width: 17px; height: 17px; border-radius: 50%;
     background: #fff; border: 3px solid var(--cyan);
-    box-shadow: 0 0 12px rgba(34,211,238,.6); cursor: pointer;
+    box-shadow: 0 0 12px rgba(47,196,178,.6); cursor: pointer;
   }
   input[type="range"]::-moz-range-thumb {
     width: 15px; height: 15px; border-radius: 50%;
     background: #fff; border: 3px solid var(--cyan);
-    box-shadow: 0 0 12px rgba(34,211,238,.6); cursor: pointer;
+    box-shadow: 0 0 12px rgba(47,196,178,.6); cursor: pointer;
   }
   /* Вкладки правой колонки КЛКТ: находки, срезы, кейс и план — это четыре
      разных чтения одного кейса, в одну ленту они не складываются. */
   .pane-tabs {
     display: flex; gap: 4px; margin-bottom: 14px;
-    border-bottom: 1px solid rgba(148,163,184,.16);
+    border-bottom: 1px solid rgba(142,153,168,.16);
   }
   .pane-tabs button {
     flex: 1; padding: 8px 4px 9px; font-size: 12.5px; cursor: pointer;
     background: none; border: none; border-bottom: 2px solid transparent;
     color: #8496ad; position: relative; top: 1px;
   }
-  .pane-tabs button:hover { color: #e6ecf5; }
-  .pane-tabs button.on { color: #22d3ee; border-bottom-color: #22d3ee; }
+  .pane-tabs button:hover { color: var(--text); }
+  .pane-tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
   .pane-tabs .cnt {
     display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 4px;
-    border-radius: 8px; background: rgba(148,163,184,.18); font-size: 10.5px;
+    border-radius: 8px; background: rgba(142,153,168,.18); font-size: 10.5px;
   }
   .share-link {
     margin-top: 14px; padding: 8px; border-radius: 9px; cursor: pointer;
-    border: 1px solid rgba(148,163,184,.22); background: rgba(148,163,184,.05);
+    border: 1px solid rgba(142,153,168,.22); background: rgba(142,153,168,.05);
     color: #8496ad; font-size: 12px; text-align: center;
   }
-  .share-link:hover { color: #22d3ee; border-color: rgba(34,211,238,.4);
-                      background: rgba(34,211,238,.08); }
+  .share-link:hover { color: var(--accent); border-color: rgba(47,196,178,.4);
+                      background: rgba(47,196,178,.08); }
   .conf-hint { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
 
   #findings {
@@ -375,10 +375,10 @@
   #findings::-webkit-scrollbar { width: 8px; }
   #findings::-webkit-scrollbar-track { background: transparent; }
   #findings::-webkit-scrollbar-thumb {
-    background: rgba(148,163,184,.22); border-radius: 4px;
+    background: rgba(142,153,168,.22); border-radius: 4px;
   }
-  #findings::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,.4); }
-  #findings { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.22) transparent; }
+  #findings::-webkit-scrollbar-thumb:hover { background: rgba(47,196,178,.4); }
+  #findings { scrollbar-width: thin; scrollbar-color: rgba(142,153,168,.22) transparent; }
   .finding {
     position: relative; border-radius: 12px; padding: 10px 13px 10px 15px;
     background: var(--panel); border: 1px solid var(--border);
@@ -401,7 +401,7 @@
   /* ---- переключение 2D/3D ---- */
   .view-tabs {
     display: flex; gap: 3px; padding: 3px; margin-left: 20px;
-    background: rgba(148,163,184,.07); border: 1px solid var(--border);
+    background: rgba(142,153,168,.07); border: 1px solid var(--border);
     border-radius: 11px;
   }
   .view-tab {
@@ -416,7 +416,7 @@
   .view-tab:hover { color: var(--text); }
   .view-tab.active {
     color: #fff; background: var(--grad); font-weight: 600;
-    box-shadow: 0 0 14px rgba(34,211,238,.3);
+    box-shadow: 0 0 14px rgba(47,196,178,.3);
   }
 
   /* ---- 3D CBCT ---- */
@@ -426,7 +426,7 @@
     border: 1px solid var(--border); border-radius: 12px; padding: 11px 18px;
     background: var(--panel); font-size: 13.5px; transition: border-color .2s;
   }
-  .cbct-model-opt:has(input:checked) { border-color: rgba(34,211,238,.5); background: rgba(34,211,238,.07); }
+  .cbct-model-opt:has(input:checked) { border-color: rgba(47,196,178,.5); background: rgba(47,196,178,.07); }
   .cbct-model-opt input { accent-color: var(--cyan); width: 16px; height: 16px; }
   .cbct-model-opt span { font-size: 11.5px; color: var(--muted); }
 
@@ -441,19 +441,19 @@
   }
   .cbct-stage .st-ico {
     width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid rgba(148,163,184,.3); display: inline-flex;
+    border: 2px solid rgba(142,153,168,.3); display: inline-flex;
     align-items: center; justify-content: center; font-size: 12px;
   }
   .cbct-stage.active { color: var(--cyan); }
   .cbct-stage.active .st-ico {
-    border-color: rgba(34,211,238,.3); border-top-color: var(--cyan);
+    border-color: rgba(47,196,178,.3); border-top-color: var(--cyan);
     animation: spin .8s linear infinite;
   }
-  .cbct-stage.done { color: #4ade80; }
-  .cbct-stage.done .st-ico { border-color: #4ade80; background: rgba(34,197,94,.15); }
+  .cbct-stage.done { color: var(--ok); }
+  .cbct-stage.done .st-ico { border-color: var(--ok); background: rgba(34,197,94,.15); }
   .cbct-stage.done .st-ico::before { content: "✓"; }
   .cbct-detail { font-size: 12px; color: var(--muted); padding: 6px 4px 0 35px; min-height: 18px; }
-  .cbct-error { color: #fca5a5; font-size: 13px; padding: 10px 4px 0 35px; }
+  .cbct-error { color: #f0a3a3; font-size: 13px; padding: 10px 4px 0 35px; }
 
   .cbct-grid {
     display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px;
@@ -469,7 +469,7 @@
      какой это номер, не сверяясь со списком. */
   #gl-tip {
     position: absolute; display: none; pointer-events: none; z-index: 5;
-    background: rgba(6,16,25,.92); color: #e6ecf5; border: 1px solid var(--cyan);
+    background: rgba(6,16,25,.92); color: var(--text); border: 1px solid var(--cyan);
     border-radius: 7px; padding: 3px 9px; font-size: 12px; font-weight: 600;
     white-space: nowrap;
   }
@@ -479,7 +479,7 @@
     border-radius: 8px; padding: 6px 14px; font-size: 12.5px; cursor: pointer;
   }
   .view-switch button.active {
-    background: rgba(34,211,238,.16); color: var(--cyan); border-color: var(--cyan);
+    background: rgba(47,196,178,.16); color: var(--cyan); border-color: var(--cyan);
   }
   /* Тумблер автовращения стоит рядом с переключателем вида: он про то же —
      как смотреть модель. */
@@ -500,8 +500,8 @@
     justify-content: center; font-size: 9px; font-weight: 700; color: #fff;
     cursor: pointer; pointer-events: auto; box-shadow: 0 0 0 1px rgba(0,0,0,.6);
   }
-  .pano-mark.alert { background: rgba(239,68,68,.92); }
-  .pano-mark.warning { background: rgba(245,158,11,.92); }
+  .pano-mark.alert { background: rgba(224,82,82,.92); }
+  .pano-mark.warning { background: rgba(214,163,39,.92); }
   .pano-mark.info { background: rgba(56,189,248,.92); }
   .pano-mark:hover { transform: translate(-50%, -50%) scale(1.25); }
   .pano-note { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
@@ -517,7 +517,7 @@
   }
   .struct-row input { accent-color: var(--cyan); width: 16px; height: 16px; cursor: pointer; }
   .struct-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
-  .struct-row.nerve { color: #fca5a5; font-weight: 600; }
+  .struct-row.nerve { color: #f0a3a3; font-weight: 600; }
 
   /* ---- находки ---- */
   .find-draft {
@@ -535,7 +535,7 @@
   }
   .find-order {
     width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0;
-    background: rgba(148,163,184,.16); color: var(--muted);
+    background: rgba(142,153,168,.16); color: var(--muted);
     font-size: 11px; display: flex; align-items: center; justify-content: center;
   }
   .find-item {
@@ -546,18 +546,18 @@
   /* Текст находки тянется, кнопки проверки прижаты вправо и не выдавливаются. */
   .find-item > div:not(.find-rev) { flex: 1 1 auto; min-width: 0; }
   .find-item.clickable { cursor: pointer; }
-  .find-item.clickable:hover { background: rgba(148,163,184,.09); }
-  .find-item.alert { border-left-color: #ef4444; background: rgba(239,68,68,.07); }
-  .find-item.warning { border-left-color: #f59e0b; }
-  .find-item.review { border-left-color: #64748b; opacity: .8; }
+  .find-item.clickable:hover { background: rgba(142,153,168,.09); }
+  .find-item.alert { border-left-color: var(--lv-k); background: rgba(224,82,82,.07); }
+  .find-item.warning { border-left-color: var(--lv-v); }
+  .find-item.review { border-left-color: var(--dim); opacity: .8; }
   .find-tooth {
     flex-shrink: 0; min-width: 26px; height: 22px; padding: 0 6px;
-    border-radius: 7px; background: rgba(34,211,238,.14); color: var(--cyan);
+    border-radius: 7px; background: rgba(47,196,178,.14); color: var(--cyan);
     font-size: 12px; font-weight: 600;
     display: flex; align-items: center; justify-content: center;
   }
   .find-tooth[data-tooth] { cursor: pointer; }
-  .find-tooth[data-tooth]:hover { background: rgba(34,211,238,.30); }
+  .find-tooth[data-tooth]:hover { background: rgba(47,196,178,.30); }
   /* Находка на список зубов (перио, эндодонтия): значок на каждый зуб,
      иначе врач видит прочерк и не может подвести камеру. */
   .find-teeth {
@@ -566,7 +566,7 @@
   }
   .find-action { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
   .find-conf {
-    font-size: 10.5px; color: #94a3b8; border: 1px solid var(--border);
+    font-size: 10.5px; color: var(--muted); border: 1px solid var(--border);
     border-radius: 5px; padding: 1px 5px; margin-left: 6px; white-space: nowrap;
   }
   .find-empty { font-size: 13px; color: var(--muted); }
@@ -580,12 +580,12 @@
   }
   .find-level.by-doctor::after { content: " · врач"; font-weight: 400; }
   .find-meta {
-    font-size: 11px; color: #7c8798; margin-top: 3px;
+    font-size: 11px; color: var(--muted); margin-top: 3px;
     display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }
   .find-note {
     margin-top: 5px; font-size: 12px; color: #a7d7b4;
-    border-left: 2px solid rgba(74,222,128,.5); padding-left: 7px;
+    border-left: 2px solid rgba(76,183,130,.5); padding-left: 7px;
   }
   /* Форма подтверждения. Разворачивается прямо в строке находки: уводить
      врача в модальное окно на каждую из семнадцати находок нельзя. */
@@ -593,70 +593,77 @@
   .rev-form textarea {
     width: 100%; min-height: 48px; resize: vertical; font: inherit;
     font-size: 12.5px; padding: 6px 8px; border-radius: 7px;
-    border: 1px solid var(--border); background: rgba(15,23,42,.6);
+    border: 1px solid var(--border); background: rgba(10,13,17,.6);
     color: var(--fg);
   }
   .rev-form .rev-row { display: flex; gap: 6px; align-items: center;
                        flex-wrap: wrap; font-size: 12px; color: var(--muted); }
   .rev-form select, .rev-form input {
     font: inherit; font-size: 12.5px; padding: 4px 7px; border-radius: 7px;
-    border: 1px solid var(--border); background: rgba(15,23,42,.6);
+    border: 1px solid var(--border); background: rgba(10,13,17,.6);
     color: var(--fg);
   }
   .rev-form input { flex: 1 1 200px; }
   .rev-form button {
     font: inherit; font-size: 12.5px; padding: 5px 12px; border-radius: 7px;
-    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    border: 1px solid var(--border); background: rgba(47,196,178,.14);
     color: var(--fg); cursor: pointer;
   }
   .rev-form button.ghost { background: transparent; color: var(--muted); }
-  .rev-err { font-size: 12px; color: #fca5a5; }
-  .rev-hint { font-size: 11px; color: #7c8798; }
+  .rev-err { font-size: 12px; color: #f0a3a3; }
+  .rev-hint { font-size: 11px; color: var(--muted); }
   /* Чат по кейсу */
   #chat-log { display: grid; gap: 10px; margin-bottom: 10px; }
   .chat-msg {
     font-size: 13px; line-height: 1.5; padding: 8px 10px; border-radius: 10px;
-    background: rgba(148,163,184,.08); white-space: pre-wrap;
+    background: rgba(142,153,168,.08); white-space: pre-wrap;
   }
-  .chat-msg.me { background: rgba(34,211,238,.10); }
+  .chat-msg.me { background: rgba(47,196,178,.10); }
   .chat-who {
     font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
-    color: #7c8798; margin-bottom: 3px;
+    color: var(--muted); margin-bottom: 3px;
   }
-  .chat-msg.err { background: rgba(239,68,68,.10); color: #fca5a5; }
+  .chat-msg.err { background: rgba(224,82,82,.10); color: #f0a3a3; }
   .chat-used { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
   .chat-used button {
     font: inherit; font-size: 11px; padding: 2px 7px; border-radius: 6px;
     border: 1px solid var(--border); background: transparent;
     color: var(--muted); cursor: pointer;
   }
-  .chat-used button:hover { color: var(--fg); border-color: #22d3ee; }
+  .chat-used button:hover { color: var(--fg); border-color: var(--accent); }
   .chat-form { display: flex; gap: 6px; align-items: flex-end; }
   .chat-form textarea {
     flex: 1 1 auto; resize: vertical; font: inherit; font-size: 13px;
     padding: 7px 9px; border-radius: 9px; border: 1px solid var(--border);
-    background: rgba(15,23,42,.6); color: var(--fg);
+    background: rgba(10,13,17,.6); color: var(--fg);
   }
   .chat-form button {
     font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 9px;
-    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    border: 1px solid var(--border); background: rgba(47,196,178,.14);
     color: var(--fg); cursor: pointer; white-space: nowrap;
   }
-  .chat-note { font-size: 11px; color: #7c8798; margin-top: 7px; }
+  .chat-note { font-size: 11px; color: var(--muted); margin-top: 7px; }
   /* Чек-лист и кнопки отчёта */
-  .rev-progress {
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-    padding: 8px 10px; border-radius: 9px; margin-bottom: 10px;
-    background: rgba(148,163,184,.08); font-size: 12.5px;
+  /* Чек-лист прилипает к верху ленты находок: врач прокручивает список
+     на два экрана, и «сколько осталось» должно быть видно всё время —
+     иначе непонятно, почему кнопки отчёта погашены.
+     Прилипает именно обёртка: `position: sticky` на самом блоке работало
+     бы в пределах его же коробки, то есть не работало бы вовсе. */
+  #find-progress:not(:empty) {
+    position: sticky; top: -12px; z-index: 2;
+    margin: -12px -14px 10px; padding: 10px 14px;
+    background: var(--panel); border-bottom: 1px solid var(--line);
   }
+  .rev-progress { font-size: 12.5px; }
   .rev-bar {
-    flex: 1 1 120px; height: 6px; border-radius: 3px;
-    background: rgba(148,163,184,.2); overflow: hidden; min-width: 80px;
+    display: block; height: 6px; border-radius: 99px; margin: 7px 0;
+    background: rgba(142,153,168,.2); overflow: hidden;
   }
-  .rev-bar > i { display: block; height: 100%; background: #4ade80; }
+  .rev-pdf { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rev-bar > i { display: block; height: 100%; background: var(--ok); }
   .rev-progress .pdf-btn {
     font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 7px;
-    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    border: 1px solid var(--border); background: rgba(47,196,178,.14);
     color: var(--fg); cursor: pointer; text-decoration: none;
   }
   .rev-progress .pdf-btn[aria-disabled="true"] {
@@ -666,8 +673,8 @@
      рисуем — калибровать его не на чем, см. cbct_findings._basis. */
   .find-why { margin-top: 6px; }
   .find-why summary {
-    font-size: 11px; color: #7c8798; cursor: pointer; list-style: none;
-    display: inline-block; border-bottom: 1px dotted #475569;
+    font-size: 11px; color: var(--muted); cursor: pointer; list-style: none;
+    display: inline-block; border-bottom: 1px dotted var(--line-2);
   }
   .find-why summary::-webkit-details-marker { display: none; }
   .find-why summary:hover { color: var(--cyan); }
@@ -676,55 +683,55 @@
     font-size: 11.5px; margin-top: 6px; padding-left: 8px;
     border-left: 2px solid var(--border);
   }
-  .basis-label { color: #94a3b8; }
+  .basis-label { color: var(--muted); }
   .basis-val {
     color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .basis-rule { grid-column: 1 / -1; color: #7c8798; }
-  .basis-note { grid-column: 1 / -1; color: #64748b; font-style: italic; }
+  .basis-rule { grid-column: 1 / -1; color: var(--muted); }
+  .basis-note { grid-column: 1 / -1; color: var(--dim); font-style: italic; }
 
   /* ---- проверка находок врачом ---- */
   .find-rev { display: flex; gap: 4px; margin-left: auto; align-self: flex-start; }
   .find-rev button {
     width: 24px; height: 22px; border-radius: 6px; cursor: pointer;
-    background: none; border: 1px solid var(--border); color: #64748b;
+    background: none; border: 1px solid var(--border); color: var(--dim);
     font-size: 12px; line-height: 1; padding: 0;
   }
   .find-rev .rv-ok:hover, .find-rev .rv-ok.on {
-    color: #061019; background: #4ade80; border-color: #4ade80;
+    color: var(--accent-ink); background: var(--ok); border-color: var(--ok);
   }
   .find-rev .rv-no:hover, .find-rev .rv-no.on {
-    color: #fff; background: #ef4444; border-color: #ef4444;
+    color: #fff; background: var(--lv-k); border-color: var(--lv-k);
   }
   .find-item.rejected { opacity: .45; }
   .find-item.rejected > div > div:first-child { text-decoration: line-through; }
-  .find-item.confirmed { box-shadow: inset 2px 0 0 #4ade80; }
+  .find-item.confirmed { box-shadow: inset 2px 0 0 var(--ok); }
 
   .sign-box { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
   .sign-stat { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
   .sign-done {
-    font-size: 12.5px; color: #a7f3d0; background: rgba(74,222,128,.10);
-    border: 1px solid rgba(74,222,128,.35); border-radius: 9px;
+    font-size: 12.5px; color: #a7f3d0; background: rgba(76,183,130,.10);
+    border: 1px solid rgba(76,183,130,.35); border-radius: 9px;
     padding: 8px 10px; margin-bottom: 8px;
   }
   .sign-note { color: var(--muted); margin-top: 3px; }
   .sign-stale {
-    font-size: 12px; color: #fcd34d; background: rgba(245,158,11,.10);
-    border: 1px solid rgba(245,158,11,.35); border-radius: 9px;
+    font-size: 12px; color: #fcd34d; background: rgba(214,163,39,.10);
+    border: 1px solid rgba(214,163,39,.35); border-radius: 9px;
     padding: 8px 10px; margin-bottom: 8px;
   }
   .sign-form { display: flex; gap: 6px; flex-wrap: wrap; }
   .sign-form input {
-    flex: 1 1 120px; min-width: 0; background: rgba(148,163,184,.07);
+    flex: 1 1 120px; min-width: 0; background: rgba(142,153,168,.07);
     border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px;
     color: var(--text); font-size: 12.5px; font-family: inherit;
   }
   .sign-form button {
-    background: var(--cyan); color: #061019; border: none; border-radius: 8px;
+    background: var(--cyan); color: var(--accent-ink); border: none; border-radius: 8px;
     padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
   }
-  .sign-warn { font-size: 11px; color: #64748b; margin-top: 8px; font-style: italic; }
+  .sign-warn { font-size: 11px; color: var(--dim); margin-top: 8px; font-style: italic; }
 
   /* ---- зубная карта ---- */
   /* ---- панорама: зубы и находки на зуб ---- */
@@ -736,17 +743,17 @@
   .opg-item { display: flex; gap: 10px; align-items: baseline; padding: 6px 9px;
               margin-bottom: 4px; border-radius: 8px; cursor: pointer; font-size: 13px;
               border-left: 3px solid var(--c); background: rgba(255,255,255,.03); }
-  .opg-item:hover, .opg-item.sel { background: rgba(34,211,238,.10); }
+  .opg-item:hover, .opg-item.sel { background: rgba(47,196,178,.10); }
   .opg-item b { min-width: 24px; font-variant-numeric: tabular-nums; }
   .opg-empty { font-size: 12.5px; color: var(--muted); padding: 2px 0 4px; }
   .opg-note { font-size: 11.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
   /* Рамки зубов на снимке. Подпись масштабируется обратно (--inv), иначе при
      вписанном снимке номер мельче шрифта, а при приближении — огромный. */
   .tooth-box { position: absolute; display: none; pointer-events: none;
-               border: var(--ovl-bw, 2px) solid rgba(148,163,184,.55); border-radius: 6px; }
+               border: var(--ovl-bw, 2px) solid rgba(142,153,168,.55); border-radius: 6px; }
   .tooth-box span { position: absolute; left: 0; bottom: 100%; white-space: nowrap;
                     font: 600 13px/1 system-ui, sans-serif; color: #e2e8f0;
-                    background: rgba(15,23,42,.85); padding: 3px 5px; border-radius: 4px;
+                    background: rgba(10,13,17,.85); padding: 3px 5px; border-radius: 4px;
                     transform: scale(var(--inv, 1)); transform-origin: left bottom; }
   #img-stage.show-teeth .tooth-box { display: block; }
   .tooth-box.sel { display: block; border-color: var(--cyan);
@@ -758,23 +765,23 @@
   .chart-gap { width: 8px; flex: 0 0 8px; }
   .chart-t {
     flex: 1 1 0; min-width: 0; height: 30px; border-radius: 6px;
-    border: 1px solid var(--border); background: rgba(148,163,184,.06);
-    color: #94a3b8; font-size: 10.5px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: rgba(142,153,168,.06);
+    color: var(--muted); font-size: 10.5px; font-weight: 600; cursor: pointer;
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 2px; padding: 0; font-family: inherit;
     line-height: 1;
   }
-  .chart-t:hover { border-color: var(--cyan); color: #e6ecf5; }
+  .chart-t:hover { border-color: var(--cyan); color: var(--text); }
   .chart-t.sel { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
-  .chart-t.present { color: #e6ecf5; background: rgba(245,240,230,.10); }
-  .chart-t.missing { color: #475569; background: none; border-style: dashed; }
-  .chart-t.warning { border-color: #f59e0b; background: rgba(245,158,11,.14); }
-  .chart-t.alert   { border-color: #ef4444; background: rgba(239,68,68,.16); }
+  .chart-t.present { color: var(--text); background: rgba(245,240,230,.10); }
+  .chart-t.missing { color: var(--line-2); background: none; border-style: dashed; }
+  .chart-t.warning { border-color: var(--lv-v); background: rgba(214,163,39,.14); }
+  .chart-t.alert   { border-color: var(--lv-k); background: rgba(224,82,82,.16); }
   .chart-dots { display: flex; gap: 2px; height: 4px; }
   .chart-dot { width: 4px; height: 4px; border-radius: 50%; }
   .chart-legend {
     display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px;
-    font-size: 10.5px; color: #7c8798; justify-content: center;
+    font-size: 10.5px; color: var(--muted); justify-content: center;
   }
   .chart-legend i { width: 6px; height: 6px; border-radius: 50%;
     display: inline-block; margin-right: 4px; vertical-align: middle; }
@@ -794,13 +801,13 @@
   }
   .tooth-slice .mpr-label { margin-bottom: 5px; }
   .tooth-hint {
-    font-size: 11px; color: #7c8798; margin: 5px 2px 0; letter-spacing: .2px;
+    font-size: 11px; color: var(--muted); margin: 5px 2px 0; letter-spacing: .2px;
   }
   .tooth-empty { font-size: 13px; color: var(--muted); }
   .tooth-scroll { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .tooth-scroll input[type="range"] { flex: 1 1 auto; }
   .tooth-scroll output {
-    font-size: 11px; color: #7c8798; white-space: nowrap; min-width: 108px;
+    font-size: 11px; color: var(--muted); white-space: nowrap; min-width: 108px;
     text-align: right;
   }
   .tooth-find { margin-top: 14px; }
@@ -814,7 +821,7 @@
     border-radius: 7px; padding: 3px 9px; font-size: 11.5px; cursor: pointer;
   }
   .overlay-switch button.on {
-    color: #061019; background: var(--cyan); border-color: var(--cyan);
+    color: var(--accent-ink); background: var(--cyan); border-color: var(--cyan);
     font-weight: 600;
   }
 
@@ -829,11 +836,11 @@
     color: var(--muted); margin: 0 2px 6px;
   }
   .mpr-block input[type="range"] { width: 100%; margin-top: 8px; }
-  .mpr-hint { font-size: 11px; color: #7c8798; margin: 0 2px 10px; }
-  .sup-note { font-size: 11px; color: #7c8798; margin: -2px 0 6px 26px; }
+  .mpr-hint { font-size: 11px; color: var(--muted); margin: 0 2px 10px; }
+  .sup-note { font-size: 11px; color: var(--muted); margin: -2px 0 6px 26px; }
   .sup-note.bad { color: #fcd34d; }
   .mpr-view { position: relative; line-height: 0; cursor: crosshair; }
-  .xh { position: absolute; background: rgba(34,211,238,.7); pointer-events: none; }
+  .xh { position: absolute; background: rgba(47,196,178,.7); pointer-events: none; }
   .xh-v { top: 0; bottom: 0; width: 1px; }
   .xh-h { left: 0; right: 0; height: 1px; }
 
@@ -842,14 +849,14 @@
   .fdi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .fdi-chip {
     font-size: 11px; border: 1px solid var(--border); border-radius: 8px;
-    padding: 3px 8px; color: var(--text); background: rgba(148,163,184,.07);
+    padding: 3px 8px; color: var(--text); background: rgba(142,153,168,.07);
   }
   .nerve-badge {
     display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px;
     padding: 3px 10px; margin-right: 6px;
   }
-  .nerve-badge.on { color: #fca5a5; background: rgba(239,68,68,.14); border: 1px solid rgba(239,68,68,.4); }
-  .nerve-badge.off { color: var(--muted); background: rgba(148,163,184,.08); border: 1px solid var(--border); }
+  .nerve-badge.on { color: #f0a3a3; background: rgba(224,82,82,.14); border: 1px solid rgba(224,82,82,.4); }
+  .nerve-badge.off { color: var(--muted); background: rgba(142,153,168,.08); border: 1px solid var(--border); }
 
   footer {
     text-align: center; padding: 26px 20px 30px; margin-top: 40px;
@@ -872,6 +879,193 @@
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   @keyframes slideIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+
+  /* ================= экран разбора: полноэкранная оболочка =================
+
+     Перенос макета (`site/index.html`). Было: обычная прокручиваемая
+     страница, 3D в рамке на 58% высоты, а под ним карточка «Структуры» с
+     ползунками. На ноутбуке снимок занимал меньше половины экрана, и врач
+     первым делом видел настройки, а не снимок.
+
+     Стало: 3D занимает всё, что не занято колонкой разбора; настройки
+     уходят в накладную панель, которую открывают один раз; ширину колонки
+     врач тянет сам. Режим включается классом `case-mode` на body — только
+     на этом экране, остальные страницы остаются прокручиваемыми. */
+
+  body.case-mode { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  body.case-mode header { padding: 8px 18px; flex: none; }
+  /* Фоновые свечения и сетка рассчитаны на длинную страницу; за 3D-сценой
+     они только подмешивают цвет в снимок. */
+  body.case-mode .glow, body.case-mode .grid-bg { display: none; }
+  body.case-mode main { max-width: none; margin: 0; padding: 0; flex: 1; min-height: 0; display: flex; }
+  body.case-mode > footer { display: none; }
+  /* min-width: 0 обязателен по всей цепочке флексов. Без него элемент не
+     даёт себя сузить ниже min-content, а min-content колонки разбора — это
+     её вкладки и самая длинная строка находки; страница получала
+     горизонтальную прокрутку, которой во вьюере быть не должно. */
+  body.case-mode #view-cbct {
+    flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column;
+  }
+  body.case-mode #cbct-result-view { flex: 1; min-height: 0; min-width: 0; flex-direction: column; }
+
+  /* ---- верхняя строка: кто, с какой жалобой, какой моделью ---- */
+  .ctop {
+    display: flex; align-items: center; gap: 12px; flex: none;
+    min-height: 46px; padding: 6px 14px; font-size: 13px;
+    border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .ctop-sp { flex: 1; min-width: 0; }
+  .ctop-case {
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+    color: var(--muted); font-size: 12.5px;
+  }
+  .btn-ghost.sm { padding: 5px 11px; font-size: 12.5px; border-radius: 8px; }
+  /* Полоса пациента пришла с другого экрана, где она была отдельным блоком
+     во всю ширину. Здесь она — часть строки. */
+  .ctop #cbct-patient-bar { margin: 0; }
+  .ctop #cbct-patient-bar .pbar { margin: 0; border: 0; background: none; padding: 0; }
+
+  /* ---- сцена и колонка ---- */
+  .cmain { flex: 1; min-height: 0; min-width: 0; display: flex; }
+  .stage {
+    position: relative; flex: 1; min-width: 0; overflow: hidden;
+    background: radial-gradient(120% 120% at 45% 20%, #18202b, #07090d);
+  }
+  body.case-mode #gl-wrap {
+    position: absolute; inset: 0; height: auto; min-height: 0;
+    border: 0; border-radius: 0; background: transparent;
+  }
+  body.case-mode #pano-wrap {
+    position: absolute; inset: 0; overflow: auto;
+    padding: 58px 16px 16px; text-align: center;
+  }
+  .handle {
+    width: 6px; flex: none; cursor: col-resize; background: var(--line);
+    transition: background .15s;
+  }
+  .handle:hover, .handle.drag { background: var(--accent); }
+  .col {
+    width: var(--colw, 38%); min-width: 330px; max-width: 86vw; flex: none;
+    display: flex; flex-direction: column; min-height: 0;
+    background: var(--panel); border-left: 1px solid var(--line);
+  }
+  body.case-mode .pane-tabs {
+    flex: none; margin: 0; padding: 0 4px; align-items: center;
+    border-bottom: 1px solid var(--line); overflow-x: auto;
+  }
+  .pane-tabs .ex {
+    margin-left: auto; border: 0; background: none; color: var(--dim);
+    padding: 8px 10px; font-size: 15px; border-bottom: 2px solid transparent;
+  }
+  .pane-tabs .ex:hover { color: var(--text); }
+  body.case-mode .cbct-pane {
+    flex: 1; min-height: 0; min-width: 0; overflow: auto;
+    padding: 12px 14px; overflow-wrap: anywhere;
+  }
+  body.case-mode .cbct-pane[hidden] { display: none; }
+  /* У чата своя раскладка: лента растёт, поле ввода прижато вниз. */
+  body.case-mode .chat-pane { display: flex; flex-direction: column; overflow: hidden; }
+  body.case-mode .chat-pane #chat-log { flex: 1; min-height: 0; overflow: auto; }
+
+  /* ---- подвал: чем посчитано ---- */
+  .cfoot {
+    flex: none; padding: 5px 14px; border-top: 1px solid var(--line);
+    background: var(--panel); color: var(--dim); font-size: 11.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ---- накладки на сцене ---- */
+  .stage-legend {
+    position: absolute; left: 12px; top: 12px; z-index: 3;
+    display: flex; flex-direction: column; gap: 5px;
+    font-size: 11.5px; color: var(--muted);
+    background: rgba(17, 21, 27, .78); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 11px;
+  }
+  .stage-legend i {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    margin-right: 7px; vertical-align: 0;
+  }
+  .stage-top {
+    position: absolute; right: 12px; top: 12px; z-index: 3;
+    display: flex; gap: 8px; align-items: center;
+  }
+  body.case-mode .view-switch { margin: 0; gap: 4px; }
+  body.case-mode .view-switch button {
+    background: rgba(17, 21, 27, .85); padding: 5px 11px; font-size: 12.5px;
+  }
+  .pp {
+    display: flex; align-items: center; gap: 6px; user-select: none;
+    background: rgba(17, 21, 27, .85); border: 1px solid var(--line);
+    border-radius: 8px; padding: 5px 11px; font-size: 12.5px;
+    color: var(--muted); cursor: pointer;
+  }
+  .pp input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+
+  .scn { position: absolute; left: 12px; bottom: 12px; z-index: 3; }
+  .scn > button {
+    background: rgba(17, 21, 27, .85); border: 1px solid var(--line);
+    border-radius: 8px; padding: 5px 11px; font-size: 12.5px; color: var(--muted);
+  }
+  .scn > button:hover { color: var(--text); border-color: var(--line-2); }
+  .scn .pnl {
+    width: 302px; max-height: min(64vh, 540px); overflow: auto;
+    margin-bottom: 8px; font-size: 13px;
+    background: rgba(17, 21, 27, .97); border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .scn .pnl[hidden] { display: none; }
+  .pnl .ph {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 13px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: rgba(17, 21, 27, .98); z-index: 1;
+  }
+  .pnl details { border-bottom: 1px solid var(--line); padding: 0 13px; }
+  .pnl details:last-child { border-bottom: 0; }
+  .pnl summary {
+    cursor: pointer; padding: 9px 0; font-weight: 600; font-size: 11px;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--dim);
+    list-style: none;
+  }
+  .pnl summary::-webkit-details-marker { display: none; }
+  .pnl summary::after { content: "▾"; float: right; transition: transform .2s; }
+  .pnl details:not([open]) summary::after { transform: rotate(-90deg); }
+  .pnl details > div { padding-bottom: 10px; }
+  .rg { margin: 9px 0 4px; font-size: 12.5px; }
+  .rg > div { display: flex; justify-content: space-between; color: var(--muted); }
+  .rg input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  /* Зубная карта стала мини-картой в углу сцены: врач выбирает зуб, не
+     уводя глаза со снимка. Ячейки фиксированные — растянутые на ширину
+     панели номера читались как таблица, а не как ряд зубов. */
+  .mm {
+    position: absolute; right: 12px; bottom: 12px; z-index: 3;
+    background: rgba(17, 21, 27, .88); border: 1px solid var(--line);
+    border-radius: 10px; padding: 7px 8px; max-width: calc(100% - 24px);
+  }
+  .mm .chart { margin: 0; }
+  .mm .chart-t { flex: 0 0 19px; height: 22px; font-size: 9px; border-radius: 5px; }
+  .mm .chart-gap { width: 6px; flex: 0 0 6px; }
+  .mm .chart-dot { width: 3px; height: 3px; }
+  .mm .chart-dots { height: 3px; }
+  .mm .chart-legend { font-size: 9.5px; gap: 2px 8px; margin-top: 6px; max-width: 330px; }
+
+  /* Узкий экран: сцена и колонка встают друг под друга, страница снова
+     прокручивается. Накладки на сцене при этом убираются — на 360 px они
+     закрывают сам снимок. */
+  @media (max-width: 900px) {
+    body.case-mode { height: auto; overflow: auto; display: block; }
+    body.case-mode main { display: block; }
+    .cmain { flex-direction: column; }
+    .stage { flex: none; height: 58vh; min-height: 320px; }
+    .handle { display: none; }
+    .col { width: 100% !important; max-width: none; border-left: 0;
+           border-top: 1px solid var(--line); min-height: 420px; }
+    .mm, .stage-legend { display: none; }
+    body.case-mode .cbct-pane { overflow: visible; }
+    .cfoot { white-space: normal; }
+  }
+
 </style>
 </head>
 <body>
@@ -883,16 +1077,7 @@
 <script src="/patient-bar.js"></script>
 
 <header>
-  <div class="logo-mark">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <path d="M3 12h4l2.5-6 4 12 2.5-6h5" stroke="#fff" stroke-width="2.1"
-            stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </div>
-  <div class="logo-text">
-    <h1>Stomadent AI</h1>
-    <p data-i18n>Интеллектуальная диагностика панорамных снимков</p>
-  </div>
+  <a class="wm" href="/patients" title="К списку пациентов"><i></i>Actina</a>
   <div class="view-tabs" id="view-tabs">
     <a class="view-tab" href="/patients" data-i18n>Пациенты</a>
     <button class="view-tab active" data-view="2d" data-i18n>2D ОПТГ</button>
@@ -922,9 +1107,9 @@
     <div id="dropzone">
       <div class="dz-icon">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-          <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#22d3ee" stroke-width="1.8"
+          <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#2fc4b2" stroke-width="1.8"
                 stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#22d3ee"
+          <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#2fc4b2"
                 stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </div>
@@ -1016,9 +1201,9 @@
       <div id="cbct-dropzone">
         <div class="dz-icon">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#22d3ee" stroke-width="1.8"
+            <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#2fc4b2" stroke-width="1.8"
                   stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#22d3ee"
+            <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#2fc4b2"
                   stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
@@ -1063,26 +1248,22 @@
     </section>
 
     <!-- Экран результата КЛКТ -->
+    <!-- Экран разбора. Полноэкранная оболочка: 3D занимает всё, что не
+         занято колонкой разбора, а настройки сцены уходят в накладную
+         панель. Раньше под канвасом стояла карточка «Структуры», и на
+         ноутбуке 3D оставалось меньше половины экрана — врач смотрел на
+         ползунки, а не на снимок. -->
     <section id="cbct-result-view" style="display:none">
-      <div id="cbct-patient-bar"></div>
-      <div class="result-top">
-        <button class="btn-ghost" id="cbct-back" data-i18n>← Новый кейс</button>
-        <div class="infer-time">
-          <span class="pulse-dot"></span>
-          <b id="cbct-case-name">—</b>
-        </div>
-      </div>
+      <header class="ctop">
+        <button class="btn-ghost sm" id="cbct-back" data-i18n>← Новый кейс</button>
+        <div id="cbct-patient-bar"></div>
+        <div class="ctop-sp"></div>
+        <div class="ctop-case"><span class="pulse-dot"></span><b id="cbct-case-name">—</b></div>
+        <button class="btn-ghost sm" id="cbct-share-top" data-i18n>Поделиться ссылкой</button>
+      </header>
 
-      <div class="cbct-grid">
-        <div>
-          <div class="view-switch">
-            <button id="vm-3d" class="active" data-i18n>3D-модель</button>
-            <button id="vm-pano" data-i18n>Панорама (ОПТГ)</button>
-            <label class="rot-switch" title="Модель медленно поворачивается сама; вращать руками можно всегда">
-              <input type="checkbox" id="auto-rot" checked>
-              <span data-i18n>Вращать</span>
-            </label>
-          </div>
+      <div class="cmain">
+        <div class="stage" id="cbct-stage">
           <div id="gl-wrap">
             <canvas id="gl-canvas"></canvas>
             <div id="gl-tip"></div>
@@ -1095,34 +1276,67 @@
             </div>
             <div id="pano-note" class="pano-note"></div>
           </div>
-          <div class="card" style="margin-top:16px">
-            <div class="card-title" data-i18n>Структуры</div>
-            <div id="struct-list"></div>
-            <div style="margin-top:12px">
-              <div class="mpr-label">
-                <span data-i18n>Прозрачность кости и пазух</span><output id="opacity-out">35%</output>
-              </div>
-              <input type="range" id="opacity-slider" min="5" max="100" value="35" style="width:100%">
-            </div>
-            <div style="margin-top:12px">
-              <div class="mpr-label">
-                <span data-i18n>Прозрачность зубов</span><output id="teeth-opacity-out">100%</output>
-              </div>
-              <input type="range" id="teeth-opacity-slider" min="10" max="100" value="100" style="width:100%">
-            </div>
-            <div style="margin-top:12px">
-              <div class="mpr-label">
-                <span data-i18n>Блеск зубов</span><output id="teeth-gloss-out">65%</output>
-              </div>
-              <input type="range" id="teeth-gloss-slider" min="0" max="100" value="65" style="width:100%">
-            </div>
-            <div style="margin-top:12px">
-            <div id="superimpose" style="display:none"></div>
-            </div>
+
+          <!-- Легенда уровней: на сцене цветом говорит только важность. -->
+          <div class="stage-legend" id="stage-legend">
+            <span><i style="background:var(--lv-k)"></i>Критичная</span>
+            <span><i style="background:var(--lv-v)"></i>Важная</span>
+            <span><i style="background:var(--lv-n)"></i>Незначительная</span>
           </div>
+
+          <div class="stage-top">
+            <div class="view-switch">
+              <button id="vm-3d" class="active" data-i18n>3D-модель</button>
+              <button id="vm-pano" data-i18n>Панорама (ОПТГ)</button>
+            </div>
+            <label class="pp" title="Модель медленно поворачивается сама; вращать руками можно всегда">
+              <input type="checkbox" id="auto-rot" checked>
+              <span data-i18n>вращение</span>
+            </label>
+          </div>
+
+          <!-- Панель сцены. Накладная и закрываемая: на приёме её открывают
+               один раз в начале, а дальше она только мешает смотреть. -->
+          <div class="scn">
+            <div class="pnl" id="scene-pnl" hidden>
+              <div class="ph"><b data-i18n>Сцена</b>
+                <button class="btn-ghost sm" id="scene-close" aria-label="Закрыть">✕</button></div>
+              <details open>
+                <summary data-i18n>Слои</summary>
+                <div>
+                  <div id="struct-list"></div>
+                  <div class="rg">
+                    <div><span data-i18n>Прозрачность кости и пазух</span><output id="opacity-out">35%</output></div>
+                    <input type="range" id="opacity-slider" min="5" max="100" value="35">
+                  </div>
+                  <div id="superimpose" style="display:none"></div>
+                </div>
+              </details>
+              <details open>
+                <summary data-i18n>Зубы</summary>
+                <div>
+                  <div class="rg">
+                    <div><span data-i18n>Прозрачность зубов</span><output id="teeth-opacity-out">100%</output></div>
+                    <input type="range" id="teeth-opacity-slider" min="10" max="100" value="100">
+                  </div>
+                  <div class="rg">
+                    <div><span data-i18n>Блеск зубов</span><output id="teeth-gloss-out">65%</output></div>
+                    <input type="range" id="teeth-gloss-slider" min="0" max="100" value="65">
+                  </div>
+                </div>
+              </details>
+            </div>
+            <button id="scn-btn" data-i18n>⚙ Сцена</button>
+          </div>
+
+          <!-- Зубная карта на самой сцене: врач выбирает зуб, не уводя
+               глаза со снимка. -->
+          <div class="mm" id="tooth-chart"></div>
         </div>
 
-        <div>
+        <div class="handle" id="col-handle" title="Потяните, чтобы изменить ширину"></div>
+
+        <aside class="col" id="cbct-col">
           <div class="pane-tabs" id="cbct-tabs">
             <button data-pane="find" class="on"><span data-i18n>Находки</span><span class="cnt" id="cnt-find">·</span></button>
             <button data-pane="chat"><span data-i18n>Чат</span><span class="cnt" id="cnt-chat">·</span></button>
@@ -1130,29 +1344,22 @@
             <button data-pane="tooth"><span data-i18n>Зуб</span><span class="cnt" id="cnt-tooth">·</span></button>
             <button data-pane="mpr" data-i18n>Срезы</button>
             <button data-pane="info" data-i18n>Кейс</button>
+            <button class="ex" id="col-expand" title="Развернуть колонку">⤢</button>
           </div>
 
           <div class="cbct-pane" id="pane-find">
-          <div class="card">
-            <div class="card-title" data-i18n>Находки и маршрут лечения</div>
-            <div id="tooth-chart"></div>
+            <div id="find-progress"></div>
             <div id="cbct-findings"><span class="find-empty">Анализ…</span></div>
-          </div>
           </div>
 
           <div class="cbct-pane" id="pane-plan" hidden>
-          <div class="card">
-            <div class="card-title"><span data-i18n>План лечения</span> — черновик</div>
             <div id="cbct-plan"><span class="find-empty">Собираем…</span></div>
             <div class="sign-box" id="cbct-sign"></div>
-          </div>
           </div>
 
           <!-- Чат по кейсу. Отвечает ТОЛЬКО по находкам этого пациента:
                контекст собирает сервер, снимки и ФИО в него не попадают. -->
-          <div class="cbct-pane" id="pane-chat" hidden>
-          <div class="card">
-            <div class="card-title" data-i18n>Вопросы по этому пациенту</div>
+          <div class="cbct-pane chat-pane" id="pane-chat" hidden>
             <div id="chat-log"></div>
             <div class="chat-form">
               <textarea id="chat-q" rows="2"
@@ -1162,21 +1369,15 @@
             <div class="chat-note">Отвечает по находкам этого снимка и плану.
               Чего нет в данных — скажет, что не знает. Диагноз ставит врач.</div>
           </div>
-          </div>
 
           <div class="cbct-pane" id="pane-tooth" hidden>
-          <div class="card">
-            <div class="card-title" data-i18n>Карточка зуба</div>
             <div id="tooth-card">
               <span class="tooth-empty">Выберите номер зуба в находках,
               на панораме или в 3D — здесь появятся срезы вдоль его оси.</span>
             </div>
           </div>
-          </div>
 
           <div class="cbct-pane" id="pane-mpr" hidden>
-          <div class="card">
-            <div class="card-title">Срезы (MPR)</div>
             <div class="overlay-switch">
               <span>Маска:</span>
               <button data-ov="contour" class="on">контуром</button>
@@ -1203,23 +1404,23 @@
               <input type="range" min="0" max="100" value="50">
             </div>
           </div>
-          </div>
 
           <div class="cbct-pane" id="pane-info" hidden>
-          <div class="card">
-            <div class="card-title" data-i18n>Информация о кейсе</div>
             <div id="cbct-info"></div>
             <div class="share-link" id="cbct-share" data-i18n>Скопировать ссылку на этот кейс</div>
           </div>
-          </div>
-        </div>
+        </aside>
       </div>
+
+      <!-- Чем посчитано и с какой измеренной точностью. Строка приходит с
+           сервера той же функцией, что печатает её в PDF. -->
+      <footer class="cfoot" id="cbct-foot"></footer>
     </section>
   </div><!-- /view-cbct -->
 </main>
 
 <footer>
-  Stomadent AI · Демонстрационная версия · Результат работы нейросети <b>не является медицинским диагнозом</b><br>
+  Actina · Демонстрационная версия · Результат работы нейросети <b>не является медицинским диагнозом</b><br>
   и предназначен только для демонстрации технологии. Окончательное заключение ставит врач-рентгенолог.
 </footer>
 
@@ -2024,7 +2225,7 @@ let curPane = "find";
 
 function selectCbctPane(name) {
   curPane = name;
-  document.querySelectorAll("#cbct-tabs button").forEach(b =>
+  document.querySelectorAll("#cbct-tabs button[data-pane]").forEach(b =>
     b.classList.toggle("on", b.dataset.pane === name));
   for (const k of ["find", "chat", "plan", "tooth", "mpr", "info"])
     $c("pane-" + k).hidden = k !== name;
@@ -2034,7 +2235,7 @@ function selectCbctPane(name) {
   if (name === "chat" && curCase) chatSummary(curCase);
   if (curCase) writePath("cbct", curCase, chosenModel());
 }
-document.querySelectorAll("#cbct-tabs button").forEach(b => {
+document.querySelectorAll("#cbct-tabs button[data-pane]").forEach(b => {
   b.onclick = () => selectCbctPane(b.dataset.pane);
 });
 $c("auto-rot").onchange = ev => { autoRotateOn = ev.target.checked; };
@@ -2154,7 +2355,13 @@ function mountPatientBar(caseId) {
   const box = $c("cbct-patient-bar");
   if (!box || !window.patientBar) return;
   box.innerHTML = "";
-  patientBar.mount(caseId, box);
+  patientBar.mount(caseId, box).then(bar => {
+    // «← Новый кейс» и «← Карточка» рядом читаются как ошибка. Если кейс
+    // принадлежит пациенту, правильный возврат — в его карточку; кнопка
+    // загрузки нужна только когда снимок открыт вне карточки.
+    const back = $c("cbct-back");
+    if (back) back.hidden = !!bar;
+  });
 }
 
 async function startSegment(caseId, converted = false) {
@@ -2201,12 +2408,16 @@ async function showCbctResult(caseId) {
   // прямой ссылке из карточки пациента — тогда startSegment не вызывается.
   mountPatientBar(caseId);
   $c("cbct-upload-view").style.display = "none";
-  $c("cbct-result-view").style.display = "block";
+  $c("cbct-result-view").style.display = "flex";
+  // Полноэкранный режим: страница перестаёт прокручиваться, 3D занимает
+  // всё, что не занято колонкой разбора. Класс снимается при выходе.
+  document.body.classList.add("case-mode");
   window.scrollTo({ top: 0 });
   const info = await fetch(`/api/cbct/info/${caseId}`).then(r => r.json());
   curInfo = info;
   $c("cbct-case-name").textContent = `${info.name} · ${info.model_label}`;
   renderCbctInfo(info);
+  renderCaseFoot(info);
   // У кейса может не быть исходного тома (демо-кейс из fixtures: том весит
   // сотни мегабайт и в репозиторий не кладётся). Тогда всё, что считается
   // по вокселям, просто не показываем: 3D, находки и план работают, а
@@ -2377,7 +2588,7 @@ function showFinding(key) {
   if (el) {
     const row = el.parentElement;
     row.scrollIntoView({ block: "center" });
-    row.style.outline = "2px solid #22d3ee";
+    row.style.outline = "2px solid #2fc4b2";
     setTimeout(() => { row.style.outline = ""; }, 2000);
   }
 }
@@ -2442,12 +2653,14 @@ function progressHtml(rv) {
        title="Сначала разберите все находки"`;
   const url = k => `/api/cbct/report/${encodeURIComponent(curCase)}?kind=${k}`;
   return `<div class="rev-progress">
-    <span>Разобрано <b>${rv.reviewed || 0}</b> из <b>${rv.total}</b></span>
-    <span class="rev-bar"><i style="width:${pct}%"></i></span>
-    <a class="pdf-btn" href="${ready ? url("doctor") : "#"}"${dis}
-       ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF врачу</a>
-    <a class="pdf-btn" href="${ready ? url("patient") : "#"}"${dis}
-       ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF пациенту</a>
+    <div>Разобрано <b>${rv.reviewed || 0}</b> из <b>${rv.total}</b></div>
+    <div class="rev-bar"><i style="width:${pct}%"></i></div>
+    <div class="rev-pdf">
+      <a class="pdf-btn" href="${ready ? url("doctor") : "#"}"${dis}
+         ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF врачу</a>
+      <a class="pdf-btn" href="${ready ? url("patient") : "#"}"${dis}
+         ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF пациенту</a>
+    </div>
   </div>`;
 }
 
@@ -2500,6 +2713,7 @@ function renderSignBox(review) {
 $c("cbct-back").addEventListener("click", () => {
   clearInterval(pollTimer);
   $c("cbct-result-view").style.display = "none";
+  document.body.classList.remove("case-mode");
   $c("cbct-upload-view").style.display = "block";
   $c("cbct-progress").style.display = "none";
 });
@@ -2599,8 +2813,8 @@ const CHART_MARKS = [
   ["tooth_impacted", "#a78bfa", "ретенция"],
   ["canal_contact", "#ef4444", "близко к каналу"],
   ["canal_close",  "#ef4444", "близко к каналу"],
-  ["sinus_contact", "#7dd3fc", "близко к пазухе"],
-  ["sinus_close",  "#7dd3fc", "близко к пазухе"],
+  ["sinus_contact", "#56b8d6", "близко к пазухе"],
+  ["sinus_close",  "#56b8d6", "близко к пазухе"],
 ];
 
 function renderChart(data) {
@@ -2684,7 +2898,10 @@ function renderFindings(data) {
   const byRoute = {};
   for (const f of all) (byRoute[f.route] = byRoute[f.route] || []).push(f);
 
-  let html = progressHtml(data.review);
+  // Чек-лист живёт в своём блоке над лентой: он прилипает к верху панели
+  // и не должен переезжать вместе с лентой при перерисовке находок.
+  $c("find-progress").innerHTML = progressHtml(data.review);
+  let html = "";
   html += data.draft
     ? `<div class="find-draft">Черновик: пороги ещё не подтверждены врачом.
        Не является назначением — только материал для приёма.</div>` : "";
@@ -3322,7 +3539,7 @@ async function loadSuperimpose(caseId) {
   box.innerHTML = regs.map((r, i) => `
     <label class="struct-row">
       <input type="checkbox" data-i="${i}"${r.good ? "" : " disabled"}>
-      <span class="struct-dot" style="background:#22d3ee"></span>
+      <span class="struct-dot" style="background:#2fc4b2"></span>
       Скан ${r.ios_case}
     </label>
     <div class="sup-note ${r.good ? "" : "bad"}">
@@ -3733,6 +3950,82 @@ syncAllSliderFills();
 // Ключ от снятой галочки зеркального вида: чистим, чтобы у врача, который
 // когда-то её включил, не осталось следа в браузере.
 try { localStorage.removeItem("mirrorOverride"); localStorage.removeItem("swapSides"); } catch (e) {}
+
+/* ================= оболочка экрана разбора =================
+   Перенос макета: панель сцены, ширина колонки, подвал с методом.
+   Всё, что здесь, — только про раскладку; данные и 3D не трогаются. */
+
+/* Панель сцены. Закрыта по умолчанию: врач открывает её один раз в начале
+   приёма, а дальше она закрывает снимок. */
+const scenePnl = $c("scene-pnl");
+$c("scn-btn").onclick = () => { scenePnl.hidden = !scenePnl.hidden; };
+$c("scene-close").onclick = () => { scenePnl.hidden = true; };
+
+/* Ширина колонки: врач тянет сам и выбор переживает перезагрузку. У разных
+   врачей разный экран, и одно «правильное» значение не подходит никому. */
+const COLW_KEY = "actina_colw";
+(() => {
+  const col = $c("cbct-col"), h = $c("col-handle");
+  const saved = +(localStorage.getItem(COLW_KEY) || 0);
+  if (saved >= 330) col.style.setProperty("--colw", saved + "px");
+  let drag = false;
+  h.addEventListener("pointerdown", ev => {
+    drag = true; h.classList.add("drag"); h.setPointerCapture(ev.pointerId);
+  });
+  h.addEventListener("pointermove", ev => {
+    if (!drag) return;
+    const w = Math.max(330, Math.min(innerWidth * 0.86, innerWidth - ev.clientX));
+    col.style.setProperty("--colw", w + "px");
+  });
+  h.addEventListener("pointerup", () => {
+    drag = false; h.classList.remove("drag");
+    localStorage.setItem(COLW_KEY, String(Math.round(col.getBoundingClientRect().width)));
+  });
+  // Колонка во весь экран — чтобы прочитать длинное основание находки или
+  // разложить план, не щурясь в узкую полосу.
+  let prev = null;
+  $c("col-expand").onclick = function () {
+    if (prev == null) {
+      prev = col.getBoundingClientRect().width;
+      col.style.setProperty("--colw", Math.round(innerWidth * 0.84) + "px");
+      this.textContent = "⤡";
+    } else {
+      col.style.setProperty("--colw", prev + "px");
+      prev = null;
+      this.textContent = "⤢";
+    }
+  };
+})();
+
+/* Канвас теперь тянется за раскладкой, а не только за окном: ширину
+   колонки двигают мышью, и без этого 3D оставалось растянутым. */
+if (window.ResizeObserver) {
+  new ResizeObserver(() => { resizeGL(); })
+    .observe($c("gl-wrap"));
+}
+
+/* Ссылка на кейс продублирована в верхней строке: на приёме ею пользуются
+   чаще, чем вкладкой «Кейс», где она лежала. */
+$c("cbct-share-top").onclick = async function () {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    this.textContent = "Ссылка скопирована";
+  } catch (e) { this.textContent = location.href; }
+  setTimeout(() => { this.textContent = "Поделиться ссылкой"; }, 2500);
+};
+
+/* Подвал: чем посчитано. Строку про точность отдаёт сервер и только для
+   модели, на которой её мерили, — для остальных подвал про точность
+   молчит, а не подставляет чужое число. */
+function renderCaseFoot(info) {
+  const bits = [`nnU-Net v2 · ${info.model_label || info.model || "модель"}`];
+  if (info.findings_version) bits.push(`правила находок v${info.findings_version}`);
+  // Короткая формулировка: длинная в подвале обрезается многоточием ровно
+  // на размере выборки, ради которого число и показывают.
+  if (info.metrics_short) bits.push(info.metrics_short);
+  $c("cbct-foot").textContent = bits.join(" · ");
+}
+
 </script>
 </body>
 </html>
