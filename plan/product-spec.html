@@ -1,546 +1,631 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Описание продукта Stomadent</title>
+<title>Stomadent: спека</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
+/* Раскладка: липкая шапка с вкладками, под ней один активный экран; внутри — кликабельные блоки (демо, шаги, этапы, карточки). */
 :root{
-  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f5; --text:#14171c; --muted:#5d6673;
-  --border:#dde1e7; --accent:#2f6fde; --accent-soft:#e6eefc;
-  --red:#d93636; --red-soft:#fdeaea; --yel:#c99a06; --yel-soft:#fdf6d8; --gray:#8a929e; --gray-soft:#eef0f3;
-  --ok:#1f9d61; --ok-soft:#e3f5ec; --warn-soft:#fff6db;
-  --viewer:#0f1622; --viewer-text:#c9d4e3;
+  --bg:#f5f6f8; --surface:#ffffff; --surface2:#eef0f4; --text:#15191f; --muted:#5b6573; --line:#dde1e8;
+  --accent:#1f5fd6; --accent-soft:#e3ecfb;
+  --crit:#d3342b; --crit-soft:#fbe6e4; --warn:#b7791f; --warn-soft:#fbf0d9; --info:#64707f; --info-soft:#e9ecf1;
+  --ok:#1d8a52; --ok-soft:#dff3e8;
+  --f-head:"Space Grotesk","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0e1116; --surface:#161a21; --surface-2:#1d222b; --text:#e7ebf0; --muted:#9aa4b2;
-    --border:#2a313c; --accent:#6c9bf0; --accent-soft:#1c2a44;
-    --red:#f06464; --red-soft:#3a1c1e; --yel:#e8c341; --yel-soft:#352f14; --gray:#9aa4b2; --gray-soft:#252b34;
-    --ok:#3fc584; --ok-soft:#173326; --warn-soft:#352d14; --viewer:#080b10;
-  }
-}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1318; --surface:#171c23; --surface2:#1f252e; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a323d;
+  --accent:#6ea0ff; --accent-soft:#1b2a45;
+  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37;
+  --ok:#59c98a; --ok-soft:#173326; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0e1116; --surface:#161a21; --surface-2:#1d222b; --text:#e7ebf0; --muted:#9aa4b2;
-  --border:#2a313c; --accent:#6c9bf0; --accent-soft:#1c2a44;
-  --red:#f06464; --red-soft:#3a1c1e; --yel:#e8c341; --yel-soft:#352f14; --gray:#9aa4b2; --gray-soft:#252b34;
-  --ok:#3fc584; --ok-soft:#173326; --warn-soft:#352d14; --viewer:#080b10;
-}
+  --bg:#0f1318; --surface:#171c23; --surface2:#1f252e; --text:#e8ecf2; --muted:#9aa5b4; --line:#2a323d;
+  --accent:#6ea0ff; --accent-soft:#1b2a45;
+  --crit:#ff7b72; --crit-soft:#3a1d1b; --warn:#e3b34d; --warn-soft:#3a2f14; --info:#a3adba; --info-soft:#262d37;
+  --ok:#59c98a; --ok-soft:#173326; color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
-.wrap{max-width:1100px;margin:0 auto;padding:40px 16px 80px}
-.tag{display:inline-block;font-size:13px;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:2px 12px}
-h1{font-size:34px;line-height:1.2;margin:14px 0 10px;letter-spacing:-.01em}
-.lead{font-size:19px;color:var(--muted);max-width:860px;margin:0}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 8px}
-nav a{font-size:14px;color:var(--accent);text-decoration:none;background:var(--accent-soft);padding:4px 10px;border-radius:8px}
-section{margin-top:48px}
-h2{font-size:22px;margin:0 0 14px;display:flex;gap:10px;align-items:baseline}
-h2 .n{color:var(--muted);font-weight:500;font-size:16px}
-h3{font-size:16px;margin:0 0 8px}
-ul{padding-left:20px;margin:8px 0}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
-.grid{display:grid;gap:14px}
-.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media (max-width:800px){.g2,.g3{grid-template-columns:1fr} h1{font-size:28px}}
-.muted{color:var(--muted)} .small{font-size:14px}
-.principle{background:var(--ok-soft);border-radius:14px;padding:14px 18px;margin-top:16px}
-.principle b{color:var(--ok)}
-.note{background:var(--warn-soft);border-radius:12px;padding:10px 14px;font-size:14px;margin-top:12px}
-code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--f-body)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance}
+h1{font-size:28px;line-height:1.15} h2{font-size:21px;margin:0 0 4px} h3{font-size:16px}
+p{margin:0}
+code{background:var(--surface2);padding:1px 6px;border-radius:5px;font-size:.88em;overflow-wrap:anywhere}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-/* steps */
-.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:800px){.steps{grid-template-columns:1fr}}
-.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px 12px 54px;position:relative;font-size:15px}
-.steps li::before{content:counter(s);position:absolute;left:14px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;font-size:14px}
-.steps b{display:block}
+header{padding-block:22px 6px}
+header .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.ver{font-size:13px;color:var(--muted)}
+.deadline{margin-top:10px;display:inline-flex;gap:8px;align-items:center;font-size:13.5px;background:var(--accent-soft);color:var(--accent);padding:5px 12px;border-radius:999px;font-weight:500}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px;display:flex;gap:8px;overflow-x:auto}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.tab{border:1px solid var(--line);background:var(--surface);padding:8px 16px;border-radius:999px;font-weight:600;white-space:nowrap;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab .cnt{font-weight:500;opacity:.85;margin-left:6px;font-size:13px}
+main{padding-block:20px 60px}
+.view[hidden]{display:none}
+.block{margin-top:28px}
+.block>header{padding:0 0 12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:14px}
 
-/* levels */
-.lv{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 6px;border-radius:6px;font-weight:700;font-size:13px;border:2px solid transparent}
-.lv.ap{background:var(--red);color:#fff;border-color:var(--red)}
-.lv.a{color:var(--red);border-color:var(--red)}
-.lv.bp{background:var(--yel);color:#1a1400;border-color:var(--yel)}
-.lv.b{color:var(--yel);border-color:var(--yel)}
-.lv.c{background:var(--gray-soft);color:var(--gray);border-color:var(--gray)}
-.lv.krit{background:var(--red);color:#fff;border-color:var(--red)}
-.lv.vazh{background:var(--yel);color:#1a1400;border-color:var(--yel)}
-.lv.nez{background:var(--gray-soft);color:var(--gray);border-color:var(--gray)}
-.scale3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-@media (max-width:800px){.scale3{grid-template-columns:1fr}}
-.scale3 .card{padding:16px}
-.scale3 .full{font-size:18px;font-weight:700;margin-top:10px}
-.scale3 p{margin:6px 0 0;font-size:14px;color:var(--muted)}
-.st{white-space:nowrap;font-weight:600}
-.st.done{color:var(--ok)} .st.part{color:var(--yel)} .st.todo{color:var(--muted)} .st.hold{color:var(--muted);font-style:italic}
-.prog{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
-.prog span{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:14px}
-.prog b{font-size:18px;margin-right:4px}
-.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-@media (max-width:800px){.scale{grid-template-columns:1fr}}
-.scale .card{padding:14px}
-.scale p{margin:8px 0 0;font-size:14px;color:var(--muted)}
+.lv{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;white-space:nowrap}
+.lv.k{background:var(--crit);color:#fff} .lv.v{background:var(--warn);color:#fff} .lv.n{background:var(--info);color:#fff}
+.chip{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.chip.done{background:var(--ok-soft);color:var(--ok)} .chip.part{background:var(--warn-soft);color:var(--warn)}
+.chip.todo{background:var(--info-soft);color:var(--info)} .chip.hold{background:var(--surface2);color:var(--muted)}
+.chip.new{background:var(--accent-soft);color:var(--accent)}
 
-/* mockup */
-.app{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}
-.pbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;background:var(--surface-2)}
-.pbar b{font-size:14px}
-.mock{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
-@media (max-width:800px){.mock{grid-template-columns:1fr}}
-.viewer{background:var(--viewer);color:var(--viewer-text);min-height:520px;position:relative;padding:14px}
-.vtools{display:flex;flex-wrap:wrap;gap:6px}
-.vtools span{font-size:12px;border:1px solid #2c3647;border-radius:6px;padding:3px 8px;background:#121a27}
-.vtools span.on{border-color:#4f7fd6;color:#fff;background:#1b2b47}
-.jaw{position:absolute;inset:70px 20px 70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-.row{display:flex;gap:5px}
-.t{width:24px;height:34px;border-radius:9px 9px 6px 6px;background:linear-gradient(#e9edf2,#b7c0cc);opacity:.92}
-.row.low .t{border-radius:6px 6px 9px 9px}
-.t.ap{background:linear-gradient(#ff8a8a,#d93636);box-shadow:0 0 0 2px #ff6b6b88,0 0 18px #ff4d4d99}
-.t.a{background:linear-gradient(#e9edf2,#b7c0cc);box-shadow:0 0 0 2px #ff5a5a}
-.t.bp{background:linear-gradient(#ffe48a,#c99a06);box-shadow:0 0 0 2px #e8c34188}
-.t.b{box-shadow:0 0 0 2px #e8c341}
-.t.c{box-shadow:0 0 0 2px #9aa4b2}
-.t.sel{transform:translateY(-14px) scale(1.15)}
-.viewer{overflow:hidden}
-@media (max-width:560px){.row{gap:3px}.t{width:14px;height:22px}}
-.vhint{position:absolute;left:14px;right:14px;bottom:12px;font-size:12px;opacity:.75}
-.side{border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:520px;position:relative}
-@media (max-width:800px){.side{border-left:0;border-top:1px solid var(--border)}}
-.grip{position:absolute;left:-4px;top:50%;width:8px;height:44px;margin-top:-22px;border-radius:4px;background:var(--border)}
-@media (max-width:800px){.grip{display:none}}
-.tabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--border);align-items:center}
-.tabs span{font-size:13px;padding:4px 10px;border-radius:8px;color:var(--muted)}
-.tabs span.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.tabs .exp{margin-left:auto;font-size:16px}
-.sb{padding:10px;display:flex;flex-direction:column;gap:10px;flex:1}
-.msg{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px}
-.f{border:1px solid var(--border);border-radius:10px;padding:10px 11px;font-size:14px;background:var(--surface)}
-.f .top{display:flex;align-items:center;gap:8px;font-weight:600}
-.f .top .pct{margin-left:auto;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
-.f details{margin-top:6px;color:var(--muted)}
-.f summary{cursor:pointer;color:var(--accent);font-size:13px}
-.f .ctl{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;font-size:12px}
-.sel-l{border:1px solid var(--border);border-radius:7px;padding:2px 8px;background:var(--surface-2)}
-.cm{margin-top:8px;border:1px dashed var(--border);border-radius:8px;padding:6px 8px;font-size:13px;color:var(--muted)}
-.btn{font-size:12px;border-radius:7px;padding:3px 9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
-.btn.ok{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
-.f.done{opacity:.75}
-.f.done .top::after{content:"✓ проверено";font-size:12px;color:var(--ok);font-weight:600;margin-left:6px}
-.ask{border-top:1px solid var(--border);padding:10px 12px;font-size:13px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;font-weight:500;text-align:left}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
 
-/* checklist */
-.chk{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:14px}
-.chk li{display:flex;gap:8px;align-items:center}
-.box{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);display:inline-grid;place-items:center;font-size:11px}
-.box.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.demo{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px}
+@media (max-width:860px){.demo{grid-template-columns:1fr}}
+.viewer{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.arch{display:flex;flex-direction:column;gap:6px}
+.arch .lbl{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.teeth{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.tooth{aspect-ratio:3/4;border-radius:6px 6px 10px 10px;border:1.5px solid var(--line);background:var(--surface);font-size:10px;display:flex;align-items:flex-end;justify-content:center;padding:0 0 3px;color:var(--muted);position:relative;min-width:0}
+.tooth.has{cursor:pointer;color:var(--text);font-weight:700}
+.tooth.k{background:var(--crit-soft);border-color:var(--crit)} .tooth.v{background:var(--warn-soft);border-color:var(--warn)} .tooth.n{background:var(--info-soft);border-color:var(--info)}
+.tooth.sel{outline:2.5px solid var(--accent);outline-offset:1px}
+.tooth.rej{opacity:.45;text-decoration:line-through}
+.tooth.ok::after{content:"✓";position:absolute;top:2px;right:3px;font-size:11px;color:var(--ok)}
+.side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sidebox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.sidetabs{display:flex;gap:6px}
+.sidetabs button{flex:1;border:1px solid var(--line);background:var(--surface);padding:6px;border-radius:8px;font-weight:600;font-size:14px;color:var(--muted)}
+.sidetabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.flist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.fitem{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px}
+.fitem[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.fitem .t{flex:1;min-width:0;font-size:14px}
+.fitem.rej .t{text-decoration:line-through;color:var(--muted)}
+.fitem .st{font-size:12px;color:var(--ok);font-weight:600}
+.detail label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+.detail select,.detail textarea{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.detail textarea{min-height:68px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;font-weight:600}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.bad{color:var(--crit);border-color:var(--crit)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.err{color:var(--crit);font-size:13px;min-height:18px;margin-top:4px}
+details.why{margin-top:8px;font-size:14px} details.why summary{cursor:pointer;color:var(--accent);font-weight:500}
+.prog{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.prog>i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.bubble.me{background:var(--accent-soft);border-color:var(--accent-soft);align-self:flex-end}
+.msgs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.ex{font-size:12px;color:var(--muted)}
 
-/* compare */
-.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:800px){.cmp{grid-template-columns:1fr}}
-.bad,.good{border-radius:12px;padding:12px 14px;font-size:14px}
-.bad{background:var(--red-soft)} .good{background:var(--ok-soft)}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.steps button{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:10px;font-weight:500}
+.steps button[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.steps button b{opacity:.7;margin-right:6px}
+.stepbody{margin-top:10px}
 
-/* report previews */
-.paper{background:#fff;color:#1a1a1a;border-radius:10px;padding:16px;box-shadow:0 1px 0 var(--border),0 6px 20px rgba(0,0,0,.08);font-size:13px;line-height:1.5}
-.paper h4{margin:0 0 4px;font-size:15px}
-.paper .ln{height:7px;border-radius:4px;background:#e6e8ec;margin:6px 0}
-.paper .ln.s{width:60%}
-.paper .foot{margin-top:10px;border-top:1px solid #e6e8ec;padding-top:8px;font-size:11.5px;color:#555}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:10px}
+details.acc>summary{cursor:pointer;padding:14px 16px;font-family:var(--f-head);font-weight:700;font-size:16px;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.acc>summary::after{content:"＋";color:var(--muted)} details.acc[open]>summary::after{content:"－"}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>.in{padding:0 16px 16px}
+ul.tight{margin:6px 0 0;padding-left:20px} ul.tight li{margin:3px 0}
+.paper{background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:14px;font-size:14px;display:flex;flex-direction:column;gap:6px}
 
-/* flow */
-.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.flow .node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px}
-.flow .node.new{border-color:var(--accent);background:var(--accent-soft)}
-.flow .arr{color:var(--muted)}
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.pipe .node{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px;font-size:14px;font-weight:500;text-align:left}
+.pipe .node[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pipe .node.new{border-style:dashed}
+.pipe .arr{align-self:center;color:var(--muted)}
+.pdetail{margin-top:10px}
+.stage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.stage{grid-template-columns:1fr}}
+.stage button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px}
+.stage button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stage .when{font-family:var(--f-head);font-weight:700;display:block}
+.stage .sum{font-size:13px;color:var(--muted);display:block;margin-top:2px}
+.tasks{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.task{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.task>summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:12px 14px}
+.task>summary::-webkit-details-marker{display:none}
+.task .num{width:26px;height:26px;border-radius:8px;background:var(--surface2);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.task .tt{flex:1;min-width:0;font-weight:500}
+.task .body{padding:0 14px 14px 50px;font-size:14px;display:grid;gap:6px}
+@media (max-width:560px){.task .body{padding-left:14px}}
+.task .body b{color:var(--muted);font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
 
-/* table */
-.tbl{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
-th{background:var(--surface-2);font-weight:600}
-tr:last-child td{border-bottom:0}
-.pr{font-weight:600;white-space:nowrap;font-size:13px}
-.pr.mvp{color:var(--red)} .pr.later{color:var(--muted)} .pr.maybe{color:var(--yel)}
+.counts{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.counts button{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 16px;text-align:left;min-width:110px}
+.counts button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.counts b{display:block;font-family:var(--f-head);font-size:24px;line-height:1.1}
+.table{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted);font-weight:600}
+.bar{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
 
-/* questions */
-.q{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
-.q.block{background:var(--warn-soft);border-color:transparent}
-.q b.id{color:var(--accent);margin-right:6px}
-.q p{margin:6px 0 0;font-size:14px}
-.pill{font-size:12px;border-radius:999px;padding:1px 8px;margin-left:6px;background:var(--red-soft);color:var(--red);font-weight:600}
-footer{margin-top:56px;color:var(--muted);font-size:13px}
-nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;margin:16px 0 8px;border-bottom:1px solid var(--border)}
-nav.tabs a{font-size:15px;font-weight:600;padding:8px 14px;background:transparent;color:var(--muted);border:1px solid var(--border)}
-nav.tabs a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-section[hidden]{display:none}
+.mentor{display:grid;gap:8px;align-content:start}
+.crit{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.crit:last-child{border-bottom:0}
+.crit .code{font-weight:700;min-width:28px;color:var(--accent)}
+.crit .sc{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.sc button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:600}
+.sc button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.crit .main{flex:1;min-width:0}
+@media (max-width:640px){.crit{flex-wrap:wrap}.crit .sc{margin-left:38px;justify-content:flex-start}}
+.big{font-family:var(--f-head);font-size:34px;font-weight:700}
+
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:8px}
+.q>summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:12px 14px}
+.q>summary::-webkit-details-marker{display:none}
+.q .id{font-family:var(--f-head);font-weight:700;color:var(--accent);width:30px}
+.q .qt{flex:1;min-width:0;font-weight:500}
+.q .body{padding:0 14px 14px 54px;font-size:14px}
+@media (max-width:560px){.q .body{padding-left:14px}}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-</head>
-<body>
-<div class="wrap">
 
-<header>
-  <span class="tag">v0.4 · 17.11.2026, 21:10 · MVP сегодня к 22:00–23:00 · чекпоинт 18.11 в 15:00</span>
-  <h1>Stomadent: ИИ-разбор КЛКТ с проверкой врачом</h1>
-  <p class="lead">Стоматолог загружает 3D-снимок. Система находит проблемы, ставит уровень критичности и уверенность, объясняет и отвечает в чате. Врач проверяет каждую находку своим комментарием, и в конце выходят два PDF — для врача и для пациента.</p>
-  <div class="principle"><b>Принцип:</b> ИИ находит, измеряет и объясняет. Диагноз ставит врач. Пациенту ничего не уходит без подтверждения врача.</div>
-  <nav class="tabs" role="tablist">
-    <a href="#vision" data-go="vision">Видение продукта</a><a href="#plan" data-go="plan">План</a><a href="#progress" data-go="progress">Прогресс</a><a href="#eval" data-go="eval">Оценка</a><a href="#questions" data-go="questions">Вопросы</a>
-  </nav>
+<header class="wrap">
+  <div class="row"><h1>Stomadent</h1><span class="ver">спека v0.4 · 17.11.2026 · источник для кода: <code>plan/product-spec.md</code></span></div>
+  <p class="muted" style="margin-top:6px">ИИ разбирает КЛКТ, врач проверяет и подписывает. Трек «Здравоохранение», National AI Hackathon Tashkent.</p>
+  <span class="deadline">MVP к 22:00–23:00 сегодня · чекпоинт 18.11 в 15:00</span>
 </header>
+<div class="wrap tabs" role="tablist" aria-label="Разделы">
+  <button class="tab" role="tab" data-go="vision">Видение</button>
+  <button class="tab" role="tab" data-go="plan">План</button>
+  <button class="tab" role="tab" data-go="progress">Прогресс<span class="cnt" id="progCnt"></span></button>
+  <button class="tab" role="tab" data-go="eval">Оценка</button>
+  <button class="tab" role="tab" data-go="questions">Вопросы<span class="cnt" id="qCnt"></span></button>
+</div>
 
-<section id="progress" data-tab="progress">
-  <h2><span class="n">00</span>Прогресс: что сделано, что нет</h2>
-  <p class="small muted" style="margin-top:0">Состояние на 17.11, 21:10 — по коду в <code>main</code> и <code>HACKATHON.md</code>. Обновляется по ходу.</p>
-  <div class="prog"><span><b>1</b>сделано</span><span><b>3</b>частично</span><span><b>7</b>не начато</span><span><b>1</b>отложено</span><span class="muted">из 12 задач продукта</span></div>
-  <div class="tbl"><table>
-    <tr><th>#</th><th>Задача</th><th>Статус</th><th>Комментарий</th></tr>
-    <tr><td>1</td><td>Сайдбар: «Находки» / «Чек-лист», карточки, ⤢</td><td class="st todo">⬜ не начато</td><td>в плане Батыра на сегодня</td></tr>
-    <tr><td>2</td><td>Шкала Крит / Важн / Незнач</td><td class="st todo">⬜ не начато</td><td>перевод из <code>severity</code> один к одному</td></tr>
-    <tr><td>3</td><td>Уверенность на карточке</td><td class="st todo">⬜ не начато</td><td>ждёт решения В1</td></tr>
-    <tr><td>4</td><td>Смена уровня и правка диагноза врачом</td><td class="st todo">⬜ не начато</td><td></td></tr>
-    <tr><td>5</td><td>Обязательный комментарий</td><td class="st todo">⬜ не начато</td><td><code>review</code> есть, проверки нет</td></tr>
-    <tr><td>6</td><td>Чат</td><td class="st part">🟡 частично</td><td>эндпоинт и модель есть; нет интерфейса, жалоб и плана в контексте</td></tr>
-    <tr><td>7</td><td>Первое сообщение-сводка</td><td class="st todo">⬜ не начато</td><td></td></tr>
-    <tr><td>8</td><td>PDF для врача</td><td class="st part">🟡 частично</td><td>работает из командной строки, к вебу не подключён</td></tr>
-    <tr><td>9</td><td>PDF для пациента</td><td class="st todo">⬜ не начато</td><td></td></tr>
-    <tr><td>10</td><td>Профиль пациента</td><td class="st part">🟡 частично</td><td>пациенты и исследования есть, жалоб нет</td></tr>
-    <tr><td>11</td><td>Изоляция зуба в 3D</td><td class="st todo">⬜ не начато</td><td>если успеем</td></tr>
-    <tr><td>12</td><td>Сравнение визитов, ОПТГ, мобильные приложения</td><td class="st hold">⏸ отложено</td><td>после хакатона (В8)</td></tr>
-  </table></div>
-  <div class="grid g2" style="margin-top:14px">
-    <div class="card small"><h3>Сверх спеки (Батыр)</h3>
-      <ul style="list-style:none;padding:0">
-        <li><span class="st done">✅</span> Проект поднимается без моделей, кейс <code>fixtures/cbct_pair001</code></li>
-        <li><span class="st done">✅</span> Сценарий показа только КЛКТ</li>
-        <li><span class="st part">🟡</span> Метрики точности с доверительными интервалами — считается</li>
-        <li><span class="st todo">⬜</span> Автовращение 3D</li>
-      </ul></div>
-    <div class="card small"><h3>Не код</h3>
-      <ul style="list-style:none;padding:0">
-        <li><span class="st done">✅</span> Спека v0.4 и страница по ссылке</li>
-        <li><span class="st done">✅</span> Репозиторий: <code>plan/</code>, <code>materials/</code>, ресёрч</li>
-        <li><span class="st done">✅</span> Документ для стоматолога</li>
-        <li><span class="st todo">⬜</span> Показать стоматологу, собрать фидбэк</li>
-        <li><span class="st todo">⬜</span> Замер времени разбора на 10 кейсах</li>
-        <li><span class="st todo">⬜</span> Бизнес-модель для бизнес-ментора</li>
-        <li><span class="st todo">⬜</span> Питч-дек</li>
-      </ul></div>
-  </div>
-</section>
+<main class="wrap">
 
-<section id="why" data-tab="vision">
-  <h2><span class="n">01</span>Для кого и зачем</h2>
+<section class="view" id="v-vision" hidden>
   <div class="grid g3">
-    <div class="card"><h3>Пользователь</h3><p class="small muted">Стоматолог в клинике. Пока только он.</p></div>
-    <div class="card"><h3>Боль</h3><p class="small muted">Сотни срезов КЛКТ, каждый зуб вручную. Около часа на пациента.</p></div>
-    <div class="card"><h3>Цель</h3><p class="small muted">Разбор за минуты — врач принимает больше пациентов.</p></div>
+    <div class="card"><div class="muted small">Пользователь</div><b>Стоматолог в клинике.</b> Пока только он.</div>
+    <div class="card"><div class="muted small">Боль</div>Сотни срезов КЛКТ, каждый зуб вручную. Около часа на пациента.</div>
+    <div class="card"><div class="muted small">Цель</div>Разбор за минуты, врач принимает больше пациентов.</div>
   </div>
-  <div class="note">⚠️ Время разбора <b>не измерено</b>. Пока не замерим на 10+ кейсах, в питче говорим «цель», а не «факт».</div>
-  <div class="grid g3" style="margin-top:14px">
-    <div class="card small"><b>Только КЛКТ (3D)</b><br><span class="muted">ОПТГ упоминаем, показываем только КЛКТ.</span></div>
-    <div class="card small"><b>Агент и skill для 3D</b><br><span class="muted">Следующий уровень, после MVP.</span></div>
-    <div class="card small"><b>Не в MVP</b><br><span class="muted">Стоимость лечения, запись на приём.</span></div>
-  </div>
-</section>
+  <div class="note" style="margin-top:12px">Время разбора пока не измерено. Пока не замерим на 10+ кейсах, в питче говорим «цель», а не «факт».</div>
 
-<section id="flow" data-tab="vision">
-  <h2><span class="n">02</span>Главный сценарий</h2>
-  <ol class="steps">
-    <li><b>Пациент</b>Найти по ID или создать профиль. Записать жалобы и самочувствие.</li>
-    <li><b>Загрузка</b>КЛКТ (DICOM / ZIP) сохраняется в профиль пациента.</li>
-    <li><b>Разбор</b>Сегментация → находки → уровни, с индикатором прогресса.</li>
-    <li><b>Сводка в чате</b>«Нашёл 5 проблем: 1 критичная, 2 важные… Жалоба слева снизу — начните с 36».</li>
-    <li><b>Работа по находкам</b>Клик → камера к зубу. ИИ направляет: «посмотрите срез через верхушку корня».</li>
-    <li><b>Объяснение</b>«Почему ИИ так думает» — свёрнуто, раскрывается по клику.</li>
-    <li><b>Вопросы</b>«Почему пульпит?», «Сколько зубов с проблемами?», «Сколько визитов?»</li>
-    <li><b>Решение врача</b>Подтвердить с комментарием, поменять уровень или диагноз, либо отклонить.</li>
-    <li><b>Чек-лист</b>«4 из 5 проверено». Отчёт доступен только когда проверено всё.</li>
-    <li><b>Два PDF</b>Для врача и для пациента. Скачать или отправить в личный кабинет.</li>
-    <li><b>Повторный визит</b>Новый снимок в тот же профиль — видна динамика.</li>
-  </ol>
-</section>
-
-<section id="screen" data-tab="vision">
-  <h2><span class="n">03</span>Экран</h2>
-  <p class="muted small">Макет показывает расположение и логику, не финальный дизайн.</p>
-  <div class="app">
-    <div class="pbar"><b>Пациент #A-0142</b><span>34 года</span><span>Жалобы: боль слева снизу на холодное</span><span class="muted">Визит 2 из 2 · история →</span></div>
-    <div class="mock">
+  <div class="block">
+    <header><h2>Попробуйте экран врача</h2><p class="muted small">Так будет выглядеть работа. Данные выдуманные. Нажмите на зуб или находку, смените уровень, подтвердите с комментарием.</p></header>
+    <div class="demo">
       <div class="viewer">
-        <div class="vtools"><span class="on">Обе челюсти</span><span>Верхняя</span><span>Нижняя</span><span>Вид изнутри</span><span>Изолировать зуб</span></div>
-        <div class="jaw">
-          <div class="row">
-            <div class="t c"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div>
-            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t c"></div><div class="t"></div><div class="t"></div>
-          </div>
-          <div class="row low">
-            <div class="t"></div><div class="t bp"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div>
-            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t ap sel"></div><div class="t bp"></div><div class="t"></div>
-          </div>
-        </div>
-        <div class="vhint">Зубы обычного цвета, проблемные — цветом уровня. Клик по зубу: остальные скрываются, остаётся зуб с корнем (последняя очередь).</div>
+        <div class="arch"><span class="lbl">Верхняя челюсть</span><div class="teeth" id="upper"></div></div>
+        <div class="arch"><span class="lbl">Нижняя челюсть</span><div class="teeth" id="lower"></div></div>
+        <p class="muted small">Цвет зуба: <span class="lv k">Крит</span> <span class="lv v">Важн</span> <span class="lv n">Незнач</span>. Галочка: врач проверил. В настоящем приложении здесь 3D-модель, клик по находке подводит камеру к зубу.</p>
+        <section aria-label="Чат">
+          <div class="msgs" id="msgs"></div>
+          <div class="seg" id="quick"></div>
+          <p class="ex" style="margin-top:6px">Ответы здесь заготовлены. Настоящий чат работает на Claude Haiku и отвечает только по данным кейса.</p>
+        </section>
       </div>
       <div class="side">
-        <div class="grip" title="Потяните, чтобы расширить"></div>
-        <div class="tabs"><span class="on">Находки</span><span>Чек-лист 1/5</span><span class="exp" title="Развернуть">⤢</span></div>
-        <div class="sb">
-          <div class="msg">Нашёл 5 проблем: 1 критичная, 2 важные, 2 незначительные. Жалоба на боль слева снизу — предлагаю начать с <b>36</b> и <b>37</b>.</div>
-          <div class="f">
-            <div class="top"><span class="lv krit">Крит</span><span>Зуб 36 · периапикальный очаг</span><span class="pct">87%</span></div>
-            <details open><summary>Почему ИИ так думает</summary>Зона разрежения у верхушки медиального корня ~3 мм, порог 2 мм. Посмотрите поперечный срез у верхушки.</details>
-            <div class="ctl">Уровень <span class="sel-l">Критичная ▾</span> <span class="btn">✎ диагноз</span> <span class="btn">Показать на модели</span></div>
-            <div class="cm">Комментарий врача: «Согласен, разрежение видно, щель расширена…»</div>
-            <div class="ctl"><span class="btn ok">Подтвердить</span><span class="btn">Отклонить</span></div>
+        <div class="sidebox">
+          <div class="sidetabs" role="tablist"><button role="tab" data-side="list" aria-selected="true">Находки</button><button role="tab" data-side="check" aria-selected="false">Чек-лист</button></div>
+          <div id="side-list"><ul class="flist" id="flist"></ul></div>
+          <div id="side-check" hidden>
+            <p id="checkTxt" style="font-weight:600"></p>
+            <div class="prog" style="margin:8px 0"><i id="checkBar"></i></div>
+            <p class="muted small" id="checkHint"></p>
           </div>
-          <div class="f"><div class="top"><span class="lv vazh">Важн</span><span>Зуб 37 · глубокий кариес</span><span class="pct">74%</span></div><details><summary>Почему ИИ так думает</summary>…</details></div>
-          <div class="f done"><div class="top"><span class="lv vazh">Важн</span><span>Зуб 46 · кариес</span><span class="pct">68%</span></div></div>
         </div>
-        <div class="ask">Спросить ИИ: «Почему ты считаешь, что это очаг?»</div>
+        <div class="sidebox detail" id="detail"></div>
+        <div class="btns" style="margin:0">
+          <button class="btn pri" id="repDoc" disabled>PDF для врача</button>
+          <button class="btn pri" id="repPat" disabled>PDF для пациента</button>
+        </div>
+        <p class="muted small" id="repHint"></p>
       </div>
     </div>
   </div>
-  <div class="grid g3" style="margin-top:14px">
-    <div class="card small"><h3>Шапка пациента</h3>ID, возраст, жалобы, номер визита, история. ФИО крупно не показываем — экран видит жюри.</div>
-    <div class="card small"><h3>Сайдбар</h3>Тянется за границу и разворачивается кнопкой ⤢. Вкладки «Находки» и «Чек-лист». 3D всегда остаётся слева.</div>
-    <div class="card small"><h3>Карточка находки</h3>Порядок: диагноз → снимок → объяснение. Уровень можно сменить, диагноз — поправить.</div>
-  </div>
-  <div class="card" style="margin-top:14px">
-    <h3>Вкладка «Чек-лист»</h3>
-    <ul class="chk">
-      <li><span class="box on">✓</span>46 · кариес — подтверждено</li>
-      <li><span class="box"></span>36 · периапикальный очаг</li>
-      <li><span class="box"></span>37 · глубокий кариес</li>
-      <li><span class="box"></span>27 · кариес</li>
-      <li><span class="box"></span>18 · ретенция</li>
-    </ul>
-    <p class="small muted" style="margin:10px 0 0">Кнопка «Сформировать отчёт» активна, когда отмечены все.</p>
-  </div>
-</section>
 
-<section id="scale" data-tab="vision">
-  <h2><span class="n">04</span>Шкала: Критичная / Важная / Незначительная</h2>
-  <p class="small muted" style="margin-top:0">Решено 17.11: три уровня вместо A+…C. Полное слово — в карточке и отчёте, короткое — на бейдже и в 3D.</p>
-  <div class="scale3">
-    <div class="card"><span class="lv krit">Крит</span><div class="full">Критичная</div><p>Требует вмешательства в первую очередь</p></div>
-    <div class="card"><span class="lv vazh">Важн</span><div class="full">Важная</div><p>Нужно лечение или решение врача</p></div>
-    <div class="card"><span class="lv nez">Незнач</span><div class="full">Незначительная</div><p>Вариант нормы, учесть, наблюдать</p></div>
+  <div class="block">
+    <header><h2>Главный сценарий</h2><p class="muted small">Нажмите на шаг.</p></header>
+    <div class="steps" id="steps"></div>
+    <div class="card stepbody" id="stepbody"></div>
   </div>
-  <div class="card small" style="margin-top:14px">
-    <b>Уровень уже считается в коде.</b> У находок поле <code>severity</code> ровно трёх значений, перевод один к одному:
-    <code>alert</code> → Критичная · <code>warning</code> → Важная · <code>info</code> → Незначительная.
-    <p class="muted" style="margin:8px 0 0">Цвета: красный, жёлтый, серый — без оранжевого. Уровень ставит система, врач может поменять. Пациенту: «требует срочного внимания / нужно лечение / для сведения».</p>
-  </div>
-</section>
 
-<section id="review" data-tab="vision">
-  <h2><span class="n">05</span>Проверка врачом</h2>
-  <div class="grid g2">
-    <div class="card small">
-      <ul>
-        <li><b>Обязательна для каждой находки.</b> Без решения по всем отчёт не генерируется.</li>
-        <li>Перед подтверждением — сменить уровень или поправить диагноз.</li>
-        <li>Отклонённая остаётся зачёркнутой и в отчёт как диагноз не идёт.</li>
+  <div class="block">
+    <header><h2>Подробности</h2></header>
+    <details class="acc"><summary>Шкала: Критичная / Важная / Незначительная</summary><div class="in">
+      <div class="grid g3">
+        <div class="card"><span class="lv k">Крит</span><h3 style="margin-top:8px">Критичная</h3><p class="muted small">Вмешательство в первую очередь.</p><p class="small" style="margin-top:6px">Пациенту: «требует срочного внимания»</p></div>
+        <div class="card"><span class="lv v">Важн</span><h3 style="margin-top:8px">Важная</h3><p class="muted small">Нужно лечение или решение врача.</p><p class="small" style="margin-top:6px">Пациенту: «нужно лечение»</p></div>
+        <div class="card"><span class="lv n">Незнач</span><h3 style="margin-top:8px">Незначительная</h3><p class="muted small">Вариант нормы: учесть, наблюдать.</p><p class="small" style="margin-top:6px">Пациенту: «для сведения»</p></div>
+      </div>
+      <p class="small" style="margin-top:10px">В коде у находок уже есть поле <code>severity</code>: <code>alert</code> → Критичная, <code>warning</code> → Важная, <code>info</code> → Незначительная. Уровень ставит система, врач может изменить.</p>
+    </div></details>
+
+    <details class="acc"><summary>Проверка врачом и комментарий</summary><div class="in">
+      <ul class="tight">
+        <li>Обязательна для каждой находки. Пока не решено по всем, отчёт не создаётся.</li>
+        <li>Перед подтверждением можно сменить уровень или поправить диагноз.</li>
+        <li>Отклонённая находка остаётся зачёркнутой и в отчёт как диагноз не попадает.</li>
         <li>Любая правка после подписи снимает подпись.</li>
+        <li>Комментарий обязателен: своими словами, что увидел и почему согласен. Проверка в MVP: не короче 20 символов и не копия объяснения ИИ.</li>
       </ul>
-    </div>
-    <div class="card small">
-      <b>Комментарий обязателен</b> — своими словами, по существу: что увидел и почему согласен.
-      <p class="muted" style="margin:8px 0 0">MVP-проверка: не короче 20 символов и не копия объяснения ИИ.</p>
-    </div>
-  </div>
-  <div class="cmp" style="margin-top:12px">
-    <div class="bad"><b>Так нельзя</b><br>«ок», «согласен», «+», скопированный или пересказанный текст ИИ</div>
-    <div class="good"><b>Так нужно</b><br>«Согласен, на срезе видна зона разрежения у верхушки 36, отметил ещё расширение периодонтальной щели.»</div>
+      <div class="grid g2" style="margin-top:10px">
+        <div class="card"><b style="color:var(--crit)">Так нельзя</b><p class="small">«ок», «согласен», «+», скопированный или пересказанный текст ИИ.</p></div>
+        <div class="card"><b style="color:var(--ok)">Так нужно</b><p class="small">«Согласен, на срезе видна зона разрежения у верхушки 36, отметил ещё расширение периодонтальной щели.»</p></div>
+      </div>
+    </div></details>
+
+    <details class="acc"><summary>Два отчёта</summary><div class="in">
+      <div class="seg" id="repSeg" style="margin-bottom:10px"><button aria-pressed="true" data-r="doc">Для врача</button><button aria-pressed="false" data-r="pat">Для пациента</button></div>
+      <div class="paper" id="paper"></div>
+      <p class="muted small" style="margin-top:8px">Создаются в конце, после проверки всех находок. В MVP отправка в кабинет пациента заменена ссылкой на скачивание.</p>
+    </div></details>
+
+    <details class="acc"><summary>Чат и языковая модель</summary><div class="in">
+      <div class="grid g2">
+        <div class="card"><h3>Что делает</h3><ul class="tight small"><li>Пишет сводку первым сообщением, с учётом жалоб.</li><li>Направляет врача: «проверьте это».</li><li>Отвечает на вопросы по находкам.</li><li>Оценивает число визитов по плану лечения.</li><li>Пишет текст отчёта для пациента.</li></ul></div>
+        <div class="card"><h3>Что получает модель</h3><p class="small">Жалобы и возраст, находки (код, зуб, текст, уровень, уверенность, основание), план лечения, какие зубы есть и отсутствуют, решения врача. Всё как JSON.</p><p class="small" style="margin-top:6px">Картинки и 3D-модель не видит. Диагноз сам не ставит, измерения не выдумывает, отвечает на языке вопроса.</p></div>
+      </div>
+      <p class="small" style="margin-top:10px">Модель: Claude Haiku через Anthropic API. Бюджет: по $3–4 с человека плюс неиспользованные $5 у одного участника. Ключ в <code>.env</code>, не в репозитории. Локальную Ollama отклонили как медленную. Бэкенд готов: <code>case_chat.py</code>, <code>POST /api/cbct/chat/{id}</code>; числа, которых нет в находках, из ответа отбрасываются.</p>
+    </div></details>
+
+    <details class="acc"><summary>Профиль пациента и история</summary><div class="in">
+      <ul class="tight"><li>Внутренний ID, ПИНФЛ по желанию.</li><li>Возраст, жалобы по визитам, снимки по датам.</li><li>Новый КЛКТ добавляется в тот же профиль. В MVP: профиль, визиты, жалобы. Сравнение снимков позже.</li></ul>
+      <div class="note" style="margin-top:10px">ПИНФЛ и ФИО — персональные данные. Хранить отдельно от снимков (как уже сделано с <code>patient_map.json</code>). На демо только вымышленный ID.</div>
+    </div></details>
+
+    <details class="acc"><summary>Что не входит в MVP</summary><div class="in">
+      <ul class="tight"><li>Показываем только КЛКТ (3D). ОПТГ упоминаем, не показываем.</li><li>Агент и skill для 3D — следующий уровень.</li><li>Стоимость лечения, запись на приём.</li><li>Мобильные приложения: 100% будем делать, но в конце.</li></ul>
+    </div></details>
   </div>
 </section>
 
-<section id="reports" data-tab="vision">
-  <h2><span class="n">06</span>Два отчёта</h2>
-  <p class="small muted">Генерируются в самом конце, после проверки всех находок. Скачать или отправить в кабинет пациента (в MVP — ссылка на скачивание).</p>
-  <div class="grid g2">
-    <div class="paper">
-      <h4>Заключение по КЛКТ — для врача</h4>
-      <div>Клиника · пациент #A-0142 · снимок 17.11.2026 · врач</div>
-      <div class="ln"></div><div class="ln s"></div>
-      <div><b>Жалобы:</b> боль слева снизу на холодное</div>
-      <div><b>Сводка:</b> критичных 1 · важных 2 · незначительных 2</div>
-      <div class="ln"></div>
-      <div><b>36 · периапикальный очаг · Критичная · 87%</b><br>срез · почему ИИ так решил · комментарий врача</div>
-      <div class="ln s"></div><div class="ln"></div>
-      <div class="foot">Предварительный разбор выполнен ИИ, проверен врачом.<br>Модели: nnU-Net (сегментация, версия) · Anthropic Claude Haiku (объяснения, точная версия).<br>Подтвердил: Имя Фамилия врача, дата.</div>
-    </div>
-    <div class="paper">
-      <h4>Ваши зубы — простыми словами</h4>
-      <div>Для пациента #A-0142</div>
-      <div class="ln"></div>
-      <div><b>Что нашли:</b> у зуба 36 (нижний левый, шестой) воспаление у кончика корня.</div>
-      <div><b>Что это значит:</b> …</div>
-      <div><b>Что делать:</b> лечение канала, ориентировочно 2–3 визита.</div>
-      <div class="ln s"></div><div class="ln"></div>
-      <div class="foot">Сроки ориентировочные, их уточнит врач.<br>Разбор выполнен ИИ и проверен врачом: Имя Фамилия.</div>
-    </div>
+<section class="view" id="v-plan" hidden>
+  <header><h2>Как это работает</h2><p class="muted small">Нажмите на шаг: что он делает и что уже есть в коде. Пунктирный контур — новое на хакатоне.</p></header>
+  <div class="pipe" id="pipe"></div>
+  <div class="card pdetail" id="pdetail"></div>
+
+  <div class="block">
+    <header><h2>Что делаем и когда</h2><p class="muted small">Выберите этап, потом нажмите на задачу: там «готово, когда…» и где в коде.</p></header>
+    <div class="stage" id="stage" role="tablist"></div>
+    <div class="filters" id="pfilters"></div>
+    <div class="tasks" id="tasks"></div>
   </div>
 </section>
 
-<section id="chat" data-tab="vision">
-  <h2><span class="n">07</span>Чат и LLM</h2>
-  <div class="grid g2">
-    <div class="card small">
-      <h3>Модель</h3>
-      <ul>
-        <li><b>Уже есть:</b> <code>case_chat.py</code>, <code>POST /api/cbct/chat/{id}</code>, модель <code>claude-haiku-5-5</code>. Числа, которых нет в находках, из ответа отбрасываются. Интерфейса пока нет.</li>
-        <li><b>Claude Haiku через Anthropic API.</b> Бюджет: по $3–4 с человека плюс неиспользованные $5 у участника.</li>
-        <li>Ключ в <code>.env</code>, не в репозитории. Нужен интернет на площадке.</li>
-        <li>Локальную Ollama отклонили — медленно.</li>
-      </ul>
-    </div>
-    <div class="card small">
-      <h3>Что делает</h3>
-      <ul>
-        <li>Пишет сводку первым, с учётом жалоб.</li>
-        <li>Направляет врача: «проверьте это».</li>
-        <li>Отвечает на вопросы по находкам.</li>
-        <li>Оценивает число визитов (по плану лечения).</li>
-        <li>Пишет текст отчёта для пациента.</li>
-      </ul>
-    </div>
-  </div>
-  <div class="card small" style="margin-top:14px">
-    <h3>Что получает модель</h3>
-    <div class="flow">
-      <span class="node">жалобы, возраст</span><span class="arr">+</span>
-      <span class="node">находки: код, зуб, текст, уровень, уверенность, основание</span><span class="arr">+</span>
-      <span class="node">план лечения</span><span class="arr">+</span>
-      <span class="node">какие зубы есть / отсутствуют</span><span class="arr">+</span>
-      <span class="node">решения врача</span><span class="arr">→</span>
-      <span class="node new">JSON → Claude Haiku</span>
-    </div>
-    <p class="muted" style="margin:10px 0 0">Картинки и 3D модель не видит — только числа и текст. Правила: не ставит диагноз сам, не выдумывает измерения («этого система не измеряет»), напоминает, что решает врач, отвечает на языке вопроса.</p>
-  </div>
-</section>
-
-<section id="patient" data-tab="vision">
-  <h2><span class="n">08</span>Профиль пациента и история</h2>
-  <div class="grid g2">
-    <div class="card small">
-      <ul>
-        <li>Внутренний ID; ПИНФЛ — опционально.</li>
-        <li>Профиль: возраст, жалобы по визитам, снимки по датам.</li>
-        <li>Новый КЛКТ добавляется к профилю, видна динамика.</li>
-        <li>В MVP: профиль, визиты, жалобы. Сравнение — потом.</li>
-      </ul>
-    </div>
-    <div class="note" style="margin:0">⚠️ ПИНФЛ и ФИО — персональные данные. Хранить отдельно от снимков, как уже сделано с <code>patient_map.json</code> (в <code>.gitignore</code>). На демо — только вымышленный ID.</div>
-  </div>
-</section>
-
-<section id="arch" data-tab="plan">
-  <h2><span class="n">09</span>Как устроено</h2>
-  <div class="flow">
-    <span class="node">КЛКТ (DICOM)</span><span class="arr">→</span>
-    <span class="node">nnU-Net: зубы, пульпа, кость, нерв</span><span class="arr">→</span>
-    <span class="node">находки: геометрия + пороги из исследований</span><span class="arr">→</span>
-    <span class="node new">уровень Крит / Важн / Незнач</span><span class="arr">→</span>
-    <span class="node new">сайдбар</span><span class="arr">+</span><span class="node">чат Claude Haiku</span><span class="arr">→</span>
-    <span class="node">проверка врачом</span><span class="arr">→</span>
-    <span class="node new">2 PDF</span>
-  </div>
-  <p class="small muted">Синим — новое на хакатоне. Пример логики находок: измерено поражение 4 мм, порог из литературы 5 мм → это кариес, а не пульпит. Патологиям модель не обучается — правила лежат в коде.</p>
-  <div class="tbl">
-  <table>
-    <tr><th>Уже есть</th><th>Где</th></tr>
-    <tr><td>Загрузка КЛКТ и статус разбора</td><td><code>/api/cbct/upload</code>, <code>/segment</code>, <code>/status/{id}</code></td></tr>
-    <tr><td>3D-меш, зубы отдельными нодами <code>tooth_&lt;FDI&gt;</code></td><td><code>/api/cbct/mesh/{id}</code>, three.js в <code>demo_static</code></td></tr>
-    <tr><td>Находки (<code>severity</code>: info / warning / alert, <code>confidence</code>, <code>basis</code>)</td><td><code>/api/cbct/findings/{id}</code></td></tr>
-    <tr><td>Подтверждение / отклонение, подпись</td><td><code>/api/cbct/review/{id}</code>, <code>/api/cbct/sign/{id}</code></td></tr>
-    <tr><td>Карточка и срезы зуба</td><td><code>/api/cbct/tooth/{id}/{fdi}</code></td></tr>
-    <tr><td>План лечения, PDF (reportlab, к вебу не подключён)</td><td><code>cbct_plan.py</code>, <code>cbct_report.py</code></td></tr>
-    <tr><td>Чат по кейсу на Claude Haiku (без интерфейса)</td><td><code>case_chat.py</code>, <code>/api/cbct/chat/{id}</code></td></tr>
-    <tr><td>Пациенты и исследования (без жалоб)</td><td><code>/api/patients</code>, <code>/api/patients/{pid}/studies</code></td></tr>
-    <tr><td>Кейс для разработки без моделей</td><td><code>fixtures/cbct_pair001/</code>, <code>SETUP.md</code></td></tr>
-  </table>
-  </div>
-</section>
-
-<section id="tasks" data-tab="plan">
-  <h2><span class="n">10</span>Задачи</h2>
-  <div class="tbl">
-  <table>
-    <tr><th>#</th><th>Задача</th><th>Где</th><th>Когда</th></tr>
-    <tr><td>1</td><td>Сайдбар: вкладки «Находки» / «Чек-лист», карточки, расширение ⤢</td><td><code>demo_static/index.html</code></td><td class="pr mvp">MVP</td></tr>
-    <tr><td>2</td><td>Шкала Крит / Важн / Незнач из <code>severity</code>, цвета в 3D и карточках</td><td>фронт</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>3</td><td>Процент уверенности на карточке</td><td>см. В1</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>4</td><td>Смена уровня и правка диагноза врачом</td><td><code>demo_server.py</code>, <code>meta.json</code></td><td class="pr mvp">MVP</td></tr>
-    <tr><td>5</td><td>Обязательный комментарий при подтверждении</td><td><code>/api/cbct/review</code>, фронт</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>6</td><td>Чат: эндпоинт есть; добавить жалобы и план в контекст, язык вопроса, интерфейс</td><td><code>case_chat.py</code>, фронт</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>7</td><td>Первое сообщение-сводка после разбора</td><td>модуль чата</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>8</td><td>PDF для врача: уровни, проценты, комментарии, модели ИИ, ФИО врача</td><td><code>cbct_report.py</code></td><td class="pr mvp">MVP</td></tr>
-    <tr><td>9</td><td>PDF для пациента простым языком</td><td><code>cbct_report.py</code> + чат</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>10</td><td>Профиль пациента: ID, жалобы, визиты</td><td>проверить <code>patients.py</code></td><td class="pr mvp">MVP мин.</td></tr>
-    <tr><td>11</td><td>Изоляция зуба в 3D</td><td>фронт, ноды GLB</td><td class="pr maybe">если успеем</td></tr>
-    <tr><td>12</td><td>Сравнение визитов, ОПТГ</td><td>—</td><td class="pr later">потом</td></tr>
-  </table>
-  </div>
-</section>
-
-<section id="stages" data-tab="plan">
-  <h2><span class="n">11</span>Этапы</h2>
-  <div class="grid g3">
-    <div class="card small"><h3>Сегодня к 22:00–23:00</h3>MVP: задачи 1–10 на одном демо-кейсе КЛКТ.</div>
-    <div class="card small"><h3>До 18.11, 15:00</h3>Доработка, изоляция зуба, прогон сценария, замер времени разбора.</div>
-    <div class="card small"><h3>Следующий уровень</h3>Агент на Anthropic Managed Agents; ресёрч skill для чтения 3D; замер на 10+ кейсах.</div>
-  </div>
-  <div class="note">Параллельно и срочно (не код): показать <code>plan/for-dentist.html</code> знакомому стоматологу и по фидбэку решить, что остаётся в MVP.</div>
-</section>
-
-<section id="eval" data-tab="eval">
-  <h2><span class="n">12</span>Критерии оценки на чекпоинте 18.11</h2>
-  <div class="grid g3">
-    <div class="card small"><h3>Как идёт</h3>Три ментора, к каждому <b>отдельно</b>, по <b>10 минут</b> — 30 минут на команду.</div>
-    <div class="card small"><h3>Как считают</h3>Каждый ставит 5 оценок от 1 до 10, балл ментора — среднее. Итог = (Тех + Бизнес + Отрасль) ÷ 3.</div>
-    <div class="card small"><h3>Что дальше</h3>По 5 команд из трека, 15 в финал. В финале — один победитель на трек.</div>
-  </div>
-  <div class="tbl" style="margin-top:14px"><table>
-    <tr><th>Ментор</th><th>Критерии (1–10)</th><th>Что показываем / чего не хватает</th></tr>
-    <tr><td><b>Технический</b></td><td>T1 реализация · T2 готовность кода · T3 инновационность · T4 знания команды · T5 технологии</td><td><span class="st done">✅ сильное место.</span> nnU-Net на КЛКТ, находки по порогам из исследований, чат с проверкой чисел. Показывать живое демо, не слайды.</td></tr>
-    <tr><td><b>Бизнес</b></td><td>B1 идея и актуальность · B2 бизнес-модель · B3 конкурентное преимущество · B4 финансовая устойчивость · B5 рост</td><td><span class="st" style="color:var(--red)">⚠️ слабое место.</span> B2 и B4 не готовы: кто платит, сколько, себестоимость разбора. B3 — против Diagnocat: языки, цена, врач в контуре. B5 — ОПТГ, сканы, мобильные приложения, страны ЦА.</td></tr>
-    <tr><td><b>Отраслевой</b></td><td>S1 актуальность · S2 понимание отрасли · S3 применимость · S4 <b>законодательство</b> · S5 масштаб влияния</td><td>S2 — сделано с врачами клиники. S3 — нужен фидбэк стоматолога. <span class="st" style="color:var(--red)">⚠️ S4</span> — подготовить ответ: решает врач, персональные данные отдельно, статус медицинского ПО. S5 — сколько КЛКТ в год в стране.</td></tr>
+<section class="view" id="v-progress" hidden>
+  <header><h2>Что сделано, что нет</h2><p class="muted small">На 17.11, вечер, по коду в <code>main</code>. Нажмите на счётчик, чтобы отфильтровать.</p></header>
+  <div class="bar" id="pbar" aria-hidden="true"></div>
+  <div class="counts" id="counts"></div>
+  <div class="card table"><table>
+    <thead><tr><th>#</th><th>Задача</th><th>Статус</th><th>Комментарий</th></tr></thead>
+    <tbody id="ptable"></tbody>
   </table></div>
-  <p class="small muted">Источник: презентация организаторов, слайды 6–9 (<code>materials/organizers/presentation-organizers.md</code>).</p>
-</section>
-
-<section id="questions" data-tab="questions">
-  <h2><span class="n">13</span>Открытые вопросы</h2>
-  <div class="grid">
-    <div class="q block"><b class="id">В1</b><b>Процент уверенности</b><span class="pill">к Батыру</span><p>Решили показывать. Но у находок КЛКТ <code>confidence</code> — категория (<code>high</code> и ниже), а не процент: находки считаются геометрией. Откуда брать число — из выхода сети, из категории или показывать категорию?</p></div>
-    <div class="q"><b class="id">В2</b><b>Шкала — решено</b><p>Три уровня: Критичная / Важная / Незначительная (Крит / Важн / Незнач), перевод из <code>severity</code> один к одному.</p></div>
-    <div class="q"><b class="id">В3</b><b>Формат 3D для Claude</b><p>Меш — GLB, маска — <code>.mha</code>. В MVP передаём только JSON с находками; что отдавать агенту потом?</p></div>
-    <div class="q block"><b class="id">В4</b><b>Где работает демо</b><span class="pill">к Батыру</span><p>Сервер с RTX 5090 в клинике, доступ через Cloudflare Tunnel. Кто держит ноутбук включённым и до какого времени?</p></div>
-    <div class="q"><b class="id">В5</b><b>Проверка комментария</b><p>Хватит длины и несовпадения с текстом ИИ, или проверять самим ИИ?</p></div>
-    <div class="q"><b class="id">В6</b><b>Финальное подтверждение</b><p>Нужна ли общая отметка «Я согласен с заключением» перед PDF?</p></div>
-    <div class="q"><b class="id">В7</b><b>Формат отчёта</b><p>Есть ли образец реального заключения клиники?</p></div>
-    <div class="q"><b class="id">В8</b><b>Мобильные приложения</b><p>Будем ли делать мобильные приложения? Ответ Бегзада: 100% будем делать, но в конце. Как внедрять — подумаем позже, пока не расписываем.</p></div>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="card"><h3>Сверх спеки (Батыр)</h3><ul class="tight small" id="extra"></ul></div>
+    <div class="card"><h3>Не код</h3><ul class="tight small" id="nocode"></ul></div>
   </div>
-  <p class="small muted" style="margin-top:12px"><b>Отложено до MVP:</b> какой снимок показываем жюри, обезличен ли он, кто записывает демо.</p>
 </section>
 
-<footer>Источник правды для кода — <code>plan/product-spec.md</code>. Эта страница — его визуальная версия; при правках обновляются оба файла.</footer>
-</div>
+<section class="view" id="v-eval" hidden>
+  <header><h2>Критерии оценки на чекпоинте</h2><p class="muted small">Три ментора, к каждому отдельно, по 10 минут. Каждый ставит 5 оценок от 1 до 10. Итог = (Тех + Бизнес + Отрасль) ÷ 3. В финал проходят 15 команд.</p></header>
+  <div class="grid" id="mentorTotals"></div>
+  <p class="muted small" style="margin-top:8px">Можно прикинуть оценки команды: нажмите балл напротив критерия. Оценки остаются только в вашем браузере.</p>
+  <div class="grid g3" id="mentors" style="margin-top:12px"></div>
+  <p class="muted small" style="margin-top:12px">Источник: презентация организаторов, слайды 6–9 (<code>materials/organizers/presentation-organizers.md</code>).</p>
+</section>
+
+<section class="view" id="v-questions" hidden>
+  <header><h2>Открытые вопросы</h2><p class="muted small">Нажмите на вопрос, чтобы раскрыть.</p></header>
+  <div class="seg" id="qf" style="margin-bottom:6px"></div>
+  <div id="qlist"></div>
+  <p class="muted small" style="margin-top:14px">Отложено до MVP: какой снимок показываем жюри, обезличен ли он, кто записывает демо.</p>
+</section>
+
+<footer>Источник правды для кода — <code>plan/product-spec.md</code>. Эта страница — его интерактивная версия, при правках обновляются оба файла.</footer>
+</main>
+
 <script>
 (function(){
-  var tabs=['vision','plan','progress','eval','questions'];
-  function show(t){
-    if(tabs.indexOf(t)<0)t='vision';
-    document.querySelectorAll('section[data-tab]').forEach(function(e){e.hidden=e.dataset.tab!==t});
-    document.querySelectorAll('nav.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.go===t)});
-    try{history.replaceState(null,'','#'+t)}catch(e){}
-    window.scrollTo(0,0);
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
+var LV={k:'Критичная',v:'Важная',n:'Незначительная'}, LVS={k:'Крит',v:'Важн',n:'Незнач'};
+function save(k,v){try{localStorage.setItem('spec_'+k,JSON.stringify(v))}catch(e){}}
+function load(k,d){try{var v=localStorage.getItem('spec_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+
+var TASKS=[
+ {n:1,st:'today',title:'Сайдбар: вкладки «Находки» и «Чек-лист», карточки, расширение',s:'todo',pr:'MVP',where:'<code>demo_static/index.html</code>',done:'Справа список находок и чек-лист, панель можно развернуть.'},
+ {n:2,st:'today',title:'Шкала Крит / Важн / Незнач',s:'todo',pr:'MVP',where:'фронт; из поля <code>severity</code>',done:'Каждая находка с цветным бейджем, зубы в 3D окрашены по уровню.'},
+ {n:3,st:'today',title:'Уверенность на карточке',s:'todo',pr:'MVP',where:'зависит от вопроса В1',done:'На карточке есть число или категория, решение по В1 принято.'},
+ {n:4,st:'today',title:'Врач меняет уровень и правит диагноз',s:'todo',pr:'MVP',where:'<code>demo_server.py</code>, <code>meta.json</code>',done:'Изменение сохраняется и попадает в отчёт.'},
+ {n:5,st:'today',title:'Обязательный комментарий при подтверждении',s:'todo',pr:'MVP',where:'<code>/api/cbct/review</code>, фронт',done:'Без комментария от 20 символов и не копии ИИ подтвердить нельзя.'},
+ {n:6,st:'today',title:'Чат: интерфейс, жалобы в контексте',s:'part',pr:'MVP',where:'<code>case_chat.py</code>, фронт',done:'Бэкенд готов: план в контексте, язык вопроса. Остался интерфейс и жалобы пациента.'},
+ {n:7,st:'today',title:'Сводка первым сообщением после разбора',s:'part',pr:'MVP',where:'<code>summary()</code> в <code>case_chat.py</code>',done:'Функция есть, счётчики считает код. Остался вывод в интерфейсе.'},
+ {n:8,st:'today',title:'PDF для врача: уровни, уверенность, комментарии, модели ИИ, ФИО врача',s:'part',pr:'MVP',where:'<code>cbct_report.py</code>',done:'PDF строится из командной строки. Нужны новые поля и кнопка в вебе.'},
+ {n:9,st:'today',title:'PDF для пациента простым языком',s:'todo',pr:'MVP',where:'<code>cbct_report.py</code> + чат',done:'Короткий текст без терминов: что нашли, что значит, что делать.'},
+ {n:10,st:'today',title:'Профиль пациента: ID, жалобы, визиты',s:'part',pr:'MVP мин.',where:'<code>/api/patients</code>',done:'Пациенты и исследования есть. Нужны поле жалоб и привязка снимка к визиту.'},
+ {n:11,st:'tomorrow',title:'Изоляция зуба в 3D',s:'todo',pr:'если успеем',where:'фронт, ноды <code>tooth_&lt;FDI&gt;</code>',done:'Клик по зубу прячет остальные, виден один зуб.'},
+ {n:13,st:'tomorrow',title:'Прогон сценария целиком, 2–3 раза',s:'todo',pr:'MVP',where:'демо-кейс <code>fixtures/cbct_pair001</code>',done:'От загрузки до двух PDF без ручных обходов.'},
+ {n:14,st:'tomorrow',title:'Показать документ стоматологу, собрать фидбэк',s:'todo',pr:'не код',where:'<code>plan/for-dentist.html</code>',done:'Есть ответы на вопросы из документа, решено, что остаётся в MVP.'},
+ {n:15,st:'tomorrow',title:'Замер времени разбора на 10 кейсах',s:'todo',pr:'не код',where:'—',done:'В питче есть число вместо «цели».'},
+ {n:16,st:'tomorrow',title:'Бизнес-модель и ответ про законодательство',s:'todo',pr:'не код',where:'—',done:'Кто платит, сколько, себестоимость разбора; ответ на вопрос ментора про закон.'},
+ {n:12,st:'later',title:'Сравнение визитов, ОПТГ',s:'hold',pr:'потом',where:'—',done:'После хакатона.'},
+ {n:17,st:'later',title:'Агент на Anthropic Managed Agents и skill для чтения 3D',s:'hold',pr:'потом',where:'—',done:'Следующий уровень после MVP.'},
+ {n:18,st:'later',title:'Мобильные приложения',s:'hold',pr:'в конце',where:'—',done:'100% будем делать, но в конце. Как внедрять, решим позже.'}
+];
+var SL={done:'Сделано',part:'Частично',todo:'Не начато',hold:'Отложено'};
+var STAGES=[
+ {id:'today',when:'Сегодня до 22:00–23:00',sum:'MVP: задачи 1–10 на одном демо-кейсе'},
+ {id:'tomorrow',when:'До 18.11, 15:00',sum:'Доработка, прогон, документы для менторов'},
+ {id:'later',when:'Дальше',sum:'Следующий уровень'}
+];
+var PIPE=[
+ {t:'КЛКТ (DICOM)',n:0,d:'Врач загружает архив снимка. Статус разбора виден в процентах.',c:'<code>/api/cbct/upload</code>, <code>/segment</code>, <code>/status/{id}</code>',s:'done'},
+ {t:'Сегментация nnU-Net',n:0,d:'Сеть размечает зубы, пульпу, кость, нерв. Из маски строится 3D-меш, зубы отдельными нодами.',c:'<code>/api/cbct/mesh/{id}</code>, three.js в <code>demo_static</code>',s:'done'},
+ {t:'Находки',n:0,d:'Геометрия по маске плюс пороги из исследований. Пример: поражение 4 мм, порог 5 мм — значит кариес, а не пульпит. Патологиям модель не обучается, правила лежат в коде.',c:'<code>/api/cbct/findings/{id}</code>; поля <code>severity</code>, <code>confidence</code>, <code>basis</code>',s:'done'},
+ {t:'Уровень Крит / Важн / Незнач',n:1,d:'Перевод из <code>severity</code> один к одному, цвет в 3D и карточках.',c:'фронт (задача 2)',s:'todo'},
+ {t:'Сайдбар и чат',n:1,d:'Список находок, чек-лист и чат Claude Haiku. Чат по кейсу работает на бэкенде, интерфейса нет.',c:'<code>case_chat.py</code>, <code>/api/cbct/chat/{id}</code>; фронт (задачи 1, 6, 7)',s:'part'},
+ {t:'Проверка врачом',n:0,d:'Подтвердить, отклонить, сменить уровень, комментарий. Подпись снимается при правках.',c:'<code>/api/cbct/review/{id}</code>, <code>/sign/{id}</code>; комментарий и смена уровня — задачи 4–5',s:'part'},
+ {t:'Два PDF',n:1,d:'Для врача и для пациента, с указанием моделей ИИ и ФИО врача.',c:'<code>cbct_report.py</code>, <code>cbct_plan.py</code> (задачи 8–9)',s:'part'}
+];
+var QS=[
+ {id:'В1',t:'Процент уверенности',s:'open',who:'к Батыру',b:'Решили показывать. Но у находок КЛКТ <code>confidence</code> — категория (<code>high</code> и ниже), а не процент: находки считаются геометрией. Откуда брать число: из выхода сети, из категории, или показывать категорию?'},
+ {id:'В2',t:'Шкала уровней',s:'done',who:'',b:'Три уровня: Критичная / Важная / Незначительная (Крит / Важн / Незнач). Перевод из <code>severity</code> один к одному.'},
+ {id:'В3',t:'Формат 3D для Claude',s:'open',who:'потом',b:'Меш — GLB, маска — <code>.mha</code>. В MVP передаём только JSON с находками. Что отдавать агенту позже?'},
+ {id:'В4',t:'Где работает демо',s:'open',who:'к Батыру',b:'Сервер с RTX 5090 в клинике, доступ через Cloudflare Tunnel. Кто держит его включённым и до какого времени?'},
+ {id:'В5',t:'Проверка комментария',s:'open',who:'',b:'Хватит длины и несовпадения с текстом ИИ, или проверять самим ИИ?'},
+ {id:'В6',t:'Финальное подтверждение',s:'open',who:'',b:'Нужна ли общая отметка «Я согласен с заключением» перед созданием PDF?'},
+ {id:'В7',t:'Формат отчёта',s:'open',who:'',b:'Есть ли образец реального заключения клиники?'},
+ {id:'В8',t:'Мобильные приложения',s:'later',who:'',b:'Ответ Бегзада: 100% будем делать, но в конце. Как внедрять, подумаем позже, пока не расписываем.'}
+];
+var MENT=[
+ {id:'T',name:'Технический ментор',note:'Сильное место: живое демо nnU-Net, находки по порогам из исследований, чат с проверкой чисел. Показывать работающее, не слайды.',
+  c:['Реализация','Готовность кода','Инновационность','Знания команды','Технологии']},
+ {id:'B',name:'Бизнес-ментор',note:'Слабое место. Не готовы модель (B2) и финансы (B4): кто платит, сколько, себестоимость разбора. B3: против Diagnocat — языки, цена, врач в контуре. B5: ОПТГ, сканы, мобильные приложения, страны Центральной Азии.',
+  c:['Идея и актуальность','Бизнес-модель','Конкурентное преимущество','Финансовая устойчивость','Потенциал роста']},
+ {id:'S',name:'Отраслевой ментор',note:'S2 закрыт общением с врачами клиники, S3 нужен фидбэк стоматолога. S4 слабое: подготовить ответ про закон (решение за врачом, персональные данные отдельно, статус медицинского ПО). S5: сколько КЛКТ в год в стране.',
+  c:['Актуальность','Понимание отрасли','Применимость','Законодательство','Масштаб влияния']}
+];
+var EXTRA=[['done','Проект поднимается без моделей, есть кейс <code>fixtures/cbct_pair001</code>'],['done','Сценарий показа только КЛКТ'],['part','Метрики точности с доверительными интервалами'],['todo','Автовращение 3D']];
+var NOCODE=[['done','Спека v0.4 и эта страница'],['done','Репозиторий: <code>plan/</code>, <code>materials/</code>, ресёрч'],['done','Документ для стоматолога'],['todo','Показать стоматологу'],['todo','Замер времени разбора на 10 кейсах'],['todo','Бизнес-модель'],['todo','Питч-дек']];
+
+/* вкладки */
+var VIEWS=['vision','plan','progress','eval','questions'];
+function show(t){
+  if(VIEWS.indexOf(t)<0)t='vision';
+  VIEWS.forEach(function(v){$('#v-'+v).hidden=v!==t});
+  $$('.tab').forEach(function(b){b.setAttribute('aria-selected',b.dataset.go===t)});
+  try{history.replaceState(null,'','#'+t)}catch(e){}
+  window.scrollTo(0,0);
+}
+$$('.tab').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.go)})});
+window.addEventListener('hashchange',function(){show(location.hash.slice(1))});
+
+/* демо врача */
+var F=[
+ {id:'f36',tooth:36,t:'Периапикальный очаг',lv:'k',conf:'87%',why:'На срезе через верхушку корня видна зона разрежения 4,2 мм. Порог из литературы для очага — 3 мм. Жалоба пациента «боль слева снизу на холодное» совпадает по месту.',ai:'Зона разрежения у верхушки корня'},
+ {id:'f37',tooth:37,t:'Глубокий кариес',lv:'v',conf:'74%',why:'Полость доходит до расстояния 0,8 мм от пульпы, порог близости — 1 мм.',ai:'Полость близко к пульпе'},
+ {id:'f46',tooth:46,t:'Кариес',lv:'v',conf:'68%',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',ai:'Снижение плотности на контактной поверхности'},
+ {id:'f48',tooth:48,t:'Ретенция зуба мудрости',lv:'n',conf:'81%',why:'Коронка зуба 48 на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',ai:'Зуб не прорезался'},
+ {id:'f15',tooth:15,t:'Корень близко к дну пазухи',lv:'n',conf:'70%',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних моляров и сама патологией не является.',ai:'Корень близко к пазухе'}
+];
+var sel=null, rev={}, lvOver={};
+var UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28], LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+function find(id){return F.filter(function(f){return f.id===id})[0]}
+function byTooth(n){return F.filter(function(f){return f.tooth===n})[0]}
+function curLv(f){return lvOver[f.id]||f.lv}
+function drawTeeth(){
+  [['#upper',UP],['#lower',LO]].forEach(function(p){
+    var root=$(p[0]);root.innerHTML='';
+    p[1].forEach(function(n){
+      var f=byTooth(n),b=el('button','tooth'+(f?' has '+curLv(f):''),String(n));
+      b.type='button';
+      if(f){
+        b.setAttribute('aria-label','Зуб '+n+', '+f.t);
+        if(sel===f.id)b.classList.add('sel');
+        var r=rev[f.id];if(r)b.classList.add(r==='ok'?'ok':'rej');
+        b.addEventListener('click',function(){select(f.id)});
+      }else{b.disabled=true;b.style.cursor='default'}
+      root.appendChild(b);
+    });
+  });
+}
+function drawList(){
+  var ul=$('#flist');ul.innerHTML='';
+  F.forEach(function(f){
+    var r=rev[f.id],li=el('li'),b=el('button','fitem'+(r==='rej'?' rej':''));
+    b.type='button';if(sel===f.id)b.setAttribute('aria-current','true');
+    b.innerHTML='<span class="lv '+curLv(f)+'">'+LVS[curLv(f)]+'</span><span class="t">'+f.tooth+' · '+f.t+'</span>'+(r?'<span class="st">'+(r==='ok'?'✓ подтверждена':'отклонена')+'</span>':'');
+    b.addEventListener('click',function(){select(f.id)});li.appendChild(b);ul.appendChild(li);
+  });
+}
+function drawCheck(){
+  var done=Object.keys(rev).length,all=F.length;
+  $('#checkTxt').textContent=done+' из '+all+' проверено';
+  $('#checkBar').style.width=(done/all*100)+'%';
+  $('#checkHint').textContent=done===all?'Все находки проверены, можно создавать отчёты.':'Осталось: '+F.filter(function(f){return !rev[f.id]}).map(function(f){return 'зуб '+f.tooth}).join(', ');
+  var ready=done===all;
+  $('#repDoc').disabled=!ready;$('#repPat').disabled=!ready;
+  $('#repHint').textContent=ready?'Готово. В настоящем приложении здесь скачиваются два PDF.':'Отчёты открываются, когда проверены все находки ('+done+' из '+all+').';
+}
+function drawDetail(){
+  var box=$('#detail'),f=sel&&find(sel);
+  if(!f){box.innerHTML='<p class="muted">Выберите находку в списке или зуб на схеме.</p>';return}
+  var lv=curLv(f);
+  box.innerHTML='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="lv '+lv+'" id="dLv">'+LV[lv]+'</span><b>Зуб '+f.tooth+' · '+f.t+'</b></div>'
+   +'<p class="muted small" style="margin-top:4px">Уверенность '+f.conf+'</p>'
+   +'<details class="why"><summary>Почему ИИ так решил</summary><p style="margin-top:6px">'+f.why+'</p></details>'
+   +'<label for="dSel">Уровень</label><select id="dSel"><option value="k">Критичная</option><option value="v">Важная</option><option value="n">Незначительная</option></select>'
+   +'<label for="dCom">Комментарий врача (от 20 символов, своими словами)</label><textarea id="dCom" placeholder="Что увидели и почему согласны"></textarea>'
+   +'<div class="err" id="dErr"></div>'
+   +'<div class="btns"><button class="btn pri" id="dOk" type="button">Подтвердить</button><button class="btn bad" id="dRej" type="button">Отклонить</button>'+(rev[f.id]?'<button class="btn" id="dUn" type="button">Снять решение</button>':'')+'</div>';
+  $('#dSel').value=lv;
+  $('#dSel').addEventListener('change',function(){lvOver[f.id]=this.value;drawTeeth();drawList();$('#dLv').className='lv '+this.value;$('#dLv').textContent=LV[this.value]});
+  function norm(s){return s.toLowerCase().replace(/[^a-zа-я0-9]/g,'')}
+  function decide(kind){
+    var c=$('#dCom').value.trim(),e=$('#dErr');
+    if(c.length<20){e.textContent='Комментарий короче 20 символов. Напишите, что увидели и почему согласны.';return}
+    if(norm(c).indexOf(norm(f.ai))===0&&norm(c).length<norm(f.ai).length+8){e.textContent='Это повторяет текст ИИ. Опишите своими словами.';return}
+    rev[f.id]=kind;refresh();
   }
-  document.querySelectorAll('nav.tabs a').forEach(function(a){a.addEventListener('click',function(ev){ev.preventDefault();show(a.dataset.go)})});
-  var h=(location.hash||'').slice(1),sec=h&&document.getElementById(h);
-  show(sec&&sec.dataset.tab?sec.dataset.tab:h);
+  $('#dOk').addEventListener('click',function(){decide('ok')});
+  $('#dRej').addEventListener('click',function(){decide('rej')});
+  var u=$('#dUn');if(u)u.addEventListener('click',function(){delete rev[f.id];refresh()});
+}
+function refresh(){drawTeeth();drawList();drawCheck();drawDetail()}
+function select(id){sel=id;refresh()}
+$$('.sidetabs button').forEach(function(b){b.addEventListener('click',function(){
+  $$('.sidetabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
+  $('#side-list').hidden=b.dataset.side!=='list';$('#side-check').hidden=b.dataset.side!=='check';
+})});
+$('#repDoc').addEventListener('click',function(){addMsg('bot','Отчёт для врача сформирован (пример): '+F.length+' находок, комментарии врача включены, указаны модели ИИ.')});
+$('#repPat').addEventListener('click',function(){addMsg('bot','Отчёт для пациента сформирован (пример): простыми словами, без терминов.')});
+
+var Q=[
+ {q:'Сколько зубов с проблемами?',a:'Находок 5 на 5 зубах: 1 критичная, 2 важные, 2 незначительные. Подробности по каждой — в списке справа.'},
+ {q:'Почему зуб 36 критичный?',a:'У верхушки корня 36 зона разрежения 4,2 мм, это больше порога 3 мм, а пациент жалуется на боль слева снизу. Решение за врачом: посмотрите срез через верхушку корня.'},
+ {q:'Сколько визитов нужно?',a:'По плану лечения ориентировочно 4–6 визитов: лечение канала 36 (2–3), лечение 37 и 46, наблюдение за 48. Сроки уточнит врач.'},
+ {q:'Какая у зуба 12 толщина эмали?',a:'Это система не измеряет, поэтому числа я не назову.'}
+];
+function addMsg(w,t){$('#msgs').appendChild(el('div','bubble'+(w==='me'?' me':''),t))}
+addMsg('bot','Нашёл 5 проблем: 1 критичная, 2 важные, 2 незначительные. Жалоба слева снизу: начните с зуба 36. Решение по каждой находке за вами.');
+Q.forEach(function(x){var b=el('button',null,x.q);b.type='button';b.addEventListener('click',function(){addMsg('me',x.q);addMsg('bot',x.a)});$('#quick').appendChild(b)});
+
+var SC=[
+ ['Пациент','Найти по ID или создать профиль. Записать жалобы и самочувствие.'],
+ ['Загрузка','КЛКТ (DICOM или ZIP) сохраняется в профиль пациента.'],
+ ['Разбор','Сегментация, находки, уровни. Виден индикатор прогресса.'],
+ ['Сводка','Чат первым сообщением: «Нашёл 5 проблем: 1 критичная, 2 важные… Жалоба слева снизу, начните с 36».'],
+ ['Находки','Клик по находке подводит камеру к зубу. ИИ направляет: «посмотрите срез через верхушку корня». «Почему ИИ так думает» свёрнуто и раскрывается по клику.'],
+ ['Вопросы','«Почему пульпит?», «Сколько зубов с проблемами?», «Сколько визитов?» — чат отвечает по данным кейса.'],
+ ['Решение','Подтвердить с комментарием, поменять уровень или диагноз, либо отклонить.'],
+ ['Чек-лист','«4 из 5 проверено». Отчёт доступен только когда проверено всё.'],
+ ['Два PDF','Для врача и для пациента. Скачать или отправить в личный кабинет.'],
+ ['Новый визит','Новый снимок в тот же профиль, видна динамика (после MVP).']
+];
+function showStep(i){
+  $$('#steps button').forEach(function(x,j){x.setAttribute('aria-selected',j===i)});
+  $('#stepbody').innerHTML='<b>'+(i+1)+'. '+SC[i][0]+'</b><p style="margin-top:4px">'+SC[i][1]+'</p>';
+}
+SC.forEach(function(s,i){var b=el('button',null,'<b>'+(i+1)+'</b>'+s[0]);b.type='button';b.addEventListener('click',function(){showStep(i)});$('#steps').appendChild(b)});
+showStep(0);
+
+var PAPER={
+ doc:'<b>Заключение по КЛКТ — для врача</b><span class="muted">Клиника · пациент #A-0142 · снимок 17.11.2026</span><span>Жалобы: боль слева снизу на холодное</span><span>Сводка: критичных 1 · важных 2 · незначительных 2</span><span>36 · периапикальный очаг · <span class="lv k">Крит</span> · 87% · срез · почему ИИ так решил · комментарий врача</span><span class="muted">Предварительный разбор выполнен ИИ и проверен врачом. Модели: nnU-Net (сегментация), Anthropic Claude Haiku (объяснения), с версиями. Подтвердил: ФИО врача, дата.</span>',
+ pat:'<b>Ваши зубы — простыми словами</b><span class="muted">Для пациента #A-0142</span><span><b>Что нашли:</b> у зуба 36 (нижний левый, шестой) воспаление у кончика корня.</span><span><b>Что это значит:</b> инфекция из канала дошла до кости вокруг корня.</span><span><b>Что делать:</b> лечение канала, ориентировочно 2–3 визита.</span><span class="muted">Сроки ориентировочные, их уточнит врач. Разбор выполнен ИИ и проверен врачом: ФИО.</span>'
+};
+$('#paper').innerHTML=PAPER.doc;
+$$('#repSeg button').forEach(function(b){b.addEventListener('click',function(){$$('#repSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});$('#paper').innerHTML=PAPER[b.dataset.r]})});
+
+/* план */
+var pipeSel=2;
+function drawPipe(){
+  var p=$('#pipe');p.innerHTML='';
+  PIPE.forEach(function(n,i){
+    if(i)p.appendChild(el('span','arr','→'));
+    var b=el('button','node'+(n.n?' new':''),n.t);b.type='button';b.setAttribute('aria-pressed',i===pipeSel);
+    b.addEventListener('click',function(){pipeSel=i;drawPipe()});p.appendChild(b);
+  });
+  var n=PIPE[pipeSel];
+  $('#pdetail').innerHTML='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>'+n.t+'</h3><span class="chip '+n.s+'">'+SL[n.s]+'</span>'+(n.n?'<span class="chip new">новое</span>':'')+'</div><p style="margin-top:6px">'+n.d+'</p><p class="small muted" style="margin-top:6px">В коде: '+n.c+'</p>';
+}
+var stage='today',pfilter='all';
+function drawStage(){
+  var root=$('#stage');root.innerHTML='';
+  STAGES.forEach(function(s){
+    var n=TASKS.filter(function(t){return t.st===s.id}).length;
+    var b=el('button',null,'<span class="when">'+s.when+'</span><span class="sum">'+s.sum+' · '+n+' задач</span>');b.type='button';b.setAttribute('aria-selected',s.id===stage);
+    b.addEventListener('click',function(){stage=s.id;drawStage();drawTasks()});root.appendChild(b);
+  });
+  var f=$('#pfilters');f.innerHTML='<span class="muted small">Показать:</span>';
+  [['all','Все'],['part','Частично'],['todo','Не начато'],['hold','Отложено']].forEach(function(x){
+    var b=el('button','btn'+(pfilter===x[0]?' pri':''),x[1]);b.type='button';
+    b.addEventListener('click',function(){pfilter=x[0];drawStage();drawTasks()});f.appendChild(b);
+  });
+}
+function drawTasks(){
+  var root=$('#tasks');root.innerHTML='';
+  var list=TASKS.filter(function(t){return t.st===stage&&(pfilter==='all'||t.s===pfilter)});
+  if(!list.length){root.appendChild(el('p','muted small','В этом этапе нет задач с таким статусом.'));return}
+  list.forEach(function(t){
+    var d=el('details','task');
+    d.innerHTML='<summary><span class="num">'+t.n+'</span><span class="tt">'+t.title+'</span><span class="chip '+t.s+'">'+SL[t.s]+'</span></summary><div class="body"><span><b>Готово, когда:</b> '+t.done+'</span><span><b>Где в коде:</b> '+t.where+'</span><span><b>Приоритет:</b> '+t.pr+'</span></div>';
+    root.appendChild(d);
+  });
+}
+drawPipe();drawStage();drawTasks();
+
+/* прогресс */
+var pf='all';
+function drawProgress(){
+  var core=TASKS.filter(function(t){return t.n<=12}).sort(function(a,b){return a.n-b.n});
+  var cnt={done:0,part:0,todo:0,hold:0};core.forEach(function(t){cnt[t.s]++});
+  var total=core.length;
+  $('#progCnt').textContent=cnt.done+'/'+total;
+  var bar=$('#pbar');bar.innerHTML='';
+  [['done','var(--ok)'],['part','var(--warn)'],['todo','var(--line)'],['hold','var(--info)']].forEach(function(x){var i=el('i');i.style.width=(cnt[x[0]]/total*100)+'%';i.style.background=x[1];bar.appendChild(i)});
+  var c=$('#counts');c.innerHTML='';
+  [['all','Все задачи продукта',total],['done','Сделано',cnt.done],['part','Частично',cnt.part],['todo','Не начато',cnt.todo],['hold','Отложено',cnt.hold]].forEach(function(x){
+    var b=el('button',null,'<b>'+x[2]+'</b><span class="muted small">'+x[1]+'</span>');b.type='button';b.setAttribute('aria-pressed',pf===x[0]);
+    b.addEventListener('click',function(){pf=x[0];drawProgress()});c.appendChild(b);
+  });
+  var tb=$('#ptable');tb.innerHTML='';
+  core.forEach(function(t){
+    if(pf!=='all'&&t.s!==pf)return;
+    tb.appendChild(el('tr',null,'<td>'+t.n+'</td><td>'+t.title+'</td><td><span class="chip '+t.s+'">'+SL[t.s]+'</span></td><td class="muted small">'+t.done+'</td>'));
+  });
+  [['#extra',EXTRA],['#nocode',NOCODE]].forEach(function(p){
+    var u=$(p[0]);u.innerHTML='';p[1].forEach(function(x){u.appendChild(el('li',null,'<span class="chip '+x[0]+'">'+SL[x[0]]+'</span> '+x[1]))});
+  });
+}
+drawProgress();
+
+/* оценка */
+var scores=load('scores',{});
+function mavg(m){var v=m.c.map(function(_,i){return scores[m.id+i]}).filter(function(x){return x});return v.length?v.reduce(function(a,b){return a+b},0)/v.length:null}
+function drawEval(){
+  var tot=$('#mentorTotals');tot.innerHTML='';
+  tot.style.gridTemplateColumns='repeat(auto-fit,minmax(150px,1fr))';
+  var avgs=MENT.map(mavg),have=avgs.filter(function(x){return x!=null});
+  MENT.forEach(function(m,i){tot.appendChild(el('div','card','<div class="muted small">'+m.name+'</div><div class="big">'+(avgs[i]==null?'—':avgs[i].toFixed(1))+'</div>'))});
+  var all=have.length===3?have.reduce(function(a,b){return a+b},0)/3:null;
+  tot.appendChild(el('div','card','<div class="muted small">Итог (T+B+S) ÷ 3</div><div class="big">'+(all==null?'—':all.toFixed(1))+'</div>'));
+  var root=$('#mentors');root.innerHTML='';
+  MENT.forEach(function(m){
+    var c=el('div','card mentor','<h3>'+m.name+'</h3><p class="small muted">'+m.note+'</p>');
+    m.c.forEach(function(name,i){
+      var row=el('div','crit','<span class="code">'+m.id+(i+1)+'</span><span class="main">'+name+'</span>');
+      var sc=el('div','sc');
+      for(var n=1;n<=10;n++){(function(n){var b=el('button',null,String(n));b.type='button';b.setAttribute('aria-pressed',scores[m.id+i]===n);
+        b.addEventListener('click',function(){if(scores[m.id+i]===n)delete scores[m.id+i];else scores[m.id+i]=n;save('scores',scores);drawEval()});sc.appendChild(b)})(n)}
+      row.appendChild(sc);c.appendChild(row);
+    });
+    root.appendChild(c);
+  });
+}
+drawEval();
+
+/* вопросы */
+var qf='all',QL={open:'Открыт',done:'Решено',later:'Позже'};
+function drawQ(){
+  $('#qCnt').textContent=QS.filter(function(q){return q.s==='open'}).length;
+  var f=$('#qf');f.innerHTML='';
+  [['all','Все'],['open','Открытые'],['done','Решённые'],['later','Позже']].forEach(function(x){
+    var b=el('button',null,x[1]);b.type='button';b.setAttribute('aria-pressed',qf===x[0]);b.addEventListener('click',function(){qf=x[0];drawQ()});f.appendChild(b);
+  });
+  var root=$('#qlist');root.innerHTML='';
+  QS.filter(function(q){return qf==='all'||q.s===qf}).forEach(function(q){
+    var d=el('details','q'),chip=q.s==='open'?'part':q.s==='done'?'done':'hold';
+    d.innerHTML='<summary><span class="id">'+q.id+'</span><span class="qt">'+q.t+'</span>'+(q.who?'<span class="chip hold">'+q.who+'</span>':'')+'<span class="chip '+chip+'">'+QL[q.s]+'</span></summary><div class="body">'+q.b+'</div>';
+    root.appendChild(d);
+  });
+}
+drawQ();
+
+refresh();
+var h=(location.hash||'').slice(1);show(VIEWS.indexOf(h)>=0?h:'vision');
 })();
 </script>
-</body>
-</html>
