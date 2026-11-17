@@ -148,7 +148,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .mm .r.g{margin-bottom:4px}
 .mm button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;cursor:pointer;--tf:#161b22;--ts:#3a4452;--tn:#6d7886}
 .mm button i{font:500 8.5px var(--mono);font-style:normal;color:var(--tn);line-height:11px}
-.mm button svg{width:19px;height:28px;display:block;overflow:visible}
+.mm button svg{width:19px;height:22px;display:block;overflow:visible}
 .mm button:not(.lo) svg{transform:scaleY(-1)}
 .mm button path{fill:var(--tf);stroke:var(--ts);stroke-width:1.1;stroke-linejoin:round;transition:fill .2s,stroke .2s}
 .mm button.k{--tf:var(--crit);--ts:var(--crit);--tn:var(--crit)}.mm button.v{--tf:var(--warn);--ts:var(--warn);--tn:var(--warn)}.mm button.n{--tf:var(--info);--ts:var(--info);--tn:var(--info)}
@@ -1016,7 +1016,7 @@ var TOOTH='M10 4.5C8 3 5 2.5 3.5 5.5C2.5 8 3.5 11 4.5 14C5.5 17 5 22 6.3 24.5C7.
 UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 function drawMap(){
   if(!cur)return;
-  function row(a,cl,low){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n),sv='<svg viewBox="0 1 20 28" aria-hidden="true"><path d="'+TOOTH+'"/></svg>';
+  function row(a,cl,low){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n),sv='<svg viewBox="0 1 20 28" preserveAspectRatio="none" aria-hidden="true"><path d="'+TOOTH+'"/></svg>';
     return '<button type="button" data-n="'+n+'" class="'+(low?'lo ':'')+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+(low?sv+'<i>'+n+'</i>':'<i>'+n+'</i>'+sv)+'</button>'}).join('')+'</div>'}
   $('#mm').innerHTML=row(UP,'g',false)+row(LO,'',true);$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
 }
