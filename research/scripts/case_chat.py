@@ -84,8 +84,8 @@ SYSTEM = """Ты помощник стоматолога в системе ан�
    новых величин.
 4. Не назначай лечение. Поле «кому» в находке говорит, к какому специалисту
    это относится, — его пересказать можно.
-5. Отвечай коротко и по-русски. Два-четыре предложения, если вопрос не
-   требует перечисления.
+5. Отвечай коротко и НА ЯЗЫКЕ ВОПРОСА (русский или узбекский). Два-четыре
+   предложения, если вопрос не требует перечисления.
 6. Если спрашивают про другого пациента, про общую медицину или просят
    что-то вне данных — откажись одной фразой и скажи, что знаешь только этот
    случай.
@@ -99,11 +99,17 @@ SYSTEM = """Ты помощник стоматолога в системе ан�
 "no_data": true и пустой «used»."""
 
 
-def context_for(case_id: str, model: str | None = None) -> dict:
+def context_for(case_id: str, model: str | None = None,
+                complaints: str | None = None) -> dict:
     """Данные ОДНОГО кейса в том виде, в каком они уходят модели.
 
     Отдельная функция, а не сборка внутри запроса: это то, что покидает
     машину, и смотреть на это надо глазами (`--dry-run`).
+
+    `complaints` — жалобы пациента словами врача. Параметром, а не из базы:
+    в модели данных их пока нет вовсе (проверено, ни в `patients.py`, ни в
+    API), а сводка без них отвечает не на тот вопрос, с которым пришёл
+    человек. Передаёт фронт; появится поле в карточке — возьмём оттуда.
     """
     c = cb.get_case(case_id)
     model = model or c.get("model") or cb.DEFAULT_MODEL
@@ -135,15 +141,51 @@ def context_for(case_id: str, model: str | None = None) -> dict:
     quality = [{"ключ": cb.finding_key(q), "что": q.get("text")}
                for q in (res.get("quality") or [])]
 
-    return {
+    # План нужен, чтобы отвечать на «сколько визитов» и «что лечить сначала».
+    # Он детерминирован (`cbct_plan` — правила, не модель), поэтому модель его
+    # пересказывает, а не придумывает. Падение плана не должно ронять чат:
+    # без него ответ беднее, но остаётся верным.
+    stages = []
+    try:
+        import cbct_plan
+        plan = cbct_plan.build_plan(res)
+        for st in (plan.get("stages") or []):
+            procs = [{"услуга": x.get("name"), "зубы": x.get("teeth") or [],
+                      "количество": x.get("count"), "основание": x.get("why")}
+                     for x in (st.get("procedures") or [])]
+            if procs:
+                stages.append({"этап": st.get("label"), "услуги": procs})
+    except Exception as exc:                       # noqa: BLE001
+        stages = [{"этап": f"план не посчитан ({type(exc).__name__})",
+                   "услуги": []}]
+
+    # СЧЁТЧИКИ СЧИТАЕТ КОД И КЛАДЁТ В ДАННЫЕ. Замер показал, зачем: на первой
+    # же сводке модель написала «найдено 9 проблемных зон, 4 warning, 1 alert»
+    # при настоящих 17 и 6/1/10. Арифметику ей доверять нельзя, а сверка чисел
+    # этого не ловила — она проверяет только величины с единицами (мм, %),
+    # а голый счёт единицы не имеет. Теперь верные числа лежат во входных
+    # данных, и модели остаётся их пересказать.
+    by_sev: dict[str, int] = {}
+    for f in findings:
+        s = f.get("важность") or "info"
+        by_sev[s] = by_sev.get(s, 0) + 1
+
+    ctx = {
         "кейс": case_id,
         "модель_сегментации": res.get("model_label") or model,
         "зубы_на_снимке": res.get("teeth_present") or [],
         "зубы_отсутствуют": res.get("teeth_missing") or [],
+        "счётчики": {"находок_всего": len(findings),
+                     "по_важности": by_sev,
+                     "ручная_проверка": len(quality)},
         "находки": findings,
         "требует_ручной_проверки": quality,
+        "черновик_плана": stages,
         "черновик": bool(res.get("draft", True)),
     }
+    if complaints:
+        ctx["жалобы_пациента"] = str(complaints)[:400]
+    return ctx
 
 
 def _read_key(name: str) -> str | None:
@@ -321,12 +363,24 @@ def _validate(reply: dict, ctx: dict) -> dict:
             "blocked": None, "dropped_keys": dropped}
 
 
-def chat(case_id: str, question: str, model: str | None = None) -> dict:
+SUMMARY_Q = (
+    "Напиши первое сообщение врачу по этому случаю: сколько найдено проблем "
+    "и какой важности, с чего предлагаешь начать разбор. Если переданы "
+    "жалобы пациента — учти их и скажи, какие зубы смотреть первыми. "
+    "ЧИСЛА БЕРИ ИЗ ПОЛЯ «счётчики», своих не считай. "
+    "Не ставь диагнозов, только перечисли измеренное.")
+
+
+def chat(case_id: str, question: str, model: str | None = None,
+         complaints: str | None = None, ctx: dict | None = None) -> dict:
+    """`ctx` передаётся готовым там, где он уже собран: сборка пересчитывает
+    находки и план, и делать это дважды на один ответ незачем."""
     question = (question or "").strip()[:MAX_QUESTION]
     if not question:
         return {"answer": "Задайте вопрос по этому случаю.", "used": [],
                 "grounded": False, "blocked": None}
-    ctx = context_for(case_id, model)
+    if ctx is None:
+        ctx = context_for(case_id, model, complaints)
 
     leak = plan_agent.check_anonymous(ctx)
     if leak:
@@ -339,6 +393,23 @@ def chat(case_id: str, question: str, model: str | None = None) -> dict:
     out = _validate(reply, ctx)
     out["provider"] = provider
     out["case"] = case_id
+    return out
+
+
+def summary(case_id: str, model: str | None = None,
+            complaints: str | None = None) -> dict:
+    """Первое сообщение чата — сводка находок.
+
+    Обёртка над `chat`, а не свой путь к модели: иначе сводка пошла бы в обход
+    проверок (опора на находки, сверка чисел, обезличивание), а она — первое,
+    что видит врач, и ошибаться в ней дороже всего.
+    """
+    ctx = context_for(case_id, model, complaints)
+    out = chat(case_id, SUMMARY_Q, model, complaints, ctx=ctx)
+    out["kind"] = "summary"
+    # Отдаём счётчики и фронту: показывать их надо из этого поля, а не
+    # вылавливать из текста модели.
+    out["counts"] = ctx["счётчики"]
     return out
 
 

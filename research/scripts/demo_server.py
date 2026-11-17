@@ -774,10 +774,34 @@ async def cbct_chat(case_id: str, body: dict = Body(...)):
         return JSONResponse({"error": "нужен question"}, status_code=400)
     import case_chat
     try:
-        return case_chat.chat(case_id, question, body.get("model"))
+        return case_chat.chat(case_id, question, body.get("model"),
+                              body.get("complaints"))
     except RuntimeError as exc:
         # Нет ключа, провайдер не ответил, обезличивание не прошло — всё это
         # причины, которые должен видеть разработчик, а не «500».
+        return JSONResponse({"error": str(exc)}, status_code=503)
+
+
+@app.post("/api/cbct/summary/{case_id}")
+async def cbct_summary(case_id: str, body: dict = Body(None)):
+    """Первое сообщение чата: сводка находок с учётом жалоб пациента.
+
+    POST, а не GET, именно из-за жалоб: это сведения о здоровье, и в строке
+    адреса им быть нельзя — она попадает в журналы сервера и в историю
+    браузера.
+
+    `counts` в ответе посчитаны кодом, а не моделью: число проблем в сводке
+    обязано совпадать с лентой находок.
+    """
+    c = cbct.get_case(case_id)
+    if c is None:
+        return JSONResponse({"error": "Кейс не найден"}, status_code=404)
+    body = body or {}
+    import case_chat
+    try:
+        return case_chat.summary(case_id, body.get("model"),
+                                 body.get("complaints"))
+    except RuntimeError as exc:
         return JSONResponse({"error": str(exc)}, status_code=503)
 
 
