@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stomadent — Как размечать снимки</title>
+<!--
+  Инструкция для врачей-разметчиков и живой счётчик размеченного.
+  Список классов НЕ дублируется: берётся из /api/classes, как и в редакторе.
+  Счётчик — из /api/progress (только разметка врача, не ИИ).
+-->
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #111827;
+    --panel: rgba(17, 24, 39, 0.85);
+    --border: rgba(148, 163, 184, 0.14);
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --cyan: #22d3ee;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --grad: linear-gradient(135deg, #22d3ee, #3b82f6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px; line-height: 1.6;
+    padding-inline: 20px;
+  }
+  header {
+    max-width: 980px; margin: 0 auto; padding-block: 18px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--grad);
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
+  }
+  header h1 { font-size: 18px; font-weight: 650; }
+  header p { font-size: 12.5px; color: var(--muted); }
+  .back {
+    margin-left: auto; font-size: 13px; color: var(--text); text-decoration: none;
+    background: rgba(148,163,184,.08); border: 1px solid var(--border);
+    border-radius: 9px; padding: 7px 13px;
+  }
+  .back:hover { background: rgba(148,163,184,.16); }
+  main { max-width: 980px; margin: 0 auto; padding-block: 26px 60px;
+         display: grid; gap: 34px; }
+  h2 { font-size: 13px; letter-spacing: .09em; text-transform: uppercase;
+       color: var(--muted); font-weight: 600; margin-bottom: 12px; text-wrap: balance; }
+  p, li { max-width: 68ch; }
+  .lead { font-size: 16.5px; color: var(--text); }
+  .muted { color: var(--muted); }
+  b { font-weight: 650; }
+
+  /* ---- прогресс ---- */
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat {
+    border: 1px solid var(--border); background: var(--panel); border-radius: 12px;
+    padding: 12px 16px; min-width: 150px;
+  }
+  .stat .v { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border);
+                border-radius: 12px; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+  th { text-align: left; font-weight: 600; font-size: 11.5px; letter-spacing: .06em;
+       text-transform: uppercase; color: var(--dim); padding: 10px 14px;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 8px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.grp td { color: var(--muted); font-size: 12px; letter-spacing: .05em;
+              text-transform: uppercase; background: rgba(148,163,184,.04);
+              padding-top: 12px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+        margin-right: 8px; vertical-align: -1px; }
+  .tag { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; margin-left: 6px;
+         border: 1px solid rgba(34,211,238,.4); color: var(--cyan); white-space: nowrap; }
+  .tag.manual { border-color: rgba(245,158,11,.45); color: var(--amber); }
+  .bar { position: relative; height: 8px; border-radius: 99px; min-width: 160px;
+         background: rgba(148,163,184,.12); overflow: hidden; }
+  .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--dim); }
+  .bar i.trial { background: var(--amber); }
+  .bar i.ok { background: var(--green); }
+  .bar .mark { position: absolute; top: -2px; bottom: -2px; width: 2px;
+               background: rgba(229,231,235,.55); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px;
+            color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 18px; height: 6px; border-radius: 99px;
+              margin-right: 6px; vertical-align: 2px; }
+
+  /* ---- порядок работы ---- */
+  ol.steps { list-style: none; counter-reset: s; display: grid; gap: 12px; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 40px; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 1px;
+    width: 26px; height: 26px; border-radius: 8px; background: rgba(34,211,238,.12);
+    color: var(--cyan); font-weight: 700; font-size: 13px;
+    display: grid; place-items: center;
+  }
+  .rule {
+    border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.07);
+    border-radius: 12px; padding: 14px 18px;
+  }
+  .rule.info { border-color: rgba(34,211,238,.3); background: rgba(34,211,238,.06); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); background: var(--panel); border-radius: 12px;
+          padding: 14px 16px; }
+  .card h3 { font-size: 14.5px; margin-bottom: 4px; }
+  .card p { font-size: 13.5px; color: var(--muted); }
+  kbd { font-family: inherit; font-size: 12px; padding: 1px 7px; border-radius: 6px;
+        border: 1px solid var(--border); background: rgba(148,163,184,.1); }
+  a { color: var(--cyan); }
+  .err { color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">🦷</div>
+  <div>
+    <h1>Как размечать снимки</h1>
+    <p>Инструкция для врачей и счётчик размеченного</p>
+  </div>
+  <a class="back" href="/">← К наборам снимков</a>
+</header>
+
+<main>
+  <section>
+    <p class="lead">Разметка врача — это обучающие примеры для модели. ИИ уже
+    отмечает кариес, очаги, ретенцию, пломбы и пролеченные каналы. Пульпу,
+    качество эндо-лечения и убыль кости он пока не видит: для этого нужны
+    ваши отметки на снимках клиники.</p>
+    <p class="muted" style="margin-top:8px">Новые панорамы из карточек
+    пациентов сами попадают в набор <b>«Клиника — снимки из карточек
+    пациентов»</b> уже с разметкой ИИ, без имени пациента.
+    <a href="/?ds=clinic-patients">Открыть набор</a>.</p>
+  </section>
+
+  <section>
+    <h2>Сколько уже размечено</h2>
+    <div class="stats" id="stats"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Класс</th><th class="num">Зубов</th><th class="num">Снимков</th>
+          <th>До цели</th>
+        </tr></thead>
+        <tbody id="progress"><tr><td colspan="4" class="muted">Загрузка…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section>
+    <h2>Каждый день</h2>
+    <ol class="steps">
+      <li>Один раз создайте свой набор: «+ Новый набор» на главной, в названии —
+        ваша фамилия. Снимки при создании добавлять не обязательно.</li>
+      <li>Каждый день открывайте свой набор и нажимайте «+ Добавить панорамы»
+        (или перетащите файлы JPG/PNG на левый столбец). Через пару секунд ИИ
+        поставит свои рамки.</li>
+      <li>Норма — <b>две проверенные панорамы в день</b>. Счётчик «Сегодня
+        проверено» виден в наборе и на главной; пересохранение вчерашнего
+        снимка норму не закрывает.</li>
+      <li>Снимок, который уже есть у кого-то из врачей, повторно не добавится —
+        система скажет, где он лежит. Ошибочно добавленный снимок уберите
+        кнопкой 🗑 на его карточке: он уйдёт в корзину, а не пропадёт.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Порядок работы со снимком</h2>
+    <ol class="steps">
+      <li>Откройте набор и выберите снимок с меткой «ИИ» (ещё не проверен).
+        На нём уже стоят рамки ИИ с процентом уверенности.</li>
+      <li>Проверьте каждую рамку ИИ. Верная — оставьте. Неверная — выделите и
+        нажмите <kbd>Delete</kbd>. Не тот класс — выделите и смените класс
+        справа.</li>
+      <li>Добавьте то, что ИИ не отмечает: классы с пометкой
+        <span class="tag manual">врач</span> в таблице выше. Кнопка
+        «+ Добавить бокс», затем обведите зуб и выберите класс.</li>
+      <li>Снимок с меткой <b>«Перепроверить»</b> уже был размечен, но изменился
+        после этого: до 17.09 снимки обрезались по корням нижних зубов.
+        Откройте его, досмотрите нижнюю челюсть и сохраните заново.</li>
+      <li>Сохраните: кнопка «Сохранить» или <kbd>Ctrl</kbd>+<kbd>S</kbd>.
+        После сохранения снимок считается проверенным.</li>
+    </ol>
+  </section>
+
+  <section class="rule">
+    <h2 style="color:#fca5a5">Главное правило</h2>
+    <p><b>Сохраняйте снимок, только когда на нём отмечено всё, что вы видите.</b>
+    Незамеченный зуб на проверенном снимке модель считает здоровым и учится
+    пропускать такие находки. Если снимок нечитаемый или нет времени пройти его
+    целиком — не сохраняйте, переходите к следующему.</p>
+  </section>
+
+  <section>
+    <h2>Как рисовать рамку</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Вокруг всего зуба</h3>
+        <p>От края коронки до верхушки корня, даже если кариес маленький.
+        По рамке система узнаёт номер зуба, поэтому обводится зуб, а не очаг.</p>
+      </div>
+      <div class="card">
+        <h3>Несколько находок — несколько рамок</h3>
+        <p>У зуба с запломбированным каналом и очагом две одинаковые рамки:
+        «Канал запломбирован» и «Периапикальное поражение».</p>
+      </div>
+      <div class="card">
+        <h3>Исключения: объект, а не зуб</h3>
+        <p>Фрагмент корня, имплант, коронка и пломба обводятся сами по себе.
+        Так их ищет модель, которая ставит эти рамки, и так их проще сверить.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Спорные классы</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Глубокий кариес или пульпит</h3>
+        <p>Глубокий — между кариесом и камерой пульпы ещё видна полоска
+        дентина. «Пульпит: кариес дошёл до пульпы» — полоски не видно.
+        Отмечаем то, что видно на снимке, без жалоб и тестов.</p>
+      </div>
+      <div class="card">
+        <h3>Пломба или запломбированный канал</h3>
+        <p>«Пломба» — реставрация коронки. «Канал запломбирован» — материал в
+        корне. Если есть и то и другое, ставьте обе: вокруг пломбы и вокруг
+        всего зуба.</p>
+      </div>
+      <div class="card">
+        <h3>Качество эндо-лечения</h3>
+        <p>Недопломбировка, выведение за верхушку, пустоты — дополнительно к
+        «Канал запломбирован». Ставьте только когда уверены: на панораме
+        каналы моляров накладываются друг на друга.</p>
+      </div>
+      <div class="card">
+        <h3>Ре-эндо</h3>
+        <p>Это ваше решение «перелечивать», а не признак на снимке. Ставьте,
+        если по этому снимку вы бы направили зуб на перелечивание.</p>
+      </div>
+      <div class="card">
+        <h3>Убыль кости</h3>
+        <p>Одна степень на зуб, по худшей стороне: в пределах коронковой трети
+        корня, до средней или до апикальной. Оценивайте от шейки зуба.</p>
+      </div>
+      <div class="card">
+        <h3>Фуркация</h3>
+        <p>Только у многокорневых зубов, если между корнями видна потеря
+        кости. У верхних моляров фуркацию перекрывает нёбный корень —
+        ставьте только если видно явно.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rule info">
+    <h2>Клавиши редактора</h2>
+    <p><kbd>Ctrl</kbd>+<kbd>S</kbd> — сохранить ·
+    <kbd>Delete</kbd> — удалить выбранную рамку ·
+    <kbd>Esc</kbd> — снять выделение или выйти из рисования ·
+    колесо мыши — масштаб · «Весь снимок» — вписать в окно.</p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function load() {
+  try {
+    const r = await fetch("/api/progress");
+    if (!r.ok) throw new Error(`ошибка ${r.status}`);
+    render(await r.json());
+  } catch (e) {
+    $("progress").innerHTML =
+      `<tr><td colspan="4" class="err">Счётчик не загрузился: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function render(d) {
+  const withAi = d.classes.filter(c => c.ai).length;
+  $("stats").innerHTML = [
+    [`${d.reviewed} из ${d.total}`, "снимков проверено врачом"],
+    [d.classes.filter(c => c.boxes >= d.trial).length + ` из ${d.classes.length}`,
+     `классов набрали ${d.trial} зубов`],
+    [`${d.classes.length - withAi}`, "классов размечает только врач"],
+  ].map(([v, k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+
+  // Группы — в порядке появления в справочнике, как в редакторе.
+  const groups = [];
+  for (const c of d.classes) if (!groups.includes(c.group)) groups.push(c.group);
+  let html = "";
+  for (const g of groups) {
+    html += `<tr class="grp"><td colspan="4">${esc(g)}</td></tr>`;
+    for (const c of d.classes.filter(x => x.group === g)) {
+      const pct = Math.min(100, c.boxes / d.target * 100);
+      const cls = c.boxes >= d.target ? "ok" : c.boxes >= d.trial ? "trial" : "";
+      const tag = c.ai ? `<span class="tag">ИИ</span>` : `<span class="tag manual">врач</span>`;
+      html += `<tr>
+        <td><span class="sw" style="background:${esc(c.color)}"></span>${esc(c.name)}${tag}</td>
+        <td class="num">${c.boxes}</td>
+        <td class="num">${c.images}</td>
+        <td><div class="bar" title="${c.boxes} из ${d.target}">
+          <i class="${cls}" style="width:${pct}%"></i>
+          <span class="mark" style="left:${d.trial / d.target * 100}%"></span>
+        </div></td>
+      </tr>`;
+    }
+  }
+  $("progress").innerHTML = html;
+  $("legend").innerHTML = `
+    <span><i style="background:var(--dim)"></i>меньше ${d.trial} — учить рано</span>
+    <span><i style="background:var(--amber)"></i>от ${d.trial} — пробная модель</span>
+    <span><i style="background:var(--green)"></i>${d.target} — цель</span>
+    <span>Цель — из нашего опыта на открытых данных: на 126 примерах очага
+    модель получила оценку 0.31 из 1, на 460 примерах глубокого кариеса — 0.60.</span>`;
+}
+
+load();
+</script>
+</body>
+</html>

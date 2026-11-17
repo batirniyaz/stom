@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stomadent — Разметка данных</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #111827;
+    --panel: rgba(17, 24, 39, 0.85);
+    --border: rgba(148, 163, 184, 0.14);
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+    --cyan: #22d3ee;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --grad: linear-gradient(135deg, #22d3ee, #3b82f6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  button { font-family: inherit; }
+
+  /* ---- шапка ---- */
+  header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 22px; flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10, 14, 20, 0.85);
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--grad);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .logo-text h1 { font-size: 17px; font-weight: 700; }
+  .logo-text p { font-size: 12px; color: var(--muted); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .counter {
+    font-size: 13px; color: var(--green);
+    border: 1px solid rgba(34,197,94,.4); border-radius: 999px;
+    padding: 5px 14px; background: rgba(34,197,94,.08); white-space: nowrap;
+  }
+  .ds-name {
+    font-size: 13px; color: var(--cyan);
+    border: 1px solid rgba(34,211,238,.35); border-radius: 999px;
+    padding: 5px 14px; background: rgba(34,211,238,.07); white-space: nowrap;
+  }
+
+  .btn {
+    font-size: 13px; color: var(--text);
+    background: rgba(148,163,184,.08); border: 1px solid var(--border);
+    border-radius: 9px; padding: 7px 13px; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: rgba(148,163,184,.16); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.active { border-color: var(--cyan); background: rgba(34,211,238,.14); color: #a5f3fc; }
+  .btn-primary {
+    background: var(--grad); border: none; color: #fff; font-weight: 600;
+    padding: 8px 18px;
+  }
+  .btn-primary:hover { filter: brightness(1.12); background: var(--grad); }
+  .btn-save {
+    background: var(--green); border-color: var(--green);
+    color: #052e12; font-weight: 700; padding: 8px 22px; font-size: 14px;
+  }
+  .btn-save:hover { background: #4ade80; }
+  .btn-danger { color: #fca5a5; }
+  .btn-danger:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); }
+
+  /* ---- экран датасетов ---- */
+  #view-datasets { flex: 1; overflow-y: auto; padding: 26px 30px; }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    position: relative; border: 1px solid var(--border); border-radius: 16px;
+    background: var(--panel); padding: 18px; cursor: pointer;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: rgba(34,211,238,.4); transform: translateY(-2px); }
+  .card h3 { font-size: 15.5px; margin-bottom: 3px; padding-right: 34px; }
+  .card .date { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .card .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 12px; }
+  .stat { font-size: 12.5px; color: var(--muted); }
+  .stat b { color: var(--text); font-weight: 600; }
+  .card .del {
+    position: absolute; top: 12px; right: 12px;
+    background: transparent; border: none; cursor: pointer;
+    font-size: 15px; color: var(--muted); padding: 4px 6px; border-radius: 8px;
+  }
+  .card .del:hover { color: #fca5a5; background: rgba(239,68,68,.12); }
+  .progress-track {
+    height: 7px; border-radius: 999px; background: rgba(148,163,184,.12);
+    overflow: hidden; margin-top: 4px;
+  }
+  .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width .3s; }
+  .progress-fill.ai { background: var(--grad); }
+  .progress-label { font-size: 11.5px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
+  .analyzing { color: #a5f3fc; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+  .empty-datasets {
+    text-align: center; color: var(--muted); padding: 80px 20px; font-size: 15px;
+  }
+
+  /* ---- модалка загрузки ---- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 90; display: none;
+    background: rgba(4, 7, 12, 0.72); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    width: 560px; max-width: calc(100vw - 40px); max-height: calc(100vh - 60px);
+    overflow-y: auto; background: var(--bg2);
+    border: 1px solid rgba(34,211,238,.3); border-radius: 18px; padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.65);
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 16px; }
+  .modal label { font-size: 12.5px; color: var(--muted); display: block; margin: 14px 0 6px; }
+  .modal input[type=text] {
+    width: 100%; font-family: inherit; font-size: 14px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  }
+  .modal input[type=text]:focus { outline: none; border-color: var(--cyan); }
+  #dropzone {
+    border: 1.5px dashed rgba(34,211,238,.4); border-radius: 14px;
+    background: rgba(34,211,238,.04); padding: 26px 16px; text-align: center;
+    cursor: pointer; transition: background .15s, border-color .15s;
+  }
+  #dropzone:hover, #dropzone.over { background: rgba(34,211,238,.1); border-color: var(--cyan); }
+  #dropzone .big { font-size: 14.5px; margin-bottom: 4px; }
+  #dropzone .small { font-size: 12px; color: var(--muted); }
+  .upload-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .upload-btns .btn { flex: 1; }
+  #file-summary {
+    margin-top: 12px; font-size: 12.5px; color: var(--muted);
+    max-height: 130px; overflow-y: auto; display: none;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  }
+  #file-summary .total { color: var(--text); font-weight: 600; margin-bottom: 5px; }
+  .modal .row { display: flex; gap: 10px; margin-top: 20px; }
+  .modal .row .btn { flex: 1; padding: 10px; }
+  .analyze-note { font-size: 12.5px; color: var(--muted); margin-top: 14px; text-align: center; }
+
+  /* ---- экран редактора ---- */
+  #view-editor { flex: 1; display: none; min-height: 0; }
+  #view-editor.show { display: flex; }
+  .sidebar {
+    width: 240px; flex-shrink: 0; overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--bg2); padding: 10px;
+  }
+  .sidebar-title {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1.2px; padding: 4px 6px 10px;
+  }
+  .shot {
+    display: flex; flex-direction: column; gap: 6px;
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px; margin-bottom: 8px; cursor: pointer;
+    background: rgba(148,163,184,.04);
+    transition: border-color .15s, background .15s;
+  }
+  .shot:hover { border-color: rgba(34,211,238,.35); }
+  .shot.active { border-color: var(--cyan); background: rgba(34,211,238,.08); }
+  .shot img {
+    width: 100%; height: 52px; object-fit: cover; border-radius: 8px;
+    background: #000; display: block;
+  }
+  .shot-name {
+    font-size: 11.5px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .badge {
+    display: inline-block; font-size: 10.5px; font-weight: 600;
+    border-radius: 999px; padding: 2px 9px; width: fit-content;
+  }
+  .badge-ai { color: var(--muted); background: rgba(148,163,184,.12); border: 1px solid rgba(148,163,184,.25); }
+  .badge-ok { color: #4ade80; background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35); }
+  .badge-re { color: #fbbf24; background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.4); }
+  .badge-wait { color: #a5f3fc; background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.35); }
+
+  /* ---- ежедневная работа: норма, добавление, дни ---- */
+  .today {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-size: 12.5px; padding: 7px 10px; border-radius: 10px;
+    color: #fbbf24; background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+  }
+  .today.done { color: #4ade80; background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.35); }
+  .today b { font-variant-numeric: tabular-nums; }
+  .card .today { margin-bottom: 12px; }
+  .side-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+  .side-actions .btn { width: 100%; }
+  .sidebar.over { outline: 2px dashed var(--cyan); outline-offset: -4px; }
+  .day-h {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; margin: 14px 4px 6px;
+  }
+  .shot { position: relative; }
+  .shot-del {
+    position: absolute; top: 12px; right: 12px; display: none;
+    background: rgba(10,14,20,.85); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; font-size: 12px; padding: 1px 7px; cursor: pointer;
+  }
+  .shot:hover .shot-del { display: block; }
+  .shot-del:hover { color: #fca5a5; border-color: rgba(239,68,68,.45); }
+  .shot-meta { font-size: 10.5px; color: var(--muted); margin-top: -3px; }
+
+  .work { flex: 1; display: flex; min-width: 0; }
+  .canvas-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 14px; border-bottom: 1px solid var(--border);
+    background: var(--panel); flex-shrink: 0;
+  }
+  .dirty-flag { font-size: 12.5px; color: #fbbf24; display: none; align-items: center; gap: 5px; }
+  .dirty-flag.on { display: inline-flex; }
+  .toolbar-spacer { flex: 1; }
+  .canvas-wrap { flex: 1; position: relative; min-height: 0; background: #05070b; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .hint {
+    position: absolute; left: 12px; bottom: 10px; pointer-events: none;
+    font-size: 11.5px; color: rgba(148,163,184,.75);
+    background: rgba(10,14,20,.65); border-radius: 8px; padding: 5px 10px;
+  }
+  .empty-state {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 15px; text-align: center; padding: 20px;
+  }
+
+  .props {
+    width: 250px; flex-shrink: 0; border-left: 1px solid var(--border);
+    background: var(--bg2); padding: 16px; overflow-y: auto;
+  }
+  .props h3 { font-size: 14px; margin-bottom: 4px; }
+  .props .sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .props label { font-size: 12px; color: var(--muted); display: block; margin: 12px 0 5px; }
+  .props select {
+    width: 100%; font-family: inherit; font-size: 13.5px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px;
+  }
+  .props .legend { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-bottom: 7px; color: var(--text); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+  .legend-group { font-size: 11px; font-weight: 600; letter-spacing: .04em;
+                  text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
+  .legend-ai { font-size: 10px; color: var(--muted); border: 1px solid var(--border);
+               border-radius: 5px; padding: 0 4px; margin-left: auto; }
+  .cls-hint { font-size: 12px; line-height: 1.45; margin: -4px 0 10px; }
+  #props-hint { margin-top: 6px; }
+  .props-empty { color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+  #cls-popup {
+    position: fixed; z-index: 100; display: none;
+    background: var(--bg2); border: 1px solid rgba(34,211,238,.4);
+    border-radius: 12px; padding: 14px; width: 330px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.6);
+  }
+  #cls-popup h4 { font-size: 13.5px; margin-bottom: 8px; }
+  #cls-popup select {
+    width: 100%; font-family: inherit; font-size: 13.5px; margin-bottom: 10px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px;
+  }
+  #cls-popup .row { display: flex; gap: 8px; }
+  #cls-popup .row .btn { flex: 1; }
+
+  #toast {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(17,24,39,.95); border: 1px solid rgba(34,197,94,.5);
+    color: #4ade80; font-size: 14px; font-weight: 600;
+    border-radius: 12px; padding: 11px 22px; z-index: 200;
+    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { border-color: rgba(239,68,68,.5); color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">🦷</div>
+  <div class="logo-text">
+    <h1>Stomadent — Разметка данных</h1>
+    <p id="header-sub">Наборы снимков и проверка разметки ИИ</p>
+  </div>
+  <div class="header-right" id="header-right"></div>
+  <a class="btn" href="/guide.html" target="_blank" rel="noopener"
+     style="text-decoration:none">Как размечать</a>
+</header>
+
+<!-- ================= ЭКРАН 1: датасеты ================= -->
+<div id="view-datasets">
+  <div class="grid" id="ds-grid"></div>
+  <div class="empty-datasets" id="ds-empty" style="display:none">
+    Пока нет ни одного набора.<br>Нажмите «+ Новый набор» и назовите его своей фамилией —
+    туда вы будете каждый день добавлять панорамы.
+  </div>
+</div>
+
+<!-- ================= ЭКРАН 3: редактор ================= -->
+<div id="view-editor">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-actions">
+      <button class="btn btn-primary" id="btn-add-images"
+              title="JPG или PNG; можно перетащить файлы на этот столбец">+ Добавить панорамы</button>
+      <div class="today" id="today-box"></div>
+    </div>
+    <input type="file" id="add-input" accept=".jpg,.jpeg,.png" multiple hidden>
+    <div id="shot-list"></div>
+  </aside>
+
+  <div class="work">
+    <div class="canvas-col">
+      <div class="toolbar">
+        <button class="btn" id="btn-zoom-out" title="Уменьшить">−</button>
+        <button class="btn" id="btn-zoom-in" title="Увеличить">+</button>
+        <button class="btn" id="btn-fit" title="Вписать снимок в окно">Весь снимок</button>
+        <button class="btn" id="btn-add">+ Добавить бокс</button>
+        <div class="toolbar-spacer"></div>
+        <span class="dirty-flag" id="dirty-flag">● Есть несохранённые изменения</span>
+        <button class="btn" id="btn-revert" disabled title="Откатить правки к последнему сохранённому состоянию">Отменить изменения</button>
+        <button class="btn btn-danger" id="btn-reset">Сбросить к разметке ИИ</button>
+        <button class="btn btn-save" id="btn-save">Сохранить</button>
+      </div>
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="cv"></canvas>
+        <div class="empty-state" id="empty-state">Выберите снимок в списке слева</div>
+        <div class="hint">Колесо мыши — масштаб · перетаскивание фона — сдвиг · Delete — удалить выбранный бокс · Ctrl+S — сохранить</div>
+      </div>
+    </div>
+
+    <aside class="props" id="props">
+      <div class="props-empty" id="props-empty">
+        Кликните по рамке на снимке, чтобы изменить её класс или удалить.<br><br>
+        Рамку можно двигать и растягивать за углы.
+      </div>
+      <div id="props-box" style="display:none">
+        <h3>Выбранный бокс</h3>
+        <div class="sub" id="props-score"></div>
+        <label for="props-cls">Диагноз (класс)</label>
+        <select id="props-cls"></select>
+        <div class="sub cls-hint" id="props-hint"></div>
+        <div style="margin-top:16px">
+          <button class="btn btn-danger" id="btn-del" style="width:100%">Удалить бокс</button>
+        </div>
+      </div>
+      <div class="legend" id="legend">
+        <div class="sub" style="margin-bottom:10px">Обозначения</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ================= ЭКРАН 2: загрузка (модалка) ================= -->
+<div class="overlay" id="upload-modal">
+  <div class="modal">
+    <div id="upload-form">
+      <h2>Новый набор снимков</h2>
+      <label for="ds-name-input">Название набора</label>
+      <input type="text" id="ds-name-input" placeholder="Например: Каримов А. — панорамы">
+      <label>Снимки (JPG или PNG) — необязательно, их можно добавлять потом внутри набора</label>
+      <div id="dropzone">
+        <div class="big">Перетащите файлы или папку сюда</div>
+        <div class="small">или выберите кнопками ниже</div>
+      </div>
+      <div class="upload-btns">
+        <button class="btn" id="btn-pick-files">Выбрать файлы</button>
+        <button class="btn" id="btn-pick-dir">Выбрать папку</button>
+      </div>
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.png" multiple hidden>
+      <input type="file" id="dir-input" webkitdirectory hidden>
+      <div id="file-summary"></div>
+      <div class="row">
+        <button class="btn" id="btn-upload-cancel">Отмена</button>
+        <button class="btn btn-primary" id="btn-upload" disabled>Создать</button>
+      </div>
+    </div>
+    <div id="upload-progress" style="display:none">
+      <h2>Анализ снимков</h2>
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px" id="analyze-text">
+        ИИ размечает снимки…
+      </p>
+      <div class="progress-track" style="height:10px">
+        <div class="progress-fill ai" id="analyze-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label"><span id="analyze-count">0 / 0</span><span></span></div>
+      <div class="analyze-note">Анализ занимает ~2 секунды на снимок, дождитесь окончания.</div>
+    </div>
+  </div>
+</div>
+
+<div id="cls-popup">
+  <h4>Какой это диагноз?</h4>
+  <select id="new-cls"></select>
+  <div class="sub cls-hint" id="new-cls-hint"></div>
+  <div class="row">
+    <button class="btn" id="cls-cancel">Отмена</button>
+    <button class="btn btn-save" id="cls-ok" style="padding:7px 13px;font-size:13px">Добавить</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* полифилл roundRect для старых браузеров */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+  };
+}
+
+/* ================= настройки ================= */
+/* Классы приходят с сервера (`/api/classes`) — один справочник на сервер и
+   фронт. Раньше здесь была своя копия из четырёх классов, и расширение на
+   сервере молча не доходило бы сюда. Номер класса = индекс в массиве. */
+let CLASSES = [];
+const HANDLE_R = 6;
+const HIT_PAD = 7;
+
+/* ================= состояние ================= */
+let view = "datasets";          // datasets | editor
+let currentDs = null;           // slug текущего датасета
+let currentDsName = "";
+let images = [];
+let current = null;
+let img = null;
+let boxes = [];
+let fromAI = false;
+let selected = -1;
+let dirty = false;
+let drawMode = false;
+let cam = { scale: 1, ox: 0, oy: 0 };
+let drag = null;
+let pendingRect = null;
+const analyzing = new Set();    // slug'и с идущим анализом
+let analyzeTimer = null;
+let uploadFiles = [];
+
+const api = () => `/api/datasets/${encodeURIComponent(currentDs)}`;
+/* все запросы к API — без кэша (Cloudflare Tunnel кэширует GET по расширению) */
+const apiFetch = (url, opts) => fetch(url, { cache: "no-store", ...(opts || {}) });
+
+/* ================= DOM ================= */
+const $ = id => document.getElementById(id);
+const cv = $("cv");
+const ctx = cv.getContext("2d");
+const wrap = $("canvas-wrap");
+const shotList = $("shot-list");
+const headerRight = $("header-right");
+const headerSub = $("header-sub");
+const dirtyFlag = $("dirty-flag");
+const emptyState = $("empty-state");
+const propsBox = $("props-box");
+const propsEmpty = $("props-empty");
+const propsCls = $("props-cls");
+const propsScore = $("props-score");
+const clsPopup = $("cls-popup");
+const newCls = $("new-cls");
+const toastEl = $("toast");
+
+/* Списки и легенда строятся по группам: классов девятнадцать, и плоский
+   список врач пролистывает, а не читает. Под списком — подсказка, как
+   рисовать рамку: от этого зависит, пригодится ли разметка для обучения. */
+function buildClassUI() {
+  const groups = [];
+  for (const c of CLASSES) {
+    let g = groups.find(x => x.name === c.group);
+    if (!g) { g = { name: c.group, items: [] }; groups.push(g); }
+    g.items.push(c);
+  }
+  for (const sel of [propsCls, newCls]) {
+    sel.innerHTML = "";
+    for (const g of groups) {
+      const og = document.createElement("optgroup");
+      og.label = g.name;
+      for (const c of g.items) {
+        const o = document.createElement("option");
+        o.value = c.id; o.textContent = c.name;
+        og.appendChild(o);
+      }
+      sel.appendChild(og);
+    }
+  }
+  const legend = $("legend");
+  legend.querySelectorAll(".legend-item, .legend-group").forEach(n => n.remove());
+  for (const g of groups) {
+    const h = document.createElement("div");
+    h.className = "legend-group";
+    h.textContent = g.name;
+    legend.appendChild(h);
+    for (const c of g.items) {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      item.title = c.hint || "";
+      item.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span>${esc(c.name)}`
+        + (c.ai ? ' <span class="legend-ai">ИИ</span>' : "");
+      legend.appendChild(item);
+    }
+  }
+}
+function classHint(id) {
+  const c = CLASSES[id];
+  return c && c.hint ? "Как рисовать: " + c.hint : "";
+}
+async function loadClasses() {
+  const r = await apiFetch("/api/classes");
+  if (!r.ok) throw new Error("справочник классов недоступен");
+  CLASSES = (await r.json()).classes;
+  buildClassUI();
+}
+
+/* ================= утилиты ================= */
+function toast(msg, isError) {
+  toastEl.textContent = msg;
+  toastEl.className = "show" + (isError ? " error" : "");
+  setTimeout(() => { toastEl.className = ""; }, 2400);
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+/* Дата и время у сервера — местные, без пояса («2026-09-17T10:42:05»).
+   Поэтому и «сегодня» считаем в местном времени, а не через toISOString. */
+function localISO(d = new Date()) {
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T` +
+         `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+const todayKey = () => localISO().slice(0, 10);
+function dayLabel(day) {
+  if (!day) return "Загружены раньше";
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  if (day === todayKey()) return "Сегодня";
+  if (day === localISO(y).slice(0, 10)) return "Вчера";
+  const [yy, mm, dd] = day.split("-");
+  return `${dd}.${mm}.${yy}`;
+}
+function todayHtml(done, goal) {
+  const ok = done >= goal;
+  return `<span>Сегодня проверено</span><b>${done} из ${goal}${ok ? " ✓" : ""}</b>`;
+}
+let dailyGoal = 2;               // приходит с сервера в списке наборов
+
+function fmtDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? iso : d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+/* ================================================================
+   ЭКРАН 1: ДАТАСЕТЫ
+================================================================ */
+function setHeader(forView) {
+  if (forView === "datasets") {
+    headerSub.textContent = "Наборы снимков и проверка разметки ИИ";
+    headerRight.innerHTML = '<button class="btn btn-primary" id="btn-open-upload">+ Новый набор</button>';
+    $("btn-open-upload").addEventListener("click", openUploadModal);
+  } else {
+    headerSub.textContent = "Проверьте и поправьте рамки, которые поставил ИИ";
+    headerRight.innerHTML =
+      `<span class="ds-name">${esc(currentDsName)}</span>` +
+      '<span class="counter" id="counter">Проверено 0 из 0</span>' +
+      '<button class="btn" id="btn-back">← К наборам</button>';
+    $("btn-back").addEventListener("click", backToDatasets);
+  }
+}
+
+function showView(name) {
+  view = name;
+  $("view-datasets").style.display = name === "datasets" ? "block" : "none";
+  $("view-editor").classList.toggle("show", name === "editor");
+  setHeader(name);
+  if (name === "editor") resizeCanvas();
+}
+
+let datasetsList = [];
+async function loadDatasets() {
+  const res = await apiFetch("/api/datasets");
+  const list = await res.json();
+  datasetsList = list;
+  renderDatasets(list);
+  // проверяем, не идёт ли анализ по какому-то датасету
+  for (const d of list) {
+    if (analyzing.has(d.slug)) continue;
+    const st = await apiFetch(`/api/datasets/${encodeURIComponent(d.slug)}/analyze_status`).then(r => r.json());
+    if (st.running) {
+      analyzing.add(d.slug);
+      renderDatasets(list);
+      ensureAnalyzeTimer();
+    }
+  }
+}
+
+function renderDatasets(list) {
+  const grid = $("ds-grid");
+  grid.innerHTML = "";
+  $("ds-empty").style.display = list.length ? "none" : "block";
+  for (const d of list) {
+    const isAnalyzing = analyzing.has(d.slug);
+    const pct = d.images_count ? Math.round(100 * d.human_count / d.images_count) : 0;
+    dailyGoal = d.daily_goal || dailyGoal;
+    const doneToday = d.today_reviewed >= d.daily_goal;
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML = `
+      <button class="del" title="Удалить набор">🗑</button>
+      <h3>${esc(d.name)}</h3>
+      <div class="date">${d.last_activity
+        ? "последняя работа: " + dayLabel(d.last_activity).toLowerCase()
+        : "создан " + fmtDate(d.created_at)}</div>
+      <div class="today${doneToday ? " done" : ""}">${todayHtml(d.today_reviewed, d.daily_goal)}</div>
+      <div class="stats">
+        <div class="stat">Снимков: <b>${d.images_count}</b></div>
+        <div class="stat">Добавлено сегодня: <b>${d.today_added}</b></div>
+        <div class="stat">ИИ-разметка: <b>${d.ai_count}</b></div>
+        <div class="stat">Проверено врачом: <b>${d.human_count}</b></div>
+      </div>
+      ${isAnalyzing
+        ? `<div class="progress-track"><div class="progress-fill ai" data-anfill style="width:0%"></div></div>
+           <div class="progress-label"><span class="analyzing" data-antext>Анализ ИИ…</span><span></span></div>`
+        : `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+           <div class="progress-label"><span>Проверено ${d.human_count} из ${d.images_count}</span><span>${pct}%</span></div>`}
+    `;
+    el.addEventListener("click", () => openDataset(d.slug, d.name));
+    el.querySelector(".del").addEventListener("click", async e => {
+      e.stopPropagation();
+      if (!confirm(`Удалить набор «${d.name}» целиком? Он уйдёт в корзину сервера вместе с разметкой.`)) return;
+      const res = await apiFetch(`/api/datasets/${encodeURIComponent(d.slug)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        toast(err && err.error ? err.error : "Не удалось удалить", true);
+        return;
+      }
+      analyzing.delete(d.slug);
+      toast("Набор убран в корзину");
+      loadDatasets();
+    });
+    grid.appendChild(el);
+  }
+}
+
+/* polling прогресса анализа — на главной и в модалке */
+function ensureAnalyzeTimer() {
+  if (analyzeTimer) return;
+  analyzeTimer = setInterval(pollAnalyze, 2000);
+  pollAnalyze();
+}
+async function pollAnalyze() {
+  if (!analyzing.size) {
+    clearInterval(analyzeTimer);
+    analyzeTimer = null;
+    return;
+  }
+  let finished = false;
+  for (const slug of [...analyzing]) {
+    const st = await apiFetch(`/api/datasets/${encodeURIComponent(slug)}/analyze_status`).then(r => r.json()).catch(() => null);
+    if (!st) continue;
+    if (st.running) {
+      updateAnalyzeUI(slug, st);
+    } else {
+      analyzing.delete(slug);
+      finished = true;
+      if (st.last_error) toast(`Анализ завершился с ошибкой: ${st.last_error}`, true);
+      else toast("Анализ ИИ завершён");
+      // если модалка загрузки открыта на прогрессе — закрываем
+      if ($("upload-modal").classList.contains("show") &&
+          $("upload-progress").style.display !== "none") {
+        closeUploadModal();
+      }
+    }
+  }
+  if (finished && view === "datasets") loadDatasets();
+  if (finished && view === "editor" && currentDs && !analyzing.has(currentDs)) {
+    refreshAfterAnalysis();
+  }
+}
+/* ИИ дорисовал новые снимки: обновляем список, а открытый снимок без
+   разметки врача перечитываем — иначе врач видел бы его пустым. */
+async function refreshAfterAnalysis() {
+  await loadList();
+  const im = images.find(x => x.name === current);
+  if (im && !im.has_human && !dirty) {
+    const name = current;
+    current = null;
+    await openImage(name);
+  }
+}
+function updateAnalyzeUI(slug, st) {
+  const pct = st.total ? Math.round(100 * st.done / st.total) : 0;
+  // карточка на главной
+  document.querySelectorAll("[data-anfill]").forEach(el => { el.style.width = pct + "%"; });
+  document.querySelectorAll("[data-antext]").forEach(el => { el.textContent = `Анализ ИИ: ${st.done} из ${st.total}`; });
+  // прогресс в модалке загрузки
+  if ($("upload-progress").style.display !== "none") {
+    $("analyze-fill").style.width = pct + "%";
+    $("analyze-count").textContent = `${st.done} / ${st.total}`;
+  }
+}
+
+/* ================================================================
+   ЭКРАН 2: ЗАГРУЗКА
+================================================================ */
+function openUploadModal() {
+  uploadFiles = [];
+  $("ds-name-input").value = "";
+  $("file-summary").style.display = "none";
+  $("file-summary").innerHTML = "";
+  $("btn-upload").disabled = true;
+  $("upload-form").style.display = "block";
+  $("upload-progress").style.display = "none";
+  $("upload-modal").classList.add("show");
+}
+function closeUploadModal() {
+  $("upload-modal").classList.remove("show");
+}
+$("btn-upload-cancel").addEventListener("click", closeUploadModal);
+
+const dz = $("dropzone");
+dz.addEventListener("click", () => $("file-input").click());
+dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+dz.addEventListener("drop", e => {
+  e.preventDefault();
+  dz.classList.remove("over");
+  addUploadFiles([...e.dataTransfer.files]);
+});
+$("btn-pick-files").addEventListener("click", () => $("file-input").click());
+$("btn-pick-dir").addEventListener("click", () => $("dir-input").click());
+$("file-input").addEventListener("change", e => { addUploadFiles([...e.target.files]); e.target.value = ""; });
+$("dir-input").addEventListener("change", e => { addUploadFiles([...e.target.files]); e.target.value = ""; });
+
+function addUploadFiles(files) {
+  const ok = files.filter(f => /\.(jpe?g|png)$/i.test(f.name));
+  for (const f of ok) {
+    if (!uploadFiles.some(x => x.name === f.name && x.size === f.size)) uploadFiles.push(f);
+  }
+  renderUploadFiles();
+}
+function renderUploadFiles() {
+  const box = $("file-summary");
+  if (!uploadFiles.length) { box.style.display = "none"; box.innerHTML = ""; validateUpload(); return; }
+  const mb = uploadFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024;
+  let html = `<div class="total">Выбрано файлов: ${uploadFiles.length} · ${mb.toFixed(1)} МБ</div>`;
+  const shown = uploadFiles.slice(0, 12);
+  for (const f of shown) html += `<div>${esc(f.name)}</div>`;
+  if (uploadFiles.length > shown.length) html += `<div>… и ещё ${uploadFiles.length - shown.length}</div>`;
+  box.innerHTML = html;
+  box.style.display = "block";
+  validateUpload();
+}
+$("ds-name-input").addEventListener("input", validateUpload);
+function validateUpload() {
+  $("btn-upload").disabled = !$("ds-name-input").value.trim();
+  $("btn-upload").textContent = uploadFiles.length
+    ? `Создать и загрузить ${uploadFiles.length}` : "Создать";
+}
+function skippedToast(skipped) {
+  if (!skipped || !skipped.length) return;
+  const first = skipped[0];
+  toast(`Не добавлено ${skipped.length}: ${first.original} — ${first.skipped}` +
+        (skipped.length > 1 ? " и др." : ""), true);
+}
+
+$("btn-upload").addEventListener("click", async () => {
+  const name = $("ds-name-input").value.trim();
+  if (!name) return;
+  if (!uploadFiles.length) {
+    // Пустой набор: врач заводит его один раз и сразу попадает внутрь.
+    const res = await apiFetch("/api/datasets", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { toast(data.error || "Не удалось создать набор", true); return; }
+    closeUploadModal();
+    toast("Набор создан — добавьте панорамы");
+    openDataset(data.slug, name);
+    return;
+  }
+  $("btn-upload").disabled = true;
+  $("btn-upload").textContent = "Загрузка…";
+  const fd = new FormData();
+  fd.append("name", name);
+  for (const f of uploadFiles) fd.append("files", f, f.name);
+  let slug;
+  try {
+    const res = await apiFetch("/api/datasets/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) { toast(data.error || "Ошибка загрузки", true); return; }
+    slug = data.slug;
+    skippedToast(data.skipped);
+  } catch (e) {
+    toast("Ошибка сети при загрузке", true);
+    return;
+  } finally {
+    validateUpload();
+  }
+  // сразу запускаем анализ и показываем прогресс
+  $("upload-form").style.display = "none";
+  $("upload-progress").style.display = "block";
+  $("analyze-fill").style.width = "0%";
+  $("analyze-count").textContent = "0 / ?";
+  analyzing.add(slug);
+  await apiFetch(`/api/datasets/${encodeURIComponent(slug)}/analyze`, { method: "POST" });
+  ensureAnalyzeTimer();
+  loadDatasetsQuiet();
+});
+async function loadDatasetsQuiet() {
+  // обновить сетку под модалкой, не трогая analyzing
+  const res = await apiFetch("/api/datasets");
+  renderDatasets(await res.json());
+}
+
+/* ================================================================
+   ЭКРАН 3: РЕДАКТОР
+================================================================ */
+async function openDataset(slug, name) {
+  currentDs = slug;
+  currentDsName = name;
+  current = null;
+  img = null;
+  boxes = [];
+  selected = -1;
+  clearDirty();
+  showView("editor");
+  shotList.innerHTML = "";
+  emptyState.style.display = "flex";
+  emptyState.textContent = "Выберите снимок в списке слева";
+  await loadList();
+  if (analyzing.has(slug)) ensureAnalyzeTimer();
+  const order = orderedImages();
+  const first = order.find(im => !im.has_human) || order[0];
+  if (first) openImage(first.name);
+}
+
+function backToDatasets() {
+  if (dirty && !confirm("Есть несохранённые изменения. Выйти без сохранения?")) return;
+  clearDirty();
+  current = null;
+  img = null;
+  currentDs = null;
+  showView("datasets");
+  loadDatasets();
+}
+
+function markDirty() { dirty = true; dirtyFlag.classList.add("on"); $("btn-revert").disabled = false; }
+function clearDirty() { dirty = false; dirtyFlag.classList.remove("on"); $("btn-revert").disabled = true; }
+function toScreen(x, y) { return [x * cam.scale + cam.ox, y * cam.scale + cam.oy]; }
+function toWorld(x, y) { return [(x - cam.ox) / cam.scale, (y - cam.oy) / cam.scale]; }
+function boxRect(b) {
+  const W = img.width, H = img.height;
+  const w = b.w * W, h = b.h * H;
+  return { x: b.cx * W - w / 2, y: b.cy * H - h / 2, w, h };
+}
+function rectToBox(r) {
+  const W = img.width, H = img.height;
+  return {
+    cx: Math.min(Math.max((r.x + r.w / 2) / W, 0), 1),
+    cy: Math.min(Math.max((r.y + r.h / 2) / H, 0), 1),
+    w: Math.min(Math.max(r.w / W, 0.001), 1),
+    h: Math.min(Math.max(r.h / H, 0.001), 1),
+  };
+}
+
+/* ---- список снимков ---- */
+async function loadList() {
+  const res = await apiFetch(`${api()}/images`);
+  images = await res.json();
+  renderList();
+}
+/* Снимки группами по дню добавления, свежие сверху: врач каждый день
+   добавляет новые, и искать их в конце длинного списка неудобно.
+   Снимки из старых пачек (без даты в реестре) — отдельной группой внизу. */
+function orderedImages() {
+  const day = im => (im.added_at || "").slice(0, 10);
+  return [...images].sort((a, b) =>
+    (day(b) || "0").localeCompare(day(a) || "0")
+    || (b.added_at || "").localeCompare(a.added_at || "")
+    || a.name.localeCompare(b.name));
+}
+function renderList() {
+  shotList.innerHTML = "";
+  let done = 0;
+  let lastDay = null;
+  const today = todayKey();
+  const doneToday = images.filter(im => (im.reviewed_at || "").slice(0, 10) === today).length;
+  const tb = $("today-box");
+  tb.innerHTML = todayHtml(doneToday, dailyGoal);
+  tb.classList.toggle("done", doneToday >= dailyGoal);
+  for (const im of orderedImages()) {
+    if (im.has_human) done++;
+    const d = (im.added_at || "").slice(0, 10);
+    if (d !== lastDay) {
+      const h = document.createElement("div");
+      h.className = "day-h";
+      h.textContent = dayLabel(d);
+      shotList.appendChild(h);
+      lastDay = d;
+    }
+    const el = document.createElement("div");
+    el.className = "shot" + (im.name === current ? " active" : "");
+    // «Перепроверить» — снимок изменился после проверки (сервер пишет
+    // причину); сохранение снимает метку.
+    const badge = im.has_human && im.recheck
+      ? `<span class="badge badge-re" title="${esc(im.recheck)}">Перепроверить</span>`
+      : im.has_human
+      ? '<span class="badge badge-ok">Проверено</span>'
+      : im.has_ai
+      ? '<span class="badge badge-ai">ИИ</span>'
+      : '<span class="badge badge-wait">ИИ размечает…</span>';
+    const time = im.added_at ? "добавлен в " + im.added_at.slice(11, 16) : "";
+    el.innerHTML = `<img loading="lazy" src="${api()}/image/${encodeURIComponent(im.name)}" alt="">
+      <button class="shot-del" title="Убрать снимок в корзину">🗑</button>
+      <span class="shot-name" title="${esc(im.original_name || im.name)}">${esc(im.original_name || im.name)}</span>
+      ${time ? `<span class="shot-meta">${time}</span>` : ""}${badge}`;
+    el.addEventListener("click", () => openImage(im.name));
+    el.querySelector(".shot-del").addEventListener("click", e => {
+      e.stopPropagation();
+      deleteImage(im);
+    });
+    shotList.appendChild(el);
+  }
+  const counterEl = $("counter");
+  if (counterEl) counterEl.textContent = `Проверено ${done} из ${images.length}`;
+}
+
+async function deleteImage(im) {
+  const label = im.original_name || im.name;
+  const warn = im.has_human ? " Ваша разметка на нём тоже уйдёт в корзину." : "";
+  if (!confirm(`Убрать снимок «${label}» из набора?${warn}`)) return;
+  const res = await apiFetch(`${api()}/images/${encodeURIComponent(im.name)}`, { method: "DELETE" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { toast(data.error || "Не удалось удалить", true); return; }
+  if (im.name === current) {
+    clearDirty();
+    current = null; img = null; boxes = []; selected = -1;
+    emptyState.style.display = "flex";
+    emptyState.textContent = "Выберите снимок в списке слева";
+    updateProps(); draw();
+  }
+  toast("Снимок убран в корзину");
+  await loadList();
+}
+
+/* ---- добавление панорам в открытый набор ---- */
+async function addImages(files) {
+  const ok = [...files].filter(f => /\.(jpe?g|png)$/i.test(f.name));
+  if (!ok.length) { toast("Нужны файлы JPG или PNG", true); return; }
+  const btn = $("btn-add-images");
+  btn.disabled = true;
+  btn.textContent = `Загрузка ${ok.length}…`;
+  try {
+    const fd = new FormData();
+    for (const f of ok) fd.append("files", f, f.name);
+    const res = await apiFetch(`${api()}/images`, { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { toast(data.error || "Ошибка загрузки", true); return; }
+    if (data.added.length) {
+      toast(`Добавлено ${data.added.length} — ИИ размечает`);
+      analyzing.add(currentDs);
+      ensureAnalyzeTimer();
+    }
+    skippedToast(data.skipped);
+    await loadList();
+  } catch (e) {
+    toast("Ошибка сети при загрузке", true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "+ Добавить панорамы";
+  }
+}
+$("btn-add-images").addEventListener("click", () => $("add-input").click());
+$("add-input").addEventListener("change", e => { addImages(e.target.files); e.target.value = ""; });
+const sidebarEl = $("sidebar");
+sidebarEl.addEventListener("dragover", e => { e.preventDefault(); sidebarEl.classList.add("over"); });
+sidebarEl.addEventListener("dragleave", e => {
+  if (!sidebarEl.contains(e.relatedTarget)) sidebarEl.classList.remove("over");
+});
+sidebarEl.addEventListener("drop", e => {
+  e.preventDefault();
+  sidebarEl.classList.remove("over");
+  if (view === "editor" && currentDs) addImages(e.dataTransfer.files);
+});
+
+/* ---- открытие снимка ---- */
+async function openImage(name) {
+  if (name === current && img) return;
+  if (dirty && !confirm("Есть несохранённые изменения. Перейти к другому снимку без сохранения?")) return;
+
+  current = name;
+  selected = -1;
+  pendingRect = null;
+  setDrawMode(false);
+  clearDirty();
+  renderList();
+  emptyState.style.display = "flex";
+  emptyState.textContent = "Загрузка…";
+
+  const [labels, image] = await Promise.all([
+    apiFetch(`${api()}/labels/${encodeURIComponent(name)}`).then(r => r.json()),
+    new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = `${api()}/image/${encodeURIComponent(name)}`;
+    }),
+  ]);
+  if (current !== name) return;
+
+  img = image;
+  fromAI = labels.human === null;
+  boxes = (fromAI ? labels.ai : labels.human).map(b => ({
+    ...b,
+    origin: fromAI ? "ai" : (b.origin === "ai" ? "ai" : "human"),
+  }));
+  emptyState.style.display = "none";
+  fitView();
+  updateProps();
+  draw();
+}
+
+/* ---- вид / масштаб ---- */
+function fitView() {
+  if (!img) return;
+  const r = wrap.getBoundingClientRect();
+  const s = Math.min(r.width / img.width, r.height / img.height) * 0.98;
+  cam.scale = s;
+  cam.ox = (r.width - img.width * s) / 2;
+  cam.oy = (r.height - img.height * s) / 2;
+  draw();
+}
+function zoomAt(factor, sx, sy) {
+  if (!img) return;
+  const [wx, wy] = toWorld(sx, sy);
+  cam.scale = Math.min(Math.max(cam.scale * factor, 0.05), 40);
+  cam.ox = sx - wx * cam.scale;
+  cam.oy = sy - wy * cam.scale;
+  draw();
+}
+
+/* ---- отрисовка ---- */
+function resizeCanvas() {
+  const r = wrap.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * dpr);
+  cv.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (img) fitView(); else draw();
+}
+
+function draw() {
+  const r = wrap.getBoundingClientRect();
+  ctx.clearRect(0, 0, r.width, r.height);
+  if (!img) return;
+
+  ctx.imageSmoothingEnabled = cam.scale < 1;
+  ctx.drawImage(img, cam.ox, cam.oy, img.width * cam.scale, img.height * cam.scale);
+
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i];
+    const c = CLASSES[b.cls] || CLASSES[0];
+    const rect = boxRect(b);
+    const [x1, y1] = toScreen(rect.x, rect.y);
+    const w = rect.w * cam.scale, h = rect.h * cam.scale;
+    const isSel = i === selected;
+
+    ctx.lineWidth = isSel ? 3.5 : 1.8;
+    ctx.strokeStyle = c.color;
+    if (isSel) {
+      ctx.shadowColor = c.color;
+      ctx.shadowBlur = 10;
+    }
+    ctx.strokeRect(x1, y1, w, h);
+    ctx.shadowBlur = 0;
+
+    if (isSel) {
+      let label = c.name;
+      if (b.origin === "ai" && b.score !== undefined) label += ` · ИИ ${(b.score * 100).toFixed(0)}%`;
+      ctx.font = "12px Segoe UI, sans-serif";
+      const tw = ctx.measureText(label).width + 14;
+      const th = 20;
+      let ly = y1 - th - 4;
+      if (ly < 0) ly = y1 + 4;
+      const lx = Math.min(Math.max(x1, 2), r.width - tw - 2);
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.roundRect(lx, ly, tw, th, 8);
+      ctx.fill();
+      ctx.fillStyle = "#0b0f16";
+      ctx.fillText(label, lx + 7, ly + 14);
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = c.color;
+      ctx.lineWidth = 2;
+      for (const [hx, hy] of handlePoints(i)) {
+        ctx.beginPath();
+        ctx.arc(hx, hy, HANDLE_R, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  }
+
+  if (drag && drag.type === "draw") {
+    const [x1, y1] = toScreen(drag.x0, drag.y0);
+    const [x2, y2] = toScreen(drag.x1, drag.y1);
+    ctx.strokeStyle = "#22d3ee";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+    ctx.setLineDash([]);
+  }
+}
+
+function handlePoints(i) {
+  const rect = boxRect(boxes[i]);
+  const pts = [
+    [rect.x, rect.y], [rect.x + rect.w, rect.y],
+    [rect.x + rect.w, rect.y + rect.h], [rect.x, rect.y + rect.h],
+  ];
+  return pts.map(([x, y]) => toScreen(x, y));
+}
+
+/* ---- мышь ---- */
+function evPos(e) {
+  const r = cv.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+
+cv.addEventListener("pointerdown", e => {
+  if (!img || pendingRect) return;
+  cv.setPointerCapture(e.pointerId);
+  const [sx, sy] = evPos(e);
+  const [wx, wy] = toWorld(sx, sy);
+
+  if (drawMode) {
+    drag = { type: "draw", x0: wx, y0: wy, x1: wx, y1: wy };
+    return;
+  }
+  if (selected >= 0) {
+    const hs = handlePoints(selected);
+    for (let k = 0; k < hs.length; k++) {
+      if (Math.hypot(sx - hs[k][0], sy - hs[k][1]) <= HANDLE_R + HIT_PAD) {
+        drag = { type: "resize", corner: k };
+        return;
+      }
+    }
+  }
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const rect = boxRect(boxes[i]);
+    if (wx >= rect.x && wx <= rect.x + rect.w && wy >= rect.y && wy <= rect.y + rect.h) {
+      selected = i;
+      updateProps();
+      drag = { type: "move", dx: wx - rect.x, dy: wy - rect.y };
+      draw();
+      return;
+    }
+  }
+  selected = -1;
+  updateProps();
+  drag = { type: "pan", sx, sy, ox: cam.ox, oy: cam.oy };
+  draw();
+});
+
+cv.addEventListener("pointermove", e => {
+  const [sx, sy] = evPos(e);
+  if (!drag) { updateCursor(sx, sy); return; }
+  const [wx, wy] = toWorld(sx, sy);
+
+  if (drag.type === "pan") {
+    cam.ox = drag.ox + (sx - drag.sx);
+    cam.oy = drag.oy + (sy - drag.sy);
+  } else if (drag.type === "draw") {
+    drag.x1 = wx; drag.y1 = wy;
+  } else if (drag.type === "move" && selected >= 0) {
+    const rect = boxRect(boxes[selected]);
+    rect.x = wx - drag.dx;
+    rect.y = wy - drag.dy;
+    rect.x = Math.min(Math.max(rect.x, 0), img.width - rect.w);
+    rect.y = Math.min(Math.max(rect.y, 0), img.height - rect.h);
+    Object.assign(boxes[selected], rectToBox(rect));
+    boxes[selected].origin = "human";  // врач тронул бокс — взял ответственность
+    markDirty();
+  } else if (drag.type === "resize" && selected >= 0) {
+    const rect = boxRect(boxes[selected]);
+    const x2 = rect.x + rect.w, y2 = rect.y + rect.h;
+    const cx = Math.min(Math.max(wx, 0), img.width);
+    const cy = Math.min(Math.max(wy, 0), img.height);
+    const MIN = 4 / cam.scale;
+    let nx = rect.x, ny = rect.y, nw = rect.w, nh = rect.h;
+    if (drag.corner === 0) { nx = Math.min(cx, x2 - MIN); ny = Math.min(cy, y2 - MIN); nw = x2 - nx; nh = y2 - ny; }
+    if (drag.corner === 1) { ny = Math.min(cy, y2 - MIN); nw = Math.max(cx - rect.x, MIN); nh = y2 - ny; }
+    if (drag.corner === 2) { nw = Math.max(cx - rect.x, MIN); nh = Math.max(cy - rect.y, MIN); }
+    if (drag.corner === 3) { nx = Math.min(cx, x2 - MIN); nw = x2 - nx; nh = Math.max(cy - rect.y, MIN); }
+    Object.assign(boxes[selected], rectToBox({ x: nx, y: ny, w: nw, h: nh }));
+    boxes[selected].origin = "human";
+    markDirty();
+  }
+  draw();
+});
+
+cv.addEventListener("pointerup", e => {
+  if (!drag) return;
+  const wasDraw = drag.type === "draw";
+  const d = drag;
+  drag = null;
+  if (wasDraw) {
+    const x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1);
+    const w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
+    if (w * cam.scale > 8 && h * cam.scale > 8) {
+      pendingRect = {
+        x: Math.min(Math.max(x, 0), img.width),
+        y: Math.min(Math.max(y, 0), img.height),
+        w: Math.min(w, img.width), h: Math.min(h, img.height),
+      };
+      showClsPopup(e.clientX, e.clientY);
+    }
+  }
+  draw();
+});
+
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  const [sx, sy] = evPos(e);
+  zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, sx, sy);
+}, { passive: false });
+
+function updateCursor(sx, sy) {
+  if (!img) { cv.style.cursor = "default"; return; }
+  if (drawMode) { cv.style.cursor = "crosshair"; return; }
+  if (selected >= 0) {
+    const hs = handlePoints(selected);
+    for (let k = 0; k < hs.length; k++) {
+      if (Math.hypot(sx - hs[k][0], sy - hs[k][1]) <= HANDLE_R + HIT_PAD) {
+        cv.style.cursor = (k === 0 || k === 2) ? "nwse-resize" : "nesw-resize";
+        return;
+      }
+    }
+  }
+  const [wx, wy] = toWorld(sx, sy);
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const rect = boxRect(boxes[i]);
+    if (wx >= rect.x && wx <= rect.x + rect.w && wy >= rect.y && wy <= rect.y + rect.h) {
+      cv.style.cursor = "move";
+      return;
+    }
+  }
+  cv.style.cursor = "grab";
+}
+
+/* ---- панель свойств ---- */
+function updateProps() {
+  if (selected >= 0 && selected < boxes.length) {
+    propsEmpty.style.display = "none";
+    propsBox.style.display = "block";
+    const b = boxes[selected];
+    propsCls.value = b.cls;
+    $("props-hint").textContent = classHint(b.cls);
+    propsScore.textContent = b.origin === "ai"
+      ? (b.score !== undefined
+          ? `ИИ · уверенность ${(b.score * 100).toFixed(0)}%`
+          : "ИИ")
+      : "Врач";
+  } else {
+    propsEmpty.style.display = "block";
+    propsBox.style.display = "none";
+  }
+}
+
+newCls.addEventListener("change", () => {
+  $("new-cls-hint").textContent = classHint(parseInt(newCls.value, 10));
+});
+propsCls.addEventListener("change", () => {
+  $("props-hint").textContent = classHint(parseInt(propsCls.value, 10));
+  if (selected < 0) return;
+  boxes[selected].cls = parseInt(propsCls.value, 10);
+  boxes[selected].origin = "human";
+  markDirty();
+  updateProps();
+  draw();
+});
+
+$("btn-del").addEventListener("click", deleteSelected);
+function deleteSelected() {
+  if (selected < 0) return;
+  boxes.splice(selected, 1);
+  selected = -1;
+  markDirty();
+  updateProps();
+  draw();
+}
+
+/* ---- добавление бокса ---- */
+const btnAdd = $("btn-add");
+function setDrawMode(on) {
+  drawMode = on;
+  btnAdd.classList.toggle("active", on);
+  btnAdd.textContent = on ? "Рисуйте рамку на снимке…" : "+ Добавить бокс";
+}
+btnAdd.addEventListener("click", () => {
+  if (!img) return;
+  setDrawMode(!drawMode);
+});
+
+function showClsPopup(clientX, clientY) {
+  clsPopup.style.display = "block";
+  const pw = 330, ph = 200;
+  clsPopup.style.left = Math.min(clientX, window.innerWidth - pw - 12) + "px";
+  clsPopup.style.top = Math.min(clientY, window.innerHeight - ph - 12) + "px";
+  $("new-cls-hint").textContent = classHint(parseInt(newCls.value, 10));
+  newCls.focus();
+}
+function hideClsPopup() {
+  clsPopup.style.display = "none";
+  pendingRect = null;
+  setDrawMode(false);
+  draw();
+}
+$("cls-ok").addEventListener("click", () => {
+  if (!pendingRect) return;
+  const b = rectToBox(pendingRect);
+  b.cls = parseInt(newCls.value, 10);
+  b.origin = "human";  // бокс поставил врач
+  boxes.push(b);
+  selected = boxes.length - 1;
+  markDirty();
+  updateProps();
+  hideClsPopup();
+});
+$("cls-cancel").addEventListener("click", hideClsPopup);
+
+/* ---- сохранение / сброс ---- */
+$("btn-save").addEventListener("click", save);
+async function save() {
+  if (!current || !currentDs) return;
+  const payload = {
+    boxes: boxes.map(b => ({ cls: b.cls, cx: b.cx, cy: b.cy, w: b.w, h: b.h })),
+    origins: boxes.map(b => b.origin === "ai" ? "ai" : "human"),
+    scores: boxes.map(b => (b.origin === "ai" && b.score !== undefined) ? b.score : null),
+  };
+  const res = await apiFetch(`${api()}/labels/${encodeURIComponent(current)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) { toast("Ошибка сохранения", true); return; }
+  clearDirty();
+  fromAI = false;
+  for (const im of images) if (im.name === current) {
+    im.has_human = true; im.recheck = null;
+    im.reviewed_at = im.reviewed_at || localISO();
+  }
+  renderList();
+  updateProps();
+  toast("Сохранено");
+}
+
+$("btn-revert").addEventListener("click", async () => {
+  if (!dirty || !current || !currentDs) return;
+  clearDirty();
+  const name = current;
+  current = null;  // форсируем повторную загрузку labels с сервера
+  await openImage(name);
+  toast("Изменения отменены");
+});
+
+$("btn-reset").addEventListener("click", async () => {
+  if (!current || !currentDs) return;
+  if (!confirm("Удалить вашу разметку и вернуться к разметке ИИ?")) return;
+  await apiFetch(`${api()}/labels/${encodeURIComponent(current)}`, { method: "DELETE" });
+  for (const im of images) if (im.name === current) { im.has_human = false; im.reviewed_at = null; }
+  clearDirty();
+  const name = current;
+  current = null;
+  renderList();
+  await openImage(name);
+  toast("Возвращена разметка ИИ");
+});
+
+/* ---- кнопки масштаба ---- */
+$("btn-zoom-in").addEventListener("click", () => {
+  const r = wrap.getBoundingClientRect();
+  zoomAt(1.3, r.width / 2, r.height / 2);
+});
+$("btn-zoom-out").addEventListener("click", () => {
+  const r = wrap.getBoundingClientRect();
+  zoomAt(1 / 1.3, r.width / 2, r.height / 2);
+});
+$("btn-fit").addEventListener("click", fitView);
+
+/* ---- клавиатура ---- */
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
+    if (view === "editor") { e.preventDefault(); save(); }
+    return;
+  }
+  if (e.key === "Escape" && pendingRect) { hideClsPopup(); return; }
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "select" || tag === "input" || tag === "textarea") return;
+  if (view !== "editor") return;
+  if (e.key === "Delete" || e.key === "Backspace") {
+    deleteSelected();
+  } else if (e.key === "Escape") {
+    if (drawMode) setDrawMode(false);
+    else { selected = -1; updateProps(); draw(); }
+  }
+});
+
+window.addEventListener("beforeunload", e => {
+  if (dirty) { e.preventDefault(); e.returnValue = ""; }
+});
+window.addEventListener("resize", resizeCanvas);
+
+/* ================= старт ================= */
+showView("datasets");
+/* `?ds=<slug>` в адресе открывает набор сразу. Врачу так можно прислать
+   ссылку на конкретный набор, а не объяснять, куда нажать, — тот же принцип,
+   что в демо. Заодно это единственный способ проверить редактор без кликов:
+   headless-браузер умеет только открыть адрес. */
+loadClasses()
+  .then(() => loadDatasets())
+  .then(() => {
+    const ds = new URLSearchParams(location.search).get("ds");
+    // В шапке — название набора, а не его служебный идентификатор.
+    const found = datasetsList.find(d => d.slug === ds);
+    if (ds) openDataset(ds, found ? found.name : ds);
+  })
+  .catch(err => toast("Не удалось загрузить классы: " + err.message, true));
+</script>
+</body>
+</html>
