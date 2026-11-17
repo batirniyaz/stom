@@ -1,4 +1,4 @@
-# Прототип Stomadent (сайт)
+# Прототип Actina (сайт)
 
 Статический сайт без сборки. Запуск: `cd site && python3 -m http.server 8765`, открыть http://localhost:8765.
 
