@@ -222,6 +222,193 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:44px;z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center}
 .toast{background:#e6eaf0;color:#0a0d11;padding:9px 16px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:ti .25s}
 @keyframes ti{from{transform:translateY(8px);opacity:0}}
+/* ---------- аватары ---------- */
+.av{display:inline-grid;place-items:center;border-radius:50%;background-size:cover;background-position:center;color:#fff;font-weight:700;flex:none;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line);letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.avw{position:relative;display:inline-block;flex:none}
+.avw .cam{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:2px solid var(--surface);display:grid;place-items:center;font-size:13px;padding:0;transition:transform .2s}
+.avw .cam:hover{transform:scale(1.12)}
+.me{display:flex;align-items:center;gap:9px;border:1px solid transparent;background:none;padding:3px 10px 3px 3px;border-radius:99px;color:var(--text);transition:border-color .2s,background .2s}
+.me:hover{border-color:var(--line);background:var(--surface)}
+.prow{grid-template-columns:44px 170px 60px 190px minmax(0,1fr) auto}
+@media (max-width:900px){.prow{grid-template-columns:44px 1fr auto;grid-template-areas:"z a e" "b b b" "c c c" "d d d"}.prow>*:nth-child(1){grid-area:z}.prow>*:nth-child(2){grid-area:a}.prow>*:nth-child(6){grid-area:e}.prow>*:nth-child(3){grid-area:b}.prow>*:nth-child(4){grid-area:c}.prow>*:nth-child(5){grid-area:d}}
+
+/* ---------- анимации ---------- */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes vin{from{opacity:0;transform:translateY(10px)}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.97)}}
+@keyframes fadein{from{opacity:0}}
+@keyframes grow{from{transform:scaleY(0)}}
+@keyframes flow{0%{top:-4px;opacity:0}25%{opacity:1}75%{opacity:1}100%{top:calc(100% - 6px);opacity:0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(47,196,178,.45)}50%{box-shadow:0 0 0 8px rgba(47,196,178,0)}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-4px);opacity:1}}
+.view:not([hidden]):not(.home){animation:vin .45s cubic-bezier(.2,.7,.2,1) both}
+.pane:not([hidden]){animation:vin .35s cubic-bezier(.2,.7,.2,1) both}
+.stag .fcard,.prow,.visit,.svc,.card.rise,.pcard{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*55ms)}
+.hcopy>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.hcopy>*:nth-child(1){animation-delay:.1s}.hcopy>*:nth-child(2){animation-delay:.2s}.hcopy>*:nth-child(3){animation-delay:.32s}.hcopy>*:nth-child(4){animation-delay:.44s}.hcopy>*:nth-child(5){animation-delay:.56s}
+.hcred{animation:fadein 2s .8s both}
+.btn{transition:transform .15s,border-color .15s,background .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:none}
+.btn.pri:hover{box-shadow:0 6px 20px rgba(47,196,178,.28)}
+.btn.pri.big{animation:pulse 2.8s 1.5s infinite}
+.prow{transition:border-color .2s,transform .2s,background .2s}.prow:hover{transform:translateX(3px);background:var(--surface2)}
+.fcard{transition:border-color .25s,opacity .25s,background .25s}
+.f3{animation:vin .3s both}
+.form{animation:vin .3s both}
+.mm button{transition:transform .15s,background .2s}.mm button:hover{transform:scale(1.25)}
+.drawer{animation:slin .35s cubic-bezier(.2,.7,.2,1)}
+.shade:not([hidden]){animation:fadein .25s}
+.modal:not([hidden]) .mbox{animation:pop .3s both}
+.prg .bar2 i,.prog i{transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.lv{transition:transform .2s}.fcard:hover .lv{transform:scale(1.06)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- карточка пациента ---------- */
+.ph-card{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:18px 20px;margin-bottom:14px}
+.ph-card h1{font-size:26px}
+.ph-card .sub{color:var(--muted);margin-top:2px}
+.ph-card .sp{flex:1}
+.pgrid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.pgrid{grid-template-columns:1fr}}
+.pcard{padding:16px 18px;margin-bottom:12px}
+.pcard h3{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent);margin:0 0 10px;font-weight:600}
+.kv2{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px 12px;font-size:13.5px}
+.kv2 dt{color:var(--muted)}.kv2 dd{margin:0;overflow-wrap:anywhere}
+.kv2 dd.warn{color:var(--warn)}
+.pgrid.pf2{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+@media (max-width:900px){.pgrid.pf2{grid-template-columns:1fr}}
+.sect{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:2px 0 10px;font-weight:600}
+
+/* ---------- панель нового пациента ---------- */
+.dh{display:flex;align-items:flex-start;gap:10px}
+.dh h2{flex:1}
+.dh .x{border:0;background:none;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:8px}.dh .x:hover{background:var(--surface2);color:var(--text)}
+.stp{display:flex;align-items:center;gap:10px;margin:16px 0 4px;font-size:13px;color:var(--muted)}
+.stp .s{display:flex;align-items:center;gap:8px;transition:color .3s}
+.stp .s b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);font-size:12px;transition:background .3s,color .3s}
+.stp .s.on{color:var(--text)}.stp .s.on b{background:var(--accent);color:var(--accent-ink)}
+.stp .s.done b{background:var(--ok);color:#06140d}
+.stp i{flex:1;height:2px;background:var(--line);border-radius:2px;position:relative;overflow:hidden}
+.stp i::after{content:"";position:absolute;inset:0;background:var(--accent);transform:scaleX(var(--p,0));transform-origin:left;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.dstep{animation:vin .35s both}.dstep[hidden]{display:none}
+.phbox{display:flex;align-items:center;gap:16px;margin:16px 0 4px}
+.phbox .t{font-size:13px;color:var(--muted)}.phbox .t b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;padding:6px 8px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.chp{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chp button{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:3px 11px;font-size:13px;color:var(--muted);transition:all .15s}
+.chp button:hover{border-color:var(--accent);color:var(--text)}
+.chp button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.drawer select{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+
+/* ---------- профиль врача ---------- */
+.prof-h{display:flex;gap:20px;align-items:center;flex-wrap:wrap;padding:22px;margin-bottom:14px;background:linear-gradient(135deg,var(--surface),#0f1e22)}
+.prof-h h1{font-size:28px}.prof-h .sp{flex:1}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:14px 16px}.stat b{display:block;font:600 28px var(--mono);color:var(--accent)}.stat span{font-size:13px;color:var(--muted)}
+.pf{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+@media (max-width:640px){.pf{grid-template-columns:1fr}}
+.pf label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.pf input,.pf textarea{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.pf .full{grid-column:1/-1}
+.act{display:flex;gap:10px;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--line)}.act:last-child{border:0}.act time{font:12px var(--mono);color:var(--muted);flex:none;width:92px}
+
+/* ---------- чат (отдельный экран) ---------- */
+.chatv{display:flex;flex-direction:column;height:100vh;min-height:520px}
+.chbody{flex:1;min-height:0;display:flex}
+.chside{width:300px;flex:none;border-right:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px}
+.chside .who3{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.chside .who3 b{display:block}.chside .who3 span{font:12px var(--mono);color:var(--muted)}
+.chside .cmp2{font-style:italic;color:#c1cad6;font-size:13px;margin-bottom:14px;padding:9px 11px;background:var(--bg);border-radius:10px}
+.chside .fl{display:flex;flex-direction:column;gap:6px}
+.chside .fl button{display:flex;gap:8px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:7px 10px;font-size:13px;transition:border-color .2s,transform .2s}
+.chside .fl button:hover{border-color:var(--accent);transform:translateX(3px)}
+.chside .fl button small{font-family:var(--mono);color:var(--muted)}
+.chmain{flex:1;min-width:0;display:flex;flex-direction:column;background:radial-gradient(90% 60% at 50% 0%,#12202a,var(--bg))}
+.chhead{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--line)}
+.bot-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1b6f8f);display:grid;place-items:center;color:var(--accent-ink);font-weight:700;animation:pulse 3s infinite;flex:none}
+.chhead b{display:block}.chhead span{font-size:12.5px;color:var(--muted)}
+.chmsgs{flex:1;min-height:0;overflow:auto;padding:20px max(24px,calc((100% - 760px)/2));display:flex;flex-direction:column;gap:14px}
+.cm{display:flex;gap:10px;max-width:86%;animation:pop .4s cubic-bezier(.2,.7,.2,1) both}
+.cm.me{align-self:flex-end;flex-direction:row-reverse}
+.cm .bub{background:var(--surface2);border-radius:16px;padding:10px 14px;font-size:15px;line-height:1.55}
+.cm.me .bub{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.cm:not(.me) .bub{border-top-left-radius:4px}
+.cm .bot-av{width:30px;height:30px;font-size:13px;animation:none}
+.cm .src{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;font-size:12px;color:var(--muted);align-items:center;animation:fadein .5s both}
+.cm .src button{font-size:12.5px;border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:2px 11px;color:var(--accent);transition:all .15s}
+.cm .src button:hover{border-color:var(--accent);background:var(--accent-soft)}
+.dots{display:inline-flex;gap:4px;padding:4px 2px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bounce 1.1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+.chfoot{padding:10px max(24px,calc((100% - 760px)/2)) 16px;border-top:1px solid var(--line);background:rgba(10,13,17,.6)}
+.chfoot .sug{margin:0 0 8px}
+.chfoot .cin textarea{height:46px;font-size:15px;border-radius:12px;padding:11px 14px}
+.chfoot .cin .btn{padding:0 20px}
+@media (max-width:900px){.chside{display:none}.chatv{height:auto;min-height:100vh}}
+
+/* ---------- сцена (подробная панель) ---------- */
+.scn .pnl{width:292px;max-height:min(62vh,520px);overflow:auto;padding:0;animation:pop .25s both}
+.pnl .ph{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(17,21,27,.98);z-index:1}
+.pnl details{border-bottom:1px solid var(--line);padding:0 14px}
+.pnl summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);list-style:none}
+.pnl summary::after{content:"▾";float:right;transition:transform .2s}
+.pnl details:not([open]) summary::after{transform:rotate(-90deg)}
+.pnl details>div{padding-bottom:10px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 0;font-size:13px;cursor:pointer}
+.sw input{appearance:none;width:34px;height:20px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);position:relative;flex:none;transition:background .2s;cursor:pointer}
+.sw input::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.sw input:checked{background:var(--accent-soft);border-color:var(--accent)}
+.sw input:checked::after{transform:translateX(14px);background:var(--accent)}
+.rg{margin:9px 0 4px;font-size:13px}.rg>div{display:flex;justify-content:space-between;color:var(--muted)}.rg input{width:100%;accent-color:var(--accent)}
+.pnl .lab{font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+.pnl .seg button{font-size:12px;padding:5px 4px}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vgrid button{padding:7px 4px;font-size:12.5px;border:1px solid var(--line);background:var(--bg);border-radius:8px;transition:all .15s}.vgrid button:hover{border-color:var(--accent);color:var(--accent)}
+.lbl{position:absolute;transform:translate(-50%,-50%);font:600 10px var(--mono);pointer-events:none;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000;transition:opacity .15s}
+.lbl.k{color:#ff8f8f}.lbl.v{color:#ffd45e}.lbl.n{color:#c9ced6}
+#lbls{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.legend{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);background:rgba(17,21,27,.78);border:1px solid var(--line);border-radius:10px;padding:8px 11px;animation:fadein .6s both}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.ro-badge{background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+
+/* ---------- план со стрелками ---------- */
+.flow{display:flex;flex-direction:column;align-items:stretch;margin-top:12px}
+.node{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 13px;animation:rise .55s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*140ms)}
+.node .nh{display:flex;align-items:center;gap:9px;margin-bottom:2px}
+.node .nn{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.node .nn.g{background:var(--surface2);color:var(--muted)}
+.node .nn.ok{background:var(--ok);color:#06140d}
+.node b{font-weight:600}.node .dur{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.node .sub{font-size:12.5px;color:var(--muted);margin:0 0 6px 35px}
+.arw{position:relative;height:30px;margin:0 auto;width:2px;background:linear-gradient(var(--line),var(--accent));animation:grow .4s both;transform-origin:top;animation-delay:calc(var(--i,0)*140ms)}
+.arw::before{content:"";position:absolute;left:-5px;bottom:-1px;width:12px;height:12px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:translateY(-1px) rotate(45deg) scale(.7);transform-origin:center}
+.arw::after{content:"";position:absolute;left:-2px;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:flow 1.8s calc(var(--i,0)*.25s) infinite}
+.sv{display:flex;flex-direction:column;align-items:stretch;margin:2px 0 0 35px}
+.sv .it{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:13.5px}
+.sv .it small{display:block;color:var(--muted);font-size:12px}
+.sv .mini{height:14px;width:2px;margin:0 auto;background:var(--accent);opacity:.6;position:relative}
+.sv .mini::after{content:"";position:absolute;left:-3px;bottom:-1px;width:8px;height:8px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(45deg) scale(.8)}
+.par{position:relative;border:1px dashed #35404d;border-radius:14px;padding:22px 10px 10px;display:grid;gap:8px;animation:rise .55s both;animation-delay:calc(var(--i,0)*140ms)}
+.par>.tag{position:absolute;top:-10px;left:14px;background:var(--surface);padding:0 8px;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+.par .node{animation:none}
+.tot{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.tot .pill{font-size:13px}
+
+/* ---------- вкладка «Кейс» ---------- */
+.bars .bl{display:grid;grid-template-columns:70px 1fr 24px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+.bars .tr{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bars .tr i{display:block;height:100%;border-radius:99px;transform-origin:left;animation:fillx .9s cubic-bezier(.2,.7,.2,1) both}
+@keyframes fillx{from{transform:scaleX(0)}}
+.tl{position:relative;margin:4px 0 0 6px;padding-left:18px;border-left:2px solid var(--line)}
+.tl .ev{position:relative;padding:3px 0 10px;font-size:13.5px;animation:rise .5s both;animation-delay:calc(var(--i,0)*70ms)}
+.tl .ev::before{content:"";position:absolute;left:-25px;top:8px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--surface)}
+.tl .ev time{display:block;font:12px var(--mono);color:var(--muted)}
+.csec{margin-bottom:18px}
+.csec>h4{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent);margin:0 0 8px;font-weight:600}
+.rst{display:flex;flex-wrap:wrap;gap:6px}.rst span{font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}.mrow:last-child{border:0}
+.mrow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media print{.toasts,.mbox .btns,.mtabs{display:none!important}.modal{position:static;background:none}.mbox{border:0;max-height:none;color:#000;background:#fff}body *{visibility:hidden}.mbox,.mbox *{visibility:visible}}
 </style>
 </head>
@@ -229,7 +416,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 <div class="bar" id="bar" hidden><div class="in">
   <button class="wm" id="logoBtn"><i></i>Actina</button>
   <div class="sp"></div>
-  <div class="who"><span class="nm" id="docName"></span><button class="btn sm ghost" id="outBtn">Выйти</button></div>
+  <div class="who"><button class="me" id="meBtn" title="Мой профиль"><span id="meAv"></span><span class="nm" id="docName"></span></button><button class="btn sm ghost" id="outBtn">Выйти</button></div>
 </div></div>
 
 <!-- главная -->
@@ -284,13 +471,35 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 <!-- карточка пациента -->
 <section class="view" id="v-patient" hidden><div class="wrap" id="pbody"></div></section>
 
+<!-- профиль врача -->
+<section class="view" id="v-profile" hidden><div class="wrap" id="prbody"></div></section>
+
+<!-- чат с ИИ (отдельный экран) -->
+<section class="view chatv" id="v-chat" hidden>
+  <header class="ctop">
+    <button class="btn sm" id="chBack">← К разбору</button>
+    <div class="who2" id="chwho"></div>
+    <div class="cmpl" id="chcmp"></div>
+    <span class="mini">ИИ-помощник · только по этому снимку</span>
+  </header>
+  <div class="chbody">
+    <aside class="chside" id="chside"></aside>
+    <main class="chmain">
+      <div class="chhead"><div class="bot-av">A</div><div><b>Помощник Actina</b><span>Отвечает по находкам этого снимка. Диагноз ставит врач.</span></div></div>
+      <div class="chmsgs" id="chmsgs"></div>
+      <div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Спросите про этот снимок, например: что с зубом 36?" aria-label="Вопрос"></textarea><button class="btn pri" type="submit">Спросить</button></form><div class="cnote">Чего нет в данных, скажет прямо: «не знаю». Источники ответа кликабельны, ведут к находке.</div></div>
+    </main>
+  </div>
+</section>
+
 <!-- разбор -->
 <section class="view case" id="v-case" hidden>
   <header class="ctop">
     <button class="btn sm" id="vBack">← Пациенты</button>
     <div class="who2" id="vwho"></div>
     <div class="cmpl" id="vcmp"></div>
-    <span class="mini">nnU-Net v2</span>
+    <span class="ro-badge" id="roBadge" hidden>Только просмотр</span>
+    <button class="btn sm pri" id="toChat">✦ Чат с ИИ</button>
     <button class="btn sm ghost" id="lang">РУС</button>
     <button class="btn sm" id="share">Поделиться ссылкой</button>
   </header>
@@ -299,12 +508,35 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
       <div id="gl"></div>
       <div class="loading" id="loading">Загрузка 3D-модели…</div>
       <button class="pp" id="pp" title="Пауза / вращение">❚❚ вращение</button>
+      <div id="lbls"></div>
+      <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span></div>
       <div class="scn"><div class="pnl" id="pnl" hidden>
-        <label><span>Кость</span><input type="checkbox" id="cBone" checked></label>
-        <label><span>Прозрачность</span><span id="opv">78%</span></label><input type="range" id="rOp" min="5" max="60" value="22">
-        <label><span>Нерв</span><input type="checkbox" id="cNerve" checked></label>
-        <label><span>Пазухи</span><input type="checkbox" id="cSinus"></label>
-        <label><span style="color:var(--muted)">Вид</span><button class="btn sm" id="tReset">Вся челюсть</button></label>
+        <div class="ph"><b>Сцена</b><button class="btn sm ghost" id="scReset">Сбросить</button></div>
+        <details open><summary>Слои</summary><div>
+          <label class="sw"><span>Верхняя челюсть</span><input type="checkbox" data-l="maxilla" checked></label>
+          <label class="sw"><span>Нижняя челюсть</span><input type="checkbox" data-l="mandible" checked></label>
+          <label class="sw"><span>Нижнечелюстной канал (нерв)</span><input type="checkbox" data-l="nerve" checked></label>
+          <label class="sw"><span>Гайморовы пазухи</span><input type="checkbox" data-l="sinus"></label>
+          <label class="sw"><span>Пульпа (каналы зубов)</span><input type="checkbox" data-l="pulp"></label>
+          <label class="sw"><span>Резцовый и язычный каналы</span><input type="checkbox" data-l="canal"></label>
+          <label class="sw"><span>Реставрации</span><input type="checkbox" data-l="resto"></label>
+          <label class="sw"><span>Дыхательные пути</span><input type="checkbox" data-l="airway"></label>
+          <div class="rg"><div><span>Непрозрачность кости</span><b id="opv">22%</b></div><input type="range" id="rOp" min="3" max="80" value="22"></div>
+          <label class="sw"><span>Каркас кости</span><input type="checkbox" id="cWire"></label>
+        </div></details>
+        <details open><summary>Зубы</summary><div>
+          <label class="sw"><span>Показывать зубы</span><input type="checkbox" data-l="teeth" checked></label>
+          <div class="lab">Окраска</div><div class="seg" id="sgColor"><button data-c="lvl" class="on">По уровням</button><button data-c="anat">По типу</button><button data-c="plain">Однотонно</button></div>
+          <div class="lab">Какие зубы</div><div class="seg" id="sgJaw"><button data-j="all" class="on">Все</button><button data-j="up">Верхние</button><button data-j="lo">Нижние</button></div>
+          <label class="sw"><span>Только с находками</span><input type="checkbox" id="cOnly"></label>
+          <label class="sw"><span>Номера зубов (FDI)</span><input type="checkbox" id="cLbl"></label>
+          <div class="rg"><div><span>Непрозрачность зубов</span><b id="topv">100%</b></div><input type="range" id="rTop" min="15" max="100" value="100"></div>
+        </div></details>
+        <details open><summary>Камера</summary><div>
+          <div class="vgrid"><button data-v="front">Спереди</button><button data-v="left">Слева</button><button data-v="right">Справа</button><button data-v="top">Сверху</button><button data-v="bottom">Снизу</button><button data-v="all">Вся челюсть</button></div>
+          <div class="rg"><div><span>Скорость вращения</span><b id="spv">1.2</b></div><input type="range" id="rSp" min="0" max="40" value="12"></div>
+          <button class="btn sm" id="scShot" style="width:100%;margin-top:8px">Сохранить снимок экрана</button>
+        </div></details>
       </div><button id="scnBtn">⚙ Сцена</button></div>
       <div class="mm" id="mm"></div>
     </div>
@@ -312,16 +544,13 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <aside class="col" id="col">
       <div class="tabs" role="tablist">
         <button class="t" role="tab" data-t="find" aria-selected="true">Находки</button>
-        <button class="t" role="tab" data-t="chat" aria-selected="false">Чат</button>
         <button class="t" role="tab" data-t="plan" aria-selected="false">План</button>
         <button class="t" role="tab" data-t="info" aria-selected="false">Кейс</button>
         <button class="ex" id="expand" title="Развернуть колонку">⤢</button>
       </div>
       <div class="pane" id="p-find"></div>
-      <div class="pane" id="p-chat" hidden></div>
       <div class="pane" id="p-plan" hidden></div>
       <div class="pane" id="p-info" hidden></div>
-      <div class="dock" id="dock" hidden><div class="ch" id="dockch"></div></div>
     </aside>
   </div>
   <footer class="cfoot">Предварительный разбор ИИ, проверен врачом · модель nnU-Net v2 · правила версии 16 · точность распознавания зубов 96.9% (95% ДИ 96.2–97.6)</footer>
@@ -360,21 +589,36 @@ function findF(id){return F.filter(function(f){return f.id===id})[0]}
 function fByTooth(n){return F.filter(function(f){return f.tooth===n})[0]}
 
 var PAT0=[
- {id:'DEMO-001',name:'Каримова Мадина',born:1992,blood:'II (A) Rh+',allergy:'Лидокаин: сыпь',meds:'Нет',visits:[
+ {id:'DEMO-001',name:'Каримова Мадина',born:1992,dob:'14.03.1992',sex:'Ж',blood:'II (A) Rh+',allergy:'Лидокаин: сыпь',meds:'Нет',chronic:'Нет',habit:'Не курит',phone:'+998 90 112 34 56',addr:'Ташкент, Мирзо-Улугбекский р-н',job:'Бухгалтер',emerg:'Каримов Дильшод (муж), +998 90 765 43 21',since:'12.03.2024',ref:'Самообращение',cleaning:'11.2025',visits:[
    {d:'17.11.2026',type:'КЛКТ',cmp:'Ноет слева снизу при накусывании',st:'ready'},{d:'03.06.2026',type:'ОПТГ',cmp:'Профилактический осмотр, жалоб нет'}]},
- {id:'DEMO-002',name:'Шарипов Рустам',born:1974,blood:'I (0) Rh+',allergy:'Нет',meds:'Метформин',visits:[
+ {id:'DEMO-002',name:'Шарипов Рустам',born:1974,dob:'02.09.1974',sex:'М',blood:'I (0) Rh+',allergy:'Нет',meds:'Метформин',chronic:'Сахарный диабет 2 типа',habit:'Курит, около 10 сигарет в день',phone:'+998 93 456 78 12',addr:'Ташкент, Чиланзарский р-н',job:'Предприниматель',emerg:'Шарипова Нигора (жена), +998 93 111 22 33',since:'05.07.2023',ref:'Рекомендация знакомых',cleaning:'03.2026',visits:[
    {d:'16.11.2026',type:'КЛКТ',cmp:'Планирует имплантацию на месте 36',st:'ready'},{d:'20.09.2026',type:'ОПТГ',cmp:'Удаление 36'}]},
- {id:'DEMO-003',name:'Турсунова Азиза',born:1998,blood:'III (B) Rh−',allergy:'Пенициллин',meds:'Нет',visits:[
+ {id:'DEMO-003',name:'Турсунова Азиза',born:1998,dob:'21.01.1998',sex:'Ж',blood:'III (B) Rh−',allergy:'Пенициллин',meds:'Нет',chronic:'Нет',habit:'Не курит',phone:'+998 97 321 65 40',addr:'Ташкент, Юнусабадский р-н',job:'Студентка',emerg:'Турсунов Алишер (отец), +998 97 888 12 12',since:'17.11.2026',ref:'Направление ортодонта',cleaning:'не было',visits:[
    {d:'17.11.2026',type:'КЛКТ',cmp:'Скученность зубов, хочет брекеты',st:'proc',late:true}]},
- {id:'DEMO-004',name:'Абдуллаев Жасур',born:1981,blood:'IV (AB) Rh+',allergy:'Нет',meds:'Нет',visits:[
+ {id:'DEMO-004',name:'Абдуллаев Жасур',born:1981,dob:'30.11.1981',sex:'М',blood:'IV (AB) Rh+',allergy:'Нет',meds:'Нет',chronic:'Гастрит',habit:'Не курит',phone:'+998 91 765 43 21',addr:'Ташкент, Шайхантахурский р-н',job:'Инженер',emerg:'Абдуллаева Феруза (жена), +998 91 222 33 44',since:'19.01.2025',ref:'Самообращение',cleaning:'09.2025',visits:[
    {d:'14.11.2026',type:'КЛКТ',cmp:'Подозрение на кисту в области 24',st:'ready'}]},
- {id:'DEMO-005',name:'Назарова Лола',born:1965,blood:'II (A) Rh+',allergy:'Нет',meds:'Бисопролол',visits:[
+ {id:'DEMO-005',name:'Назарова Лола',born:1965,dob:'08.05.1965',sex:'Ж',blood:'II (A) Rh+',allergy:'Нет',meds:'Бисопролол',chronic:'Гипертония',habit:'Не курит',phone:'+998 90 987 65 43',addr:'Ташкент, Сергелийский р-н',job:'Учитель на пенсии',emerg:'Назаров Бахтиёр (сын), +998 90 333 44 55',since:'02.02.2022',ref:'Рекомендация знакомых',cleaning:'06.2026',visits:[
    {d:'11.11.2026',type:'Осмотр',cmp:'Подвижность нижних резцов, назначена КЛКТ'}]}
 ];
 var KEY='actina_proto_v3';
 var S=(function(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}})();
-S.cases=S.cases||{};S.extra=S.extra||[];S.vis=S.vis||{};S.notes=S.notes||{};S.msgs=S.msgs||{};S.colw=S.colw||null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S.cases=S.cases||{};S.extra=S.extra||[];S.vis=S.vis||{};S.notes=S.notes||{};S.msgs=S.msgs||{};S.colw=S.colw||null;S.photos=S.photos||{};
+S.doc=Object.assign({name:'Алишер Каримов',spec:'Стоматолог-терапевт, рентгенолог',clinic:'Клиника «Актина Демо», Ташкент',phone:'+998 90 123 45 67',email:'a.karimov@example.com',license:'UZ-DT-004512',exp:12,langs:'Русский, узбекский',about:'Принимаю взрослых пациентов. Специализация: эндодонтия, диагностика по КЛКТ.'},S.doc||{});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Не хватило места в браузере: фото слишком большое')}}
+function docName(){return S.doc.name}
+
+/* ---------- аватары и фото ---------- */
+var TONES=[['#2fc4b2','#1b6f8f'],['#d6a327','#a0552a'],['#7d8cff','#4b3fa8'],['#e05252','#8d2f5a'],['#4cb782','#1f6f6a'],['#c77dff','#5b3ea8']];
+function hash(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
+function ini(n){return String(n).split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0]}).join('').toUpperCase()}
+function avatar(key,name,size,photo){var ph=photo||S.photos[key],t=TONES[hash(key)%TONES.length];
+  return '<span class="av" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.38)+'px;'+(ph?'background-image:url('+ph+')':'background:linear-gradient(135deg,'+t[0]+','+t[1]+')')+'">'+(ph?'':esc(ini(name)))+'</span>'}
+function readPhoto(cb){
+  var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+  fi.onchange=function(){var f=fi.files[0];if(!f)return;var r=new FileReader();
+    r.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=240;
+      c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,240,240);cb(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(f)};
+  fi.click()}
 var late=false;
 function allP(){return PAT0.concat(S.extra).map(function(p){var q=Object.assign({},p);
   q.visits=(S.vis[p.id]||[]).concat(p.visits||[]).map(function(v){var r=Object.assign({},v);if(r.late&&late)r.st='ready';return r});return q})}
@@ -397,28 +641,33 @@ function pstatus(p){
   return {t:n>=F.length?'подписано, '+(C.signed||TODAY.slice(0,5)):n?'разобрано '+n+' из '+F.length:'не разобрано',dots:dots}}
 
 /* ---------- роутер ---------- */
-var VIEWS=['home','login','patients','patient','case'],mode='home',after=null;
+var VIEWS=['home','login','patients','patient','case','profile','chat'],ALLV=VIEWS.concat(['shared']),mode='home',after=null,ro=false,pendingSel=null;
 function go(h){if(location.hash===h)route();else location.hash=h}
 function route(){
-  var parts=location.hash.replace(/^#\/?/,'').split('/'),v=parts[0]||'home';
-  if(VIEWS.indexOf(v)<0)v='home';
+  var parts=location.hash.replace(/^#\/?/,'').split('/'),v=parts[0]||'home',view;
+  if(ALLV.indexOf(v)<0)v='home';
+  view=v==='shared'?'case':v;ro=v==='shared';
   if(v==='login'&&S.session){var t=after||'#/patients';after=null;go(t);return}
-  if((v==='patients'||v==='patient'||v==='case')&&!S.session){after=location.hash;location.hash='#/login';return}
-  VIEWS.forEach(function(x){$('#v-'+x).hidden=x!==v});
-  $('#bar').hidden=!(v==='patients'||v==='patient');
+  if(['patients','patient','case','profile','chat'].indexOf(v)>=0&&!S.session){after=location.hash;location.hash='#/login';return}
+  VIEWS.forEach(function(x){$('#v-'+x).hidden=x!==view});
+  $('#bar').hidden=!(view==='patients'||view==='patient'||view==='profile');
   $('#drawer').dataset.lock='';closeDrawer();window.scrollTo(0,0);
-  if(v!=='case')$('#dock').hidden=true;
   if(v==='home'){mode='home';ensure3d();mount($('#heroGl'));applyMode();fit(true)}
   if(v==='login'){$('#lstep1').hidden=false;$('#lstep2').hidden=true}
+  if(view==='patients'||view==='patient'||view==='profile'){$('#docName').textContent='Др. '+docName();$('#meAv').innerHTML=avatar('doctor',docName(),30)}
   if(v==='patients')drawPatients();
   if(v==='patient'){if(!getP(parts[1])){go('#/patients');return}drawPatient(parts[1])}
+  if(v==='profile')drawProfile();
   if(v==='case'){var p=getP(parts[1]);if(!p||!readyVisit(p)){toast('У этого пациента ещё нет готового разбора');go('#/patients');return}openCase(parts[1])}
+  if(v==='shared'){var sid=parts[1];if(!getP(sid)||!readyVisit(getP(sid))){sid='DEMO-001'}openCase(sid)}
+  if(v==='chat'){var p2=getP(parts[1]);if(!p2||!readyVisit(p2)){toast('Чат доступен после готового разбора');go('#/patients');return}openChat(parts[1])}
 }
 window.addEventListener('hashchange',route);
 
 /* ---------- главная и вход ---------- */
 $('#hOpen').addEventListener('click',function(){go('#/patients')});
-$('#hDemo').addEventListener('click',function(){if(!S.session){S.session={name:'Алишер Каримов',demo:true,trust:true};save()}go('#/case/DEMO-001')});
+$('#hDemo').addEventListener('click',function(){if(!S.session){S.session={name:docName(),demo:true,trust:true};save()}go('#/case/DEMO-001')});
+$('#meBtn').addEventListener('click',function(){go('#/profile')});
 $('#lLogo').addEventListener('click',function(){go('#/')});
 $('#logoBtn').addEventListener('click',function(){go('#/patients')});
 $('#phone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.indexOf('998')===0)d=d.slice(3);d=d.slice(0,9);var o='+998 ';if(d.length>0)o+=d.slice(0,2);if(d.length>2)o+=' '+d.slice(2,5);if(d.length>5)o+=' '+d.slice(5,7);if(d.length>7)o+=' '+d.slice(7,9);this.value=o});
@@ -428,7 +677,7 @@ $('#getCode').addEventListener('click',function(){
 $('#back1').addEventListener('click',function(){$('#lstep1').hidden=false;$('#lstep2').hidden=true});
 function doLogin(){
   if($('#code').value!=='1234'){$('#lerr2').textContent='Неверный код. В демо это 1234.';return}
-  S.session={name:'Алишер Каримов',trust:$('#trust').checked};save();$('#code').value='';var t=after||'#/patients';after=null;go(t)}
+  S.session={name:docName(),trust:$('#trust').checked};save();$('#code').value='';var t=after||'#/patients';after=null;go(t)}
 $('#doLogin').addEventListener('click',doLogin);
 $('#code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
 $('#phone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#getCode').click()});
@@ -436,13 +685,12 @@ $('#outBtn').addEventListener('click',function(){S.session=null;save();go('#/')}
 
 /* ---------- список пациентов ---------- */
 function drawPatients(){
-  $('#docName').textContent='Др. '+S.session.name;
   var q=$('#q').value.trim().toLowerCase(),L=$('#plist');L.innerHTML='';var P=allP(),n=0;
   P.forEach(function(p){
     if(q&&(p.name+' '+p.id).toLowerCase().indexOf(q)<0)return;n++;
     var v=p.visits[0]||{},s=pstatus(p),age=new Date().getFullYear()-p.born;
-    var b=el('button','prow','<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div><div class="muted">'+age+' лет</div><div><span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d||'—')+'</span> · '+(v.type||'')+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):'')+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
-    b.type='button';b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
+    var b=el('button','prow',avatar(p.id,p.name,40)+'<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div><div class="muted">'+age+' лет</div><div><span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d||'—')+'</span> · '+(v.type||'')+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):'')+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
+    b.type='button';b.style.setProperty('--i',n);b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
   if(!n)L.innerHTML='<div class="empty">'+(P.length?'Никого не нашли по запросу.':'Пациентов пока нет.')+'<br><br><button class="btn pri" id="e1">Загрузить КЛКТ</button> <button class="btn" id="e2">Открыть демо-кейс</button></div>';
   if($('#e1'))$('#e1').addEventListener('click',function(){openDrawer(null)});
   if($('#e2'))$('#e2').addEventListener('click',function(){$('#hDemo').click()});
@@ -451,36 +699,71 @@ $('#q').addEventListener('input',drawPatients);
 $('#newP').addEventListener('click',function(){openDrawer(null)});
 
 /* ---------- карточка пациента ---------- */
+function kv(rows){return '<dl class="kv2">'+rows.map(function(r){return '<dt>'+r[0]+'</dt><dd'+(r[2]?' class="warn"':'')+'>'+esc(r[1]||'не указано')+'</dd>'}).join('')+'</dl>'}
+function ageOf(p){return new Date().getFullYear()-p.born}
 function drawPatient(id){
   var p=getP(id),b=$('#pbody'),fl=p.allergy&&p.allergy!=='Нет'&&p.allergy!=='не указано';
   b.innerHTML='<div class="crumb"><button id="cb">← Пациенты</button></div>'
-   +'<div class="phead"><div><h1>'+esc(p.name)+'</h1><div class="muted"><span style="font-family:var(--mono)">'+p.id+'</span> · '+(new Date().getFullYear()-p.born)+' лет</div></div><div class="sp"></div><button class="btn pri" id="upB">+ Новый снимок</button></div>'
-   +'<div class="chips"><span class="c'+(fl?' flag':'')+'"><small>Аллергия</small>'+esc(p.allergy||'не указано')+'</span><span class="c"><small>Кровь</small>'+esc(p.blood||'не указано')+'</span><span class="c"><small>Принимает</small>'+esc(p.meds||'не указано')+'</span></div>'
-   +'<div id="feed"></div><details class="nt"><summary>Заметки врача</summary><textarea class="note" id="note" placeholder="Сохраняются автоматически"></textarea></details>';
+   +'<div class="card ph-card rise"><span class="avw" id="avw">'+avatar(p.id,p.name,92)+'<button class="cam" id="camB" title="Загрузить фото" aria-label="Загрузить фото">📷</button></span>'
+   +'<div><h1>'+esc(p.name)+'</h1><div class="sub"><span style="font-family:var(--mono)">'+p.id+'</span> · '+ageOf(p)+' лет · '+(p.sex==='М'?'мужчина':p.sex==='Ж'?'женщина':'пол не указан')+'</div>'
+   +'<div class="chips" style="margin:10px 0 0"><span class="c'+(fl?' flag':'')+'"><small>Аллергия</small>'+esc(p.allergy||'не указано')+'</span><span class="c"><small>Кровь</small>'+esc(p.blood||'не указано')+'</span><span class="c"><small>Принимает</small>'+esc(p.meds||'не указано')+'</span></div></div>'
+   +'<div class="sp"></div><button class="btn pri big" id="upB">+ Новый снимок</button></div>'
+   +'<div class="pgrid"><div>'
+   +'<div class="card pcard" style="--i:1"><h3>Контакты</h3>'+kv([['Телефон',p.phone],['Адрес',p.addr],['Род занятий',p.job],['Экстренный контакт',p.emerg]])+'</div>'
+   +'<div class="card pcard" style="--i:2"><h3>Здоровье</h3>'+kv([['Дата рождения',p.dob||String(p.born)],['Группа крови',p.blood],['Аллергия',p.allergy,fl],['Хронические болезни',p.chronic],['Лекарства',p.meds],['Привычки',p.habit]])+'</div>'
+   +'<div class="card pcard" style="--i:3"><h3>В клинике</h3>'+kv([['Карта открыта',p.since],['Как пришёл',p.ref],['Визитов',String(p.visits.length)],['Проф. чистка',p.cleaning]])+'</div>'
+   +'<div class="card pcard" style="--i:4"><h3>Заметки врача</h3><textarea class="note" id="note" placeholder="Сохраняются автоматически"></textarea></div>'
+   +'</div><div><div class="sect">Визиты и снимки</div><div id="feed"></div></div></div>';
   $('#cb').addEventListener('click',function(){go('#/patients')});
   $('#upB').addEventListener('click',function(){openDrawer(id)});
+  $('#camB').addEventListener('click',function(){readPhoto(function(d){S.photos[id]=d;save();$('#avw').firstChild.outerHTML=avatar(id,p.name,92);toast('Фото сохранено')})});
   $('#note').value=S.notes[id]||'';$('#note').addEventListener('input',function(){S.notes[id]=this.value;save()});
   var feed=$('#feed'),nready=p.visits.filter(function(x){return x.st==='ready'}).length;
   if(!p.visits.length)feed.innerHTML='<div class="card empty">Визитов пока нет.<br><br><button class="btn pri" id="e3">Загрузить КЛКТ</button></div>';
   p.visits.forEach(function(v,i){
     var ready=v.st==='ready',d=el('div','card visit'),s=ready&&i===0?pstatus(p):null;
+    d.style.setProperty('--i',i+1);
     d.innerHTML='<div class="d">'+v.d+'<small>'+v.type+'</small></div><div><div class="cmp">'+esc(v.cmp||'Жалоба не указана')+'</div><div class="meta">'+(ready?(i===0?s.dots+' · '+s.t:'Разбор готов'):v.st==='proc'?'<i class="spin"></i>Обрабатывается':'Архив, без разбора')+'</div>'+(ready&&nready>1&&i===0?'<div class="stub">Сравнение с прошлым визитом: появится после хакатона</div>':'')+'</div>'+(ready?'<button class="btn pri sm">Открыть разбор</button>':'<span></span>');
     var bt=$('button',d);if(bt)bt.addEventListener('click',function(){go('#/case/'+id)});feed.appendChild(d)});
   if($('#e3'))$('#e3').addEventListener('click',function(){openDrawer(id)});
 }
 
-/* ---------- панель: новый пациент / новый снимок ---------- */
+/* ---------- панель: новый пациент / новый снимок (два шага) ---------- */
+var QCOM=['Боль при накусывании','Боль на холодное или горячее','Кровоточат дёсны','Планирую имплантацию','Скученность, ортодонтия','Профилактический осмотр'];
 function openDrawer(pid){
-  var np=!pid,p=pid?getP(pid):null,nextId='DEMO-0'+(String(6+S.extra.length).padStart(2,'0'));
+  var np=!pid,p=pid?getP(pid):null,nextId='DEMO-0'+(String(6+S.extra.length).padStart(2,'0')),dPhoto=null,sex='Ж',allergy='Нет',step=np?1:2;
   $('#drawer').dataset.lock='';
-  $('#drawer').innerHTML='<h2>'+(np?'Новый пациент':'Новый снимок')+'</h2><div class="muted">'+(np?'Заведите карточку и сразу загрузите КЛКТ.':esc(p.name)+' · '+p.id)+'</div>'
-   +(np?'<div class="two"><div><label>Фамилия</label><input type="text" id="nLast" placeholder="Юсупова"></div><div><label>Имя</label><input type="text" id="nFirst" placeholder="Нодира"></div></div><div class="two"><div><label>Год рождения</label><input type="number" id="nYear" min="1920" max="2026" value="1990"></div><div><label>Номер карты</label><input type="text" id="nCard" value="'+nextId+'"></div></div>':'')
-   +'<label>Жалобы на этот визит</label><textarea id="nCom" rows="3" placeholder="Своими словами, например: ноет слева снизу при накусывании"></textarea><div class="err" id="nErr"></div>'
-   +'<div class="demo-opt"><span class="pill ok">выбран</span><div><b>Демо-снимок: КЛКТ, обе челюсти</b><div class="muted">Публичный набор. В демо доступен один снимок.</div></div></div>'
-   +'<div class="drop" id="drop">Или перетащите файл КЛКТ (ZIP или DICOM)<br><button class="btn sm" id="pick" style="margin-top:8px">Выбрать файл</button><input type="file" id="fi" hidden><div id="fn" style="margin-top:8px;font-size:13px"></div></div>'
-   +'<div class="btns"><button class="btn" id="mc">Отмена</button><button class="btn pri" id="mgo">'+(np?'Создать и загрузить':'Загрузить и разобрать')+'</button></div>';
+  function chips(arr,cls,sel){return arr.map(function(a){return '<button type="button" class="'+(sel&&sel===a?'on':'')+'" data-v="'+esc(a)+'">'+esc(a)+'</button>'}).join('')}
+  $('#drawer').innerHTML='<div class="dh"><h2>'+(np?'Новый пациент':'Новый снимок')+'</h2><button class="x" id="dx" aria-label="Закрыть">✕</button></div>'
+   +(np?'<div class="muted">Заведите карточку, затем загрузите КЛКТ.</div>':'<div class="muted" style="display:flex;gap:10px;align-items:center;margin-top:8px">'+avatar(p.id,p.name,34)+'<span>'+esc(p.name)+' · '+p.id+'</span></div>')
+   +(np?'<div class="stp"><span class="s" id="sp1"><b>1</b>Пациент</span><i id="spl"></i><span class="s" id="sp2"><b>2</b>Снимок</span></div>':'')
+   +'<div class="dstep" id="s1"'+(np?'':' hidden')+'>'
+     +'<div class="phbox"><span class="avw" id="dav">'+avatar('new','Нов Пац',72)+'<button class="cam" id="dcam" type="button" aria-label="Фото">📷</button></span><div class="t"><b>Фото пациента</b>Необязательно. Можно добавить позже.</div></div>'
+     +'<div class="two"><div><label>Фамилия</label><input type="text" id="nLast" placeholder="Юсупова" autocomplete="off"></div><div><label>Имя</label><input type="text" id="nFirst" placeholder="Нодира" autocomplete="off"></div></div>'
+     +'<div class="two"><div><label>Пол</label><div class="seg" id="sgSex"><button type="button" data-v="Ж" class="on">Женский</button><button type="button" data-v="М">Мужской</button></div></div><div><label>Год рождения</label><input type="number" id="nYear" min="1920" max="2026" value="1990"></div></div>'
+     +'<div class="two"><div><label>Телефон</label><input type="text" id="nPhone" value="+998 " inputmode="tel"></div><div><label>Номер карты</label><input type="text" id="nCard" value="'+nextId+'"></div></div>'
+     +'<label>Группа крови</label><select id="nBlood"><option>не указано</option><option>I (0) Rh+</option><option>I (0) Rh−</option><option>II (A) Rh+</option><option>II (A) Rh−</option><option>III (B) Rh+</option><option>III (B) Rh−</option><option>IV (AB) Rh+</option><option>IV (AB) Rh−</option></select>'
+     +'<label>Аллергия</label><div class="chp" id="chAl">'+chips(['Нет','Лидокаин','Пенициллин','Латекс','Другое'],'','Нет')+'</div><input type="text" id="nAlOther" placeholder="Что именно" hidden style="margin-top:6px">'
+     +'<div class="err" id="nErr1"></div></div>'
+   +'<div class="dstep" id="s2"'+(np?' hidden':'')+'>'
+     +'<label>Жалобы на этот визит</label><textarea id="nCom" rows="3" placeholder="Своими словами, например: ноет слева снизу при накусывании"></textarea><div class="chp" id="chCom">'+chips(QCOM)+'</div>'
+     +'<div class="demo-opt"><span class="pill ok">выбран</span><div><b>Демо-снимок: КЛКТ, обе челюсти</b><div class="muted">Публичный набор. В демо доступен один снимок.</div></div></div>'
+     +'<div class="drop" id="drop">Или перетащите файл КЛКТ (ZIP или DICOM)<br><button class="btn sm" id="pick" type="button" style="margin-top:8px">Выбрать файл</button><input type="file" id="fi" hidden><div id="fn" style="margin-top:8px;font-size:13px"></div></div>'
+     +'<div class="err" id="nErr2"></div></div>'
+   +'<div class="btns"><button class="btn" id="mc" type="button">Отмена</button><button class="btn ghost" id="mb" type="button" hidden>← Назад</button><button class="btn pri" id="mgo" type="button"></button></div>';
   $('#drawer').hidden=false;$('#shade').hidden=false;
-  $('#mc').addEventListener('click',closeDrawer);
+  function setStep(n){step=n;$('#s1').hidden=n!==1;$('#s2').hidden=n!==2;$('#mb').hidden=!(np&&n===2);
+    if(np){$('#sp1').className='s '+(n===1?'on':'done');$('#sp2').className='s '+(n===2?'on':'');$('#spl').style.setProperty('--p',n===2?1:0)}
+    $('#mgo').textContent=n===1?'Далее →':(np?'Создать и загрузить':'Загрузить и разобрать')}
+  setStep(step);
+  $('#dx').addEventListener('click',closeDrawer);$('#mc').addEventListener('click',closeDrawer);$('#mb').addEventListener('click',function(){setStep(1)});
+  $('#dcam').addEventListener('click',function(){readPhoto(function(d){dPhoto=d;$('#dav').firstChild.outerHTML=avatar('new','Нов Пац',72,d)})});
+  function nameAv(){if(dPhoto)return;var t=($('#nLast').value+' '+$('#nFirst').value).trim()||'Нов Пац';$('#dav').firstChild.outerHTML=avatar('new:'+t,t,72)}
+  $('#nLast').addEventListener('input',nameAv);$('#nFirst').addEventListener('input',nameAv);
+  $('#sgSex').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;sex=b.dataset.v;$$('#sgSex button').forEach(function(x){x.classList.toggle('on',x===b)})});
+  $('#chAl').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;allergy=b.dataset.v;$$('#chAl button').forEach(function(x){x.classList.toggle('on',x===b)});$('#nAlOther').hidden=allergy!=='Другое'});
+  $('#chCom').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var t=$('#nCom');var cur0=t.value.trim();t.value=cur0?cur0.replace(/[.,;]\s*$/,'')+', '+b.dataset.v.toLowerCase():b.dataset.v;t.focus()});
+  $('#nPhone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.indexOf('998')===0)d=d.slice(3);d=d.slice(0,9);var o='+998 ';if(d.length>0)o+=d.slice(0,2);if(d.length>2)o+=' '+d.slice(2,5);if(d.length>5)o+=' '+d.slice(5,7);if(d.length>7)o+=' '+d.slice(7,9);this.value=o});
   $('#pick').addEventListener('click',function(){$('#fi').click()});
   function setF(f){if(f)$('#fn').innerHTML='Файл «'+esc(f.name)+'» ('+(f.size/1048576).toFixed(1)+' МБ) принят. <b>В демо будет разобран демо-снимок.</b>'}
   $('#fi').addEventListener('change',function(){setF(this.files[0])});
@@ -488,11 +771,17 @@ function openDrawer(pid){
   ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('over')})});
   d.addEventListener('drop',function(e){setF(e.dataTransfer.files[0])});
   $('#mgo').addEventListener('click',function(){
+    if(step===1){var ln=$('#nLast').value.trim(),fn=$('#nFirst').value.trim();
+      if(ln.length<2||fn.length<2){$('#nErr1').textContent='Введите фамилию и имя';return}
+      var cid=($('#nCard').value.trim()||nextId).toUpperCase();if(getP(cid)){$('#nErr1').textContent='Такой номер карты уже есть';return}
+      $('#nErr1').textContent='';setStep(2);$('#nCom').focus();return}
     var id=pid,cmp=$('#nCom').value.trim();
-    if(!cmp){$('#nErr').textContent='Напишите жалобу на этот визит, хотя бы пару слов';return}
-    if(np){var ln=$('#nLast').value.trim(),fn=$('#nFirst').value.trim();if(ln.length<2){$('#nErr').textContent='Введите фамилию';return}
-      id=($('#nCard').value.trim()||nextId).toUpperCase();if(getP(id)){$('#nErr').textContent='Такой номер карты уже есть';return}
-      S.extra.push({id:id,name:ln+' '+fn,born:+$('#nYear').value||1990,blood:'не указано',allergy:'не указано',meds:'не указано',visits:[]})}
+    if(!cmp){$('#nErr2').textContent='Напишите жалобу на этот визит, хотя бы пару слов';return}
+    if(np){var ln2=$('#nLast').value.trim(),fn2=$('#nFirst').value.trim(),y=+$('#nYear').value||1990;
+      id=($('#nCard').value.trim()||nextId).toUpperCase();
+      var al=allergy==='Другое'?($('#nAlOther').value.trim()||'не указано'):allergy;
+      S.extra.push({id:id,name:ln2+' '+fn2,born:y,dob:String(y),sex:sex,blood:$('#nBlood').value,allergy:al,meds:'не указано',chronic:'не указано',habit:'не указано',phone:$('#nPhone').value.length>8?$('#nPhone').value:'',addr:'',job:'',emerg:'',since:TODAY,ref:'не указано',cleaning:'не указано',visits:[]});
+      if(dPhoto)S.photos[id]=dPhoto}
     S.vis[id]=[{d:TODAY,type:'КЛКТ',cmp:cmp,st:'proc',nv:1}].concat(S.vis[id]||[]);save();runProcess(id)})
 }
 function closeDrawer(){if($('#drawer').dataset.lock)return;$('#drawer').hidden=true;$('#shade').hidden=true}
@@ -517,8 +806,11 @@ function runProcess(id){
 }
 
 /* ---------- 3D (одна сцена на главную и разбор) ---------- */
-var scene,camera,renderer,controls,model,teethMesh={},bone=[],nerve=[],sinus=[],origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null;
+var scene,camera,renderer,controls,model,teethMesh={},G={maxilla:[],mandible:[],nerve:[],sinus:[],pulp:[],canal:[],resto:[],airway:[]},tc={},lblEl={},origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null,shotReq=false;
 var cur=null,sel=null,HERO={36:'k',16:'k',37:'v',46:'v',26:'v',47:'v'};
+var V0={maxilla:true,mandible:true,nerve:true,sinus:false,pulp:false,canal:false,resto:false,airway:false,teeth:true,boneOp:.22,toothOp:1,color:'lvl',jaw:'all',only:false,wire:false,labels:false,speed:1.2};
+var V=Object.assign({},V0);
+var ANAT={1:0x8fd3c8,2:0x8fd3c8,3:0xf2c26b,4:0x9db7ff,5:0x9db7ff,6:0xe59ad0,7:0xe59ad0,8:0xe59ad0};
 function ensure3d(){
   if(gl3d)return;gl3d=true;
   if(!window.THREE||!THREE.GLTFLoader){$$('.loading').forEach(function(l){l.textContent='3D не загрузился: проверьте интернет.'});return}
@@ -535,7 +827,7 @@ function ensure3d(){
   fetch('model.glb').then(function(r){if(!r.ok)throw new Error(r.status);return r.arrayBuffer()}).then(function(buf){
     new THREE.GLTFLoader().parse(buf,'',function(g){model=g.scene;scene.add(model);prepare();$$('.loading').forEach(function(l){l.style.display='none'});applyMode();fit(true)},function(){$$('.loading').forEach(function(l){l.textContent='Не удалось разобрать модель.'})});
   }).catch(function(){$$('.loading').forEach(function(l){l.textContent='Не удалось загрузить модель. Запустите сайт через локальный сервер.'})});
-  var ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),down=null;
+  var ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),down=null,pv=new THREE.Vector3();
   function hit(e){var r=renderer.domElement.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);
     var tg=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)tg.push(m)})});var h=ray.intersectObjects(tg,false)[0];return h?h.object.userData.fdi:null}
   renderer.domElement.addEventListener('pointerdown',function(e){down=[e.clientX,e.clientY]});
@@ -544,10 +836,13 @@ function ensure3d(){
   var lastN=0;
   (function loop(){requestAnimationFrame(loop);
     if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*(3-2*k);camera.position.lerpVectors(anim.p0,anim.p1,e);controls.target.lerpVectors(anim.c0,anim.c1,e);if(k>=1)anim=null}
-    if(curHost&&curHost.offsetParent!==null){controls.update();renderer.render(scene,camera)}
+    if(curHost&&curHost.offsetParent!==null){controls.update();renderer.render(scene,camera);
+      if(shotReq){shotReq=false;var a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='actina-'+(cur||'scene')+'.png';a.click();toast('Снимок экрана сохранён')}
+      if(mode==='case'&&V.labels&&model){var w=curHost.clientWidth,h=curHost.clientHeight;
+        Object.keys(lblEl).forEach(function(k){var e2=lblEl[k],ms=teethMesh[k];if(!ms||!ms[0].visible){e2.style.display='none';return}pv.copy(tc[k]).project(camera);if(pv.z>1){e2.style.display='none';return}e2.style.display='';e2.style.left=((pv.x*.5+.5)*w)+'px';e2.style.top=((-pv.y*.5+.5)*h)+'px'})}}
     if(mode==='home'){var n=Math.max(1,Math.round((controls.getAzimuthalAngle()+Math.PI)/(2*Math.PI)*31));if(n!==lastN){lastN=n;$('#fcount').textContent=n}}})();
 }
-function holdThenSpin(){clearTimeout(resumeT);resumeT=setTimeout(function(){if(!paused||mode==='home')controls.autoRotate=true},3000)}
+function holdThenSpin(){clearTimeout(resumeT);resumeT=setTimeout(function(){if(mode==='home'||(!paused&&V.speed>0))controls.autoRotate=true},3000)}
 function mount(host){if(!renderer)return;curHost=host;host.appendChild(renderer.domElement);resize()}
 function resize(){
   if(!renderer||!curHost)return;var r=curHost.getBoundingClientRect();if(!r.width||!r.height)return;
@@ -555,33 +850,44 @@ function resize(){
   if(mode==='home'&&r.width>760)camera.setViewOffset(r.width,r.height,-r.width*0.17,0,r.width,r.height);else camera.clearViewOffset();
   camera.updateProjectionMatrix()}
 function prepare(){
+  var KINDS={mandible:'mandible',maxilla:'maxilla',nerve:'nerve',sinus:'sinus',pulp:'pulp',incisive:'canal',lingual:'canal',prosthetics:'resto',pharynx:'airway'};
+  var MAT={
+    mandible:{color:0xaeb6c2,transparent:true,opacity:.22,roughness:.8,depthWrite:false},maxilla:{color:0xaeb6c2,transparent:true,opacity:.22,roughness:.8,depthWrite:false},
+    nerve:{color:0xf08aa6,roughness:.5},sinus:{color:0x6ab7ff,transparent:true,opacity:.35,roughness:.6,depthWrite:false},
+    pulp:{color:0xff9a6b,roughness:.5},canal:{color:0xf5d27a,roughness:.5},resto:{color:0xa9b8cc,roughness:.3,metalness:.6},airway:{color:0xd18b8b,transparent:true,opacity:.25,roughness:.7,depthWrite:false}};
   model.traverse(function(o){
     var chain=[],p=o;while(p){chain.push(p.name);p=p.parent}
     var tooth=null,kind=null;
-    chain.forEach(function(n){var m=/^tooth_(\d\d)$/.exec(n||'');if(m)tooth=+m[1];if(/^(mandible|maxilla)$/.test(n))kind='bone';if(n==='nerve')kind='nerve';if(n==='sinus')kind='sinus';if(/^(pulp|pharynx|incisive|lingual|prosthetics)$/.test(n))kind='hide'});
+    chain.forEach(function(n){var m=/^tooth_(\d\d)$/.exec(n||'');if(m)tooth=+m[1];if(KINDS[n])kind=KINDS[n]});
     if(!o.isMesh)return;
     if(o.geometry&&!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
     if(tooth){o.material=new THREE.MeshStandardMaterial({color:0xefeadf,roughness:.45,metalness:0,side:THREE.DoubleSide});o.userData.fdi=tooth;(teethMesh[tooth]=teethMesh[tooth]||[]).push(o)}
-    else if(kind==='bone'){o.material=new THREE.MeshStandardMaterial({color:0xaeb6c2,transparent:true,opacity:.22,roughness:.8,depthWrite:false,side:THREE.DoubleSide});bone.push(o)}
-    else if(kind==='nerve'){o.material=new THREE.MeshStandardMaterial({color:0xf08aa6,roughness:.5});nerve.push(o)}
-    else if(kind==='sinus'){o.material=new THREE.MeshStandardMaterial({color:0x6ab7ff,transparent:true,opacity:.35,roughness:.6,depthWrite:false,side:THREE.DoubleSide});sinus.push(o)}
+    else if(kind){var mt=Object.assign({side:THREE.DoubleSide},MAT[kind]);o.material=new THREE.MeshStandardMaterial(mt);G[kind].push(o)}
     else o.visible=false});
+  Object.keys(teethMesh).forEach(function(k){var b=new THREE.Box3();teethMesh[k].forEach(function(m){b.expandByObject(m)});tc[k]=b.getCenter(new THREE.Vector3());
+    var d=el('div','lbl',k);d.style.display='none';$('#lbls').appendChild(d);lblEl[k]=d});
 }
 function applyMode(){
-  if(!model)return;var home=mode==='home',C=(!home&&cur)?cs(cur):null,op=+$('#rOp').value/100;
-  bone.forEach(function(m){m.material.opacity=home?0.1:(sel?Math.min(op,0.1):op);m.visible=home||(isolated==null&&$('#cBone').checked)});
-  nerve.forEach(function(m){m.visible=home||(isolated==null&&$('#cNerve').checked)});
-  sinus.forEach(function(m){m.visible=!home&&(isolated==null&&$('#cSinus').checked)});
-  Object.keys(teethMesh).forEach(function(k){var f2=fByTooth(+k),lvl=home?HERO[k]:(f2?lvOf(f2):null);
-    teethMesh[k].forEach(function(m){var c=new THREE.Color(0xefeadf);
-      if(lvl)c.lerp(new THREE.Color(COL[lvl]),(!home&&f2&&C.rev[f2.id]==='rej')?0.25:0.95);
+  if(!model)return;var home=mode==='home',C=(!home&&cur)?cs(cur):null,iso=isolated!=null;
+  function vis(g){return home?(g==='maxilla'||g==='mandible'||g==='nerve'):(!iso&&V[g])}
+  ['maxilla','mandible'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g);m.material.opacity=home?0.1:(sel?Math.min(V.boneOp,0.1):V.boneOp);m.material.wireframe=!home&&V.wire})});
+  ['nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g)})});
+  Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
+    var show=home||(V.teeth&&(!iso||isolated===kk)&&(V.jaw==='all'||(V.jaw==='up')===(kk<30))&&(!V.only||!!f2));
+    var tr=!home&&V.toothOp<1;
+    teethMesh[k].forEach(function(m){var c=new THREE.Color(V.color==='anat'&&!home?ANAT[kk%10]:0xefeadf);
+      if(useLvl&&lvl)c.lerp(new THREE.Color(COL[lvl]),(!home&&f2&&C.rev[f2.id]==='rej')?0.25:0.95);
       m.material.color.copy(c);m.material.emissive=new THREE.Color(!home&&sel&&f2&&f2.id===sel?0x4a2a1a:0x000000);
-      m.visible=home||isolated==null||isolated===+k})});
-  controls.autoRotateSpeed=home?2:1.2;controls.autoRotate=home?true:!paused;
+      if(m.material.transparent!==tr){m.material.transparent=tr;m.material.depthWrite=!tr;m.material.needsUpdate=true}
+      m.material.opacity=tr?V.toothOp:1;m.visible=show});
+    var e=lblEl[k];if(e){e.className='lbl '+(lvl&&!home?lvl:'')}});
+  $('#lbls').style.display=(!home&&V.labels)?'':'none';
+  $('#legend').style.display=(!home&&V.color==='lvl')?'':'none';
+  controls.autoRotateSpeed=home?2:V.speed;controls.autoRotate=home?true:(!paused&&V.speed>0);
 }
 function fit(apply){
   if(!model||!camera)return;var box=new THREE.Box3(),home=mode==='home';
-  Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){box.expandByObject(m)})});if(!home)bone.forEach(function(m){box.expandByObject(m)});
+  Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){box.expandByObject(m)})});if(!home)['maxilla','mandible'].forEach(function(g){G[g].forEach(function(m){box.expandByObject(m)})});
   var c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());
   if(home){var d=Math.max(s.x,s.z)*2.7;origCam=new THREE.Vector3(c.x+d*0.5,c.y+d*0.3,c.z+d*0.8)}
   else{var d2=Math.max(s.x/Math.min(camera.aspect,1.6),s.y,s.z)*1.9;origCam=new THREE.Vector3(c.x,c.y+s.y*.12,c.z+d2)}
@@ -593,44 +899,59 @@ function flyTo(n){
   var c=b.getCenter(new THREE.Vector3()),dir=c.clone().sub(origTarget);dir.y=0;if(dir.length()<1)dir.set(0,0,1);dir.normalize();
   controls.autoRotate=false;anim={t:0,n:40,p0:camera.position.clone(),p1:c.clone().add(dir.multiplyScalar(60)).add(new THREE.Vector3(0,12,0)),c0:controls.target.clone(),c1:c};holdThenSpin()}
 function resetView(){if(!origCam)return;isolated=null;applyMode();fit(false);anim={t:0,n:40,p0:camera.position.clone(),p1:origCam.clone(),c0:controls.target.clone(),c1:origTarget.clone()};holdThenSpin()}
+function viewTo(name){
+  if(!origCam)return;if(name==='all'){resetView();drawFind();return}
+  var d=origCam.distanceTo(origTarget),a={front:[0,.12,1],left:[-1,.12,0],right:[1,.12,0],top:[0,1,.0001],bottom:[0,-1,.0001]}[name];
+  controls.autoRotate=false;anim={t:0,n:40,p0:camera.position.clone(),p1:origTarget.clone().add(new THREE.Vector3(a[0],a[1],a[2]).normalize().multiplyScalar(d)),c0:controls.target.clone(),c1:origTarget.clone()};holdThenSpin()}
 function isolate(n){isolated=n;applyMode();drawFind()}
+function syncScene(){
+  $$('#pnl [data-l]').forEach(function(i){i.checked=!!V[i.dataset.l]});
+  $('#rOp').value=Math.round(V.boneOp*100);$('#opv').textContent=Math.round(V.boneOp*100)+'%';
+  $('#rTop').value=Math.round(V.toothOp*100);$('#topv').textContent=Math.round(V.toothOp*100)+'%';
+  $('#rSp').value=Math.round(V.speed*10);$('#spv').textContent=V.speed.toFixed(1);
+  $('#cWire').checked=V.wire;$('#cOnly').checked=V.only;$('#cLbl').checked=V.labels;
+  $$('#sgColor button').forEach(function(b){b.classList.toggle('on',b.dataset.c===V.color)});
+  $$('#sgJaw button').forEach(function(b){b.classList.toggle('on',b.dataset.j===V.jaw)})}
 
 /* ---------- разбор ---------- */
-var openForm=null,col0=null;
+var openForm=null,col0=null,findAnim=true;
+function addLog(id,x){var C=cs(id);C.log=C.log||[];C.log.push({t:TODAY.slice(0,5)+' '+new Date().toTimeString().slice(0,5),x:x});save()}
 function openCase(id){
   cur=id;sel=null;isolated=null;openForm=null;mode='case';var p=getP(id),v=readyVisit(p);
   $('#vwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
   $('#vcmp').textContent='Жалоба: '+(v.cmp||'не указана');
+  $('#roBadge').hidden=!ro;$('#toChat').hidden=ro;$('#share').hidden=ro;$('#vBack').textContent=ro?'← На главную':'← Пациенты';
+  if(!ro&&!cs(id).opened){cs(id).opened=true;addLog(id,'Разбор открыт врачом')}
   ensure3d();mount($('#gl'));
   if(S.colw)$('#col').style.setProperty('--colw',S.colw+'px');
-  tab('find');drawAll();applyMode();setTimeout(function(){resize();fit(true)},60);
+  findAnim=true;syncScene();tab('find');drawAll();applyMode();setTimeout(function(){resize();fit(true)},60);
+  if(pendingSel){var ps=pendingSel;pendingSel=null;setTimeout(function(){select(ps)},700)}
 }
-function drawAll(){drawFind();drawChat();drawPlan();drawInfo();drawMap()}
-var curTab='find';
-function tab(t){curTab=t;$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','chat','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t});dockSync()}
+function drawAll(){drawFind();drawPlan();drawInfo();drawMap()}
+function tab(t){$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t})}
 $$('.tabs .t').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.t)})});
-function dockSync(){var wide=window.innerWidth>=1300&&curTab==='find'&&!$('#v-case').hidden;$('#dock').hidden=!wide;if(wide)renderChat($('#dockch'),true)}
-window.addEventListener('resize',function(){if(!$('#v-case').hidden)dockSync()});
 function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else{toast('Зуб '+n+': находок нет');if(teethMesh[n])flyTo(n)}}
 function select(id){sel=id;openForm=null;tab('find');applyMode();drawFind();drawMap();var f=findF(id);if(f)flyTo(f.tooth);var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function drawFind(){
   var p=$('#p-find');if(!p||!cur)return;var C=cs(cur),n=reviewed(cur),all=n>=F.length,st=p.scrollTop;
-  p.innerHTML='<div class="prg"><div>Разобрано <b>'+n+'</b> из '+F.length+'</div><div class="bar2"><i style="width:'+(n/F.length*100)+'%"></i></div><div class="pb"><button class="btn sm" id="pdfD" '+(all?'':'disabled')+'>PDF врачу</button><button class="btn sm" id="pdfP" '+(all?'':'disabled')+'>PDF пациенту</button>'+(all?'':'<span class="muted" style="font-size:12px;align-self:center">откроются, когда разобрано всё</span>')+'</div></div>';
+  p.className='pane'+(findAnim?' stag':'');
+  p.innerHTML=ro?'<div class="prg"><div>Режим просмотра: <b>'+F.length+' находок</b></div><div class="muted" style="font-size:12.5px">Подтверждать и отклонять находки может только врач после входа.</div></div>':'<div class="prg"><div>Разобрано <b>'+n+'</b> из '+F.length+'</div><div class="bar2"><i style="width:'+(n/F.length*100)+'%"></i></div><div class="pb"><button class="btn sm" id="pdfD" '+(all?'':'disabled')+'>PDF врачу</button><button class="btn sm" id="pdfP" '+(all?'':'disabled')+'>PDF пациенту</button>'+(all?'':'<span class="muted" style="font-size:12px;align-self:center">откроются, когда разобрано всё</span>')+'</div></div>';
+  var fi=0;
   ROLES.forEach(function(role){
     var list=F.filter(function(f){return f.role===role});if(!list.length)return;
     list.sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))});
     p.appendChild(el('div','grp',role));
     list.forEach(function(f){
-      var open=sel===f.id,r=C.rev[f.id],lv=lvOf(f),fo=openForm&&openForm.id===f.id;
+      var open=sel===f.id,r=C.rev[f.id],lv=lvOf(f),fo=!ro&&openForm&&openForm.id===f.id;
       var c=el('div','fcard'+(open?' open':'')+(r==='ok'?' ok':'')+(r==='rej'?' rej':''));
-      c.innerHTML='<div class="f1"><div class="hd"><span class="lv '+lv+'">'+LV[lv]+'</span> <span class="tn">зуб '+f.tooth+'</span><span class="tx">'+esc(ftext(f))+'</span></div><div class="ic"><button class="y'+(r==='ok'?' on':'')+'" title="Подтвердить" aria-label="Подтвердить">✓</button><button class="x'+(r==='rej'?' on':'')+'" title="Отклонить" aria-label="Отклонить">✕</button></div></div>'
+      c.innerHTML='<div class="f1"><div class="hd"><span class="lv '+lv+'">'+LV[lv]+'</span> <span class="tn">зуб '+f.tooth+'</span><span class="tx">'+esc(ftext(f))+'</span></div>'+(ro?'':'<div class="ic"><button class="y'+(r==='ok'?' on':'')+'" title="Подтвердить" aria-label="Подтвердить">✓</button><button class="x'+(r==='rej'?' on':'')+'" title="Отклонить" aria-label="Отклонить">✕</button></div>')+'</div>'
        +'<div class="f2"><div class="rel">надёжность измерения: '+f.rel+'</div>'+(r&&C.comm[f.id]?'<div class="fc">Врач: '+esc(C.comm[f.id])+'</div>':'')+'</div>'
        +(open?'<div class="f3"><div class="acts"><button class="btn sm" data-a="show">Показать на модели</button><button class="btn sm" data-a="iso">'+(isolated===f.tooth?'Показать все зубы':'Изолировать зуб')+'</button></div><details><summary>На чём основано</summary><p style="margin:6px 0 0">'+esc(f.why)+'</p><p style="margin:6px 0 0;color:var(--muted)">Оговорка: '+esc(f.cav)+'</p></details></div>':'')
        +(fo?'<div class="form"><label>Ваш комментарий (от 10 символов)</label><textarea id="cmt" placeholder="Что вы увидели и почему так решили"></textarea><label>Уровень</label><select id="lvSel"><option value="k">Крит</option><option value="v">Важн</option><option value="n">Незнач</option></select><label class="cb"><input type="checkbox" id="fixT"> Поправить формулировку</label><input type="text" id="fixV" hidden><div class="err" id="err"></div><button class="btn pri sm" id="sv">'+(openForm.kind==='ok'?'Подтвердить':'Отклонить')+'</button> <button class="btn sm ghost" id="cn">Отмена</button></div>':'');
-      p.appendChild(c);
+      c.style.setProperty('--i',fi++);p.appendChild(c);
       $('.hd',c).addEventListener('click',function(){if(open){sel=null;applyMode();drawFind();drawMap()}else select(f.id)});
-      $('.y',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'ok'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
-      $('.x',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'rej'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
+      if(!ro)$('.y',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'ok'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
+      if(!ro)$('.x',c).addEventListener('click',function(){sel=f.id;openForm={id:f.id,kind:'rej'};applyMode();drawFind();drawMap();flyTo(f.tooth)});
       $$('[data-a]',c).forEach(function(b){b.addEventListener('click',function(){if(b.dataset.a==='show')flyTo(f.tooth);else{isolate(isolated===f.tooth?null:f.tooth);if(isolated)flyTo(f.tooth)}})});
       if(fo){$('#cmt',c).value=C.comm[f.id]||'';$('#lvSel',c).value=lv;$('#fixV',c).value=ftext(f);
         $('#fixT',c).addEventListener('change',function(){$('#fixV',c).hidden=!this.checked});
@@ -642,12 +963,13 @@ function drawFind(){
           if(norm(t).indexOf(norm(f.ai))===0&&norm(t).length<norm(f.ai).length+8){e.textContent='Это повторяет текст программы. Опишите своими словами.';return}
           C.comm[f.id]=t;C.rev[f.id]=openForm.kind;C.lv[f.id]=$('#lvSel',c).value;if($('#fixT',c).checked&&$('#fixV',c).value.trim())C.txt[f.id]=$('#fixV',c).value.trim();
           if(reviewed(cur)>=F.length&&!C.signed)C.signed=TODAY.slice(0,5);
-          save();openForm=null;toast(C.rev[f.id]==='ok'?'Находка подтверждена':'Находка отклонена');
+          addLog(cur,(C.rev[f.id]==='ok'?'Подтверждена':'Отклонена')+' находка: зуб '+f.tooth+', '+ftext(f).toLowerCase());if(reviewed(cur)>=F.length)addLog(cur,'Все находки разобраны, заключение готово');save();openForm=null;toast(C.rev[f.id]==='ok'?'Находка подтверждена':'Находка отклонена');
           var nx=F.filter(function(x){return !C.rev[x.id]})[0];sel=nx?nx.id:null;applyMode();drawFind();drawMap();drawPlan();
           if(nx)flyTo(nx.tooth);else{toast('Всё разобрано. PDF можно скачать.');resetView()}})}
     })});
   p.scrollTop=st;
-  $('#pdfD').addEventListener('click',function(){showDocs('d')});$('#pdfP').addEventListener('click',function(){showDocs('p')});
+  findAnim=false;
+  if(!ro){$('#pdfD').addEventListener('click',function(){showDocs('d')});$('#pdfP').addEventListener('click',function(){showDocs('p')})}
 }
 var UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 function drawMap(){
@@ -655,13 +977,26 @@ function drawMap(){
   function row(a,cl){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n);return '<button type="button" data-n="'+n+'" class="'+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+n+'</button>'}).join('')+'</div>'}
   $('#mm').innerHTML=row(UP,'g')+row(LO,'');$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
 }
-$('#pp').addEventListener('click',function(){paused=!paused;controls.autoRotate=!paused;this.textContent=paused?'▶ вращение':'❚❚ вращение'});
+$('#pp').addEventListener('click',function(){paused=!paused;controls.autoRotate=!paused&&V.speed>0;this.textContent=paused?'▶ вращение':'❚❚ вращение'});
 $('#scnBtn').addEventListener('click',function(){$('#pnl').hidden=!$('#pnl').hidden});
-['cBone','cNerve','cSinus'].forEach(function(i){$('#'+i).addEventListener('change',applyMode)});
-$('#rOp').addEventListener('input',function(){$('#opv').textContent=(100-this.value)+'%';applyMode()});
-$('#tReset').addEventListener('click',resetView);
-$('#vBack').addEventListener('click',function(){go('#/patient/'+cur)});
-$('#share').addEventListener('click',function(){try{navigator.clipboard.writeText(location.href)}catch(e){}toast('Ссылка на разбор скопирована')});
+$$('#pnl [data-l]').forEach(function(i){i.addEventListener('change',function(){V[i.dataset.l]=i.checked;applyMode()})});
+$('#rOp').addEventListener('input',function(){V.boneOp=this.value/100;$('#opv').textContent=this.value+'%';applyMode()});
+$('#rTop').addEventListener('input',function(){V.toothOp=this.value/100;$('#topv').textContent=this.value+'%';applyMode()});
+$('#rSp').addEventListener('input',function(){V.speed=this.value/10;$('#spv').textContent=V.speed.toFixed(1);applyMode()});
+$('#cWire').addEventListener('change',function(){V.wire=this.checked;applyMode()});
+$('#cOnly').addEventListener('change',function(){V.only=this.checked;applyMode()});
+$('#cLbl').addEventListener('change',function(){V.labels=this.checked;applyMode()});
+$('#sgColor').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;V.color=b.dataset.c;syncScene();applyMode()});
+$('#sgJaw').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;V.jaw=b.dataset.j;syncScene();applyMode()});
+$$('#pnl [data-v]').forEach(function(b){b.addEventListener('click',function(){viewTo(b.dataset.v)})});
+$('#scShot').addEventListener('click',function(){shotReq=true});
+$('#scReset').addEventListener('click',function(){V=Object.assign({},V0);syncScene();applyMode();resetView();toast('Сцена сброшена')});
+$('#vBack').addEventListener('click',function(){go(ro?'#/':'#/patient/'+cur)});
+$('#toChat').addEventListener('click',function(){go('#/chat/'+cur)});
+$('#share').addEventListener('click',function(){
+  var u=location.origin+location.pathname+'#/shared/'+cur;
+  function ok(){toast('Ссылка скопирована. Открывается без входа, только просмотр')}
+  try{navigator.clipboard.writeText(u).then(ok,function(){prompt('Скопируйте ссылку',u)})}catch(e){prompt('Скопируйте ссылку',u)}});
 $('#lang').addEventListener('click',function(){toast('Каракалпакский перевод в работе: пока только русский')});
 $('#expand').addEventListener('click',function(){var c=$('#col');if(col0==null){col0=c.getBoundingClientRect().width;c.style.setProperty('--colw',Math.round(window.innerWidth*0.84)+'px');this.textContent='⤡'}else{c.style.setProperty('--colw',col0+'px');col0=null;this.textContent='⤢'}});
 (function(){var h=$('#handle'),drag=false;h.addEventListener('pointerdown',function(e){drag=true;h.setPointerCapture(e.pointerId)});
@@ -690,37 +1025,121 @@ function answer(q){
   if(/пазух|гайм/.test(t))return {h:'Корень зуба 15 в 0,9 мм от дна пазухи. Такая близость у большинства верхних зубов, это не патология, но важно при имплантации. Объём пазухи не измеряю.',s:['f15']};
   if(/эмал|рак|онколог|диагноз/.test(t))return {h:'Это я не измеряю, поэтому ни числа, ни вывода не назову. Диагноз ставит врач.',s:[]};
   return {h:'Отвечаю только по находкам этого снимка. Спросите про конкретный зуб или выберите вопрос ниже.',s:[]}}
-var thinking=false;
+var thinking=false,typeT=null;
 function hist(){if(!S.msgs[cur]||!S.msgs[cur].length){S.msgs[cur]=[firstMsg()];save()}return S.msgs[cur]}
-function renderChat(host){
-  if(!cur)return;var H=hist();
-  host.innerHTML='<div class="msgs"></div><div class="sug"></div><form class="cin"><textarea placeholder="Спросите про этот снимок" aria-label="Вопрос"></textarea><button class="btn pri sm" type="submit">Спросить</button></form><div class="cnote">Отвечает только по находкам этого снимка. Чего нет в данных, скажет, что не знает. Диагноз ставит врач.</div>';
-  var m=$('.msgs',host);
-  H.forEach(function(x){var d=el('div','b'+(x.w==='me'?' me':''),'<small class="who">'+(x.w==='me'?'Врач':'ИИ')+'</small>'+x.h+(x.s&&x.s.length?'<div class="src">на основании: '+x.s.map(function(id){var f=findF(id);return '<button type="button" data-id="'+id+'">зуб '+f.tooth+' · '+esc(f.t)+'</button>'}).join('')+'</div>':''));m.appendChild(d);
-    $$('.src button',d).forEach(function(b){b.addEventListener('click',function(){select(b.dataset.id)})})});
-  if(thinking)m.appendChild(el('div','b think','Думает…'));
+function openChat(id){
+  cur=id;thinking=false;clearInterval(typeT);var p=getP(id),v=readyVisit(p);
+  $('#chwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
+  $('#chcmp').textContent='Жалоба: '+(v.cmp||'не указана');
+  $('#chside').innerHTML='<div class="who3">'+avatar(p.id,p.name,44)+'<div><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div></div><div class="cmp2">'+esc(v.cmp||'')+'</div><div class="sect">Находки снимка</div><div class="fl" id="chfl"></div>';
+  F.slice().sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))}).forEach(function(f,i){
+    var b=el('button',null,'<span class="dot '+lvOf(f)+'" style="margin:0"></span><small>зуб '+f.tooth+'</small><span>'+esc(ftext(f))+'</span>');b.type='button';
+    b.style.animation='rise .5s both';b.style.animationDelay=(i*60)+'ms';
+    b.addEventListener('click',function(){ask('Расскажи про зуб '+f.tooth)});$('#chfl').appendChild(b)});
+  var sg=$('#chsug');sg.innerHTML='';
+  ['Почему это критично?','Сколько визитов?','Что сказать пациенту?','Чего ты не видишь на этом снимке?'].forEach(function(q){var b=el('button',null,q);b.type='button';b.addEventListener('click',function(){ask(q)});sg.appendChild(b)});
+  renderMsgs(false);setTimeout(function(){$('#chta').focus()},300);
+}
+function srcHtml(x){return x.s&&x.s.length?'<div class="src">на основании: '+x.s.map(function(id){var f=findF(id);return '<button type="button" data-id="'+id+'">зуб '+f.tooth+' · '+esc(f.t)+'</button>'}).join('')+'</div>':''}
+function bindSrc(d){$$('.src button',d).forEach(function(b){b.addEventListener('click',function(){pendingSel=b.dataset.id;go('#/case/'+cur)})})}
+function typeInto(node,html,done,scroller){
+  var w=html.split(' '),i=0;clearInterval(typeT);
+  typeT=setInterval(function(){i=Math.min(w.length,i+2);node.innerHTML=w.slice(0,i).join(' ');scroller.scrollTop=scroller.scrollHeight;if(i>=w.length){clearInterval(typeT);done()}},45)}
+function renderMsgs(animLast){
+  var m=$('#chmsgs'),H=hist();m.innerHTML='';
+  H.forEach(function(x,i){
+    var me=x.w==='me',last=animLast&&i===H.length-1&&!me;
+    var d=el('div','cm'+(me?' me':''),(me?'':'<div class="bot-av">A</div>')+'<div class="bub"><div class="tx"></div></div>'),tx=$('.tx',d);
+    if(last){typeInto(tx,x.h,function(){$('.bub',d).insertAdjacentHTML('beforeend',srcHtml(x));bindSrc(d);m.scrollTop=m.scrollHeight},m)}
+    else{tx.innerHTML=x.h;if(!me){$('.bub',d).insertAdjacentHTML('beforeend',srcHtml(x));bindSrc(d)}}
+    m.appendChild(d)});
+  if(thinking)m.appendChild(el('div','cm','<div class="bot-av">A</div><div class="bub"><span class="dots"><i></i><i></i><i></i></span></div>'));
   m.scrollTop=m.scrollHeight;
-  ['Почему это критично?','Сколько визитов?','Что сказать пациенту?','Чего ты не видишь на этом снимке?'].forEach(function(q){var b=el('button',null,q);b.type='button';b.addEventListener('click',function(){ask(q)});$('.sug',host).appendChild(b)});
-  var ta=$('textarea',host);
-  ta.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('form',host).requestSubmit()}});
-  $('form',host).addEventListener('submit',function(e){e.preventDefault();var v=ta.value.trim();if(!v||thinking)return;ask(v)});
 }
 function ask(q){
-  if(thinking)return;hist().push({w:'me',h:esc(q)});thinking=true;chatAll();
-  setTimeout(function(){var a=answer(q);S.msgs[cur].push({w:'bot',h:esc(a.h),s:a.s});thinking=false;save();chatAll()},700+Math.random()*500)}
-function chatAll(){renderChat($('#p-chat'));if(!$('#dock').hidden)renderChat($('#dockch'))}
-function drawChat(){renderChat($('#p-chat'));dockSync()}
+  if(thinking)return;var id=cur;hist().push({w:'me',h:esc(q)});thinking=true;renderMsgs(false);
+  setTimeout(function(){var a=answer(q);S.msgs[id].push({w:'bot',h:esc(a.h),s:a.s});thinking=false;save();if(cur===id&&!$('#v-chat').hidden)renderMsgs(true)},900+Math.random()*600)}
+$('#chform').addEventListener('submit',function(e){e.preventDefault();var t=$('#chta'),v=t.value.trim();if(!v||thinking)return;t.value='';ask(v)});
+$('#chta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chform').requestSubmit()}});
+$('#chBack').addEventListener('click',function(){go('#/case/'+cur)});
 
-/* ---------- план и кейс ---------- */
+/* ---------- план (шаг за шагом, со стрелками) ---------- */
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 function drawPlan(){
-  if(!cur)return;var C=cs(cur),p=$('#p-plan'),list=F.filter(function(f){return C.rev[f.id]!=='rej'&&f.plan!=='наблюдение'});
-  var st1=list.filter(function(f){return f.role!=='Хирург'}),st2=list.filter(function(f){return f.role==='Хирург'});
-  function grp(a){return a.map(function(f){return '<div class="svc"><b>'+f.plan[0].toUpperCase()+f.plan.slice(1)+', зуб '+f.tooth+'</b><small>'+esc(ftext(f))+' · '+(f.visits?'ориентировочно визитов: '+f.visits:'по решению врача')+'</small></div>'}).join('')||'<div class="muted">Нет позиций</div>'}
-  p.innerHTML='<div class="calm">Черновик плана. Порядок этапов взят из плана клиники, правила врачом ещё не подписаны. Отклонённые находки в план не попадают.</div><div class="st">Этап 1. Терапия</div>'+grp(st1)+'<div class="st">Этап 2. Хирургия и имплантация (параллельно этапу 1)</div>'+grp(st2);
+  if(!cur)return;var C=cs(cur),p=$('#p-plan'),act=F.filter(function(f){return C.rev[f.id]!=='rej'});
+  var n=reviewed(cur),all=n>=F.length;
+  var watch=act.filter(function(f){return f.plan==='наблюдение'}),
+      ther=act.filter(function(f){return f.role!=='Хирург'&&f.plan!=='наблюдение'}),
+      surg=act.filter(function(f){return f.role==='Хирург'});
+  function ord(a){return a.slice().sort(function(x,y){return 'kvn'.indexOf(lvOf(x))-'kvn'.indexOf(lvOf(y))})}
+  function chain(a,empty){if(!a.length)return '<div class="sub">'+empty+'</div>';
+    return '<div class="sv">'+ord(a).map(function(f,i){return (i?'<div class="mini"></div>':'')+'<div class="it"><span class="lv '+lvOf(f)+'">'+LV[lvOf(f)]+'</span> <b>'+esc(cap(f.plan))+', зуб '+f.tooth+'</b><small>'+esc(ftext(f))+' · '+(f.visits?'визитов: '+f.visits:'по решению врача')+'</small></div>'}).join('')+'</div>'}
+  var visits=act.reduce(function(a,f){return a+f.visits},0),idx=0;
+  function arrow(){return '<div class="arw" style="--i:'+(idx++)+'"></div>'}
+  var html='<div class="calm" style="margin-top:0">Черновик плана. Порядок этапов взят из плана клиники, правила врачом ещё не подписаны. Отклонённые находки в план не попадают.</div>'
+   +'<div class="tot"><span class="pill acc">Услуг: '+(ther.length+surg.length+watch.length)+'</span><span class="pill">Визитов: около '+visits+'</span><span class="pill">Срок: 2–4 месяца, ориентир</span></div>'
+   +'<div class="flow">'
+   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn '+(all?'ok':'')+'">'+(all?'✓':'1')+'</span><b>Проверка находок врачом</b><span class="dur">'+n+' из '+F.length+'</span></div><div class="sub" style="margin:0 0 0 35px">'+(all?'Все находки разобраны, план подтверждён':'Осталось разобрать: '+(F.length-n))+'</div></div>'
+   +arrow()
+   +'<div class="par" style="--i:'+(idx++)+'"><span class="tag">Параллельно</span>'
+     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Терапия</b><span class="dur">1–2 мес</span></div><div class="sub">Лечение зубов и дёсен, гигиена внутри этапа</div>'+chain(ther,'Нет позиций')+'</div>'
+     +'<div class="node"><div class="nh"><span class="nn">2</span><b>Хирургия и имплантация</b><span class="dur">по решению хирурга</span></div><div class="sub">Не ждёт окончания терапии</div>'+chain(surg,'Нет позиций')+'</div>'
+   +'</div>'
+   +arrow()
+   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn g">3</span><b>Наблюдение</b><span class="dur">на контрольных осмотрах</span></div>'+chain(watch,'Нет позиций')+'</div>'
+   +arrow()
+   +'<div class="node" style="--i:'+(idx++)+'"><div class="nh"><span class="nn g">4</span><b>Контрольный осмотр и снимок</b><span class="dur">через 6 мес</span></div><div class="sub" style="margin:0 0 0 35px">Проверка результата, корректировка плана</div></div>'
+   +'</div>';
+  p.innerHTML=html;
 }
+
+/* ---------- кейс (подробно) ---------- */
 function drawInfo(){
-  if(!cur)return;var p=getP(cur),v=readyVisit(p);
-  $('#p-info').innerHTML='<div class="kv"><span>Пациент</span><span>'+esc(p.name)+', '+p.id+'</span><span>Снимок</span><span>'+v.type+' от '+v.d+'</span><span>Модель</span><span>nnU-Net v2, 3d_fullres</span><span>Правила</span><span>версия 16, не подписаны врачом</span><span>Точность зубов</span><span>96.9% (95% ДИ 96.2–97.6), 100 пациентов внешней выборки</span></div><div class="calm">У демо-кейса нет исходного тома, поэтому вкладок «Зуб» и «Срезы» здесь нет. Это обычное состояние демо, а не ошибка.</div><div class="calm">Процента уверенности у находок нет намеренно: вероятности у нас нет, есть измерение, порог и оговорка. Вместо процента показана надёжность измерения.</div>';
+  if(!cur)return;var p=getP(cur),v=readyVisit(p),C=cs(cur),c=counts(cur),n=reviewed(cur),i0=0;
+  function bar(l,k,col){return '<div class="bl"><span>'+l+'</span><div class="tr"><i style="width:'+(c[k]/F.length*100)+'%;background:'+col+'"></i></div><b>'+c[k]+'</b></div>'}
+  var log=[{t:v.d,x:'Снимок загружен ('+v.type+')'},{t:v.d,x:'Обработан: 31 зуб, кость, канал, '+F.length+' находок'}].concat((C.log||[]).map(function(e){return {t:e.t,x:e.x}}));
+  if(C.signed)log.push({t:C.signed,x:'Заключение подписано врачом'});
+  var th=ROLES.map(function(r){return {r:r,a:F.filter(function(f){return f.role===r})}});
+  $('#p-info').innerHTML=
+   '<div class="csec"><h4>Пациент</h4><div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">'+avatar(p.id,p.name,48)+'<div><b>'+esc(p.name)+'</b><div class="muted" style="font-size:13px">'+p.id+' · '+ageOf(p)+' лет · '+(p.sex==='М'?'мужчина':'женщина')+'</div></div></div>'
+   +kv([['Аллергия',p.allergy,p.allergy&&p.allergy!=='Нет'],['Хронические',p.chronic],['Лекарства',p.meds],['Телефон',p.phone]])
+   +'<button class="btn sm" id="toPat" style="margin-top:10px">Открыть карточку пациента</button></div>'
+   +'<div class="csec"><h4>Визит и жалоба</h4>'+kv([['Дата',v.d],['Жалоба',v.cmp],['Врач','Др. '+docName()]])+'</div>'
+   +'<div class="csec"><h4>Снимок</h4>'+kv([['Тип','КЛКТ, обе челюсти'],['Источник','Демо-снимок, публичный набор figshare 26965903 (CC BY 4.0)'],['Шаг вокселя','около 0,25 мм (демо)'],['Исходный том','В демо не подгружается, поэтому срезов и карточки зуба здесь нет']])+'</div>'
+   +'<div class="csec"><h4>Как обработано</h4>'+kv([['Модель','nnU-Net v2, 3d_fullres'],['Правила находок','версия 16, врачом не подписаны'],['Распознано','31 зуб, обе челюсти, нижнечелюстной канал, пазухи'],['Точность зубов','96.9% (95% ДИ 96.2–97.6), 100 пациентов внешней выборки'],['Время','около 3 минут (в демо ускорено)']])+'</div>'
+   +'<div class="csec"><h4>Находки по важности</h4><div class="bars">'+bar('Критичные','k','var(--crit)')+bar('Важные','v','var(--warn)')+bar('Незначит.','n','var(--info)')+'</div></div>'
+   +'<div class="csec"><h4>Ход проверки: '+n+' из '+F.length+'</h4>'+F.slice().sort(function(a,b){return 'kvn'.indexOf(lvOf(a))-'kvn'.indexOf(lvOf(b))}).map(function(f){var r=C.rev[f.id];return '<div class="mrow"><span class="dot '+lvOf(f)+'" style="margin:0"></span><span class="t">зуб '+f.tooth+' · '+esc(ftext(f))+'</span>'+(r==='ok'?'<span class="pill ok">подтверждена</span>':r==='rej'?'<span class="pill">отклонена</span>':'<span class="pill">ждёт</span>')+'</div>'}).join('')+'</div>'
+   +'<div class="csec"><h4>Чего программа не измеряет</h4><div class="rst"><span>объём пазух и слизистая</span><span>височно-нижнечелюстной сустав</span><span>число корневых каналов</span><span>дентикли</span><span>качество пломбирования</span><span>стадия пародонтита</span></div><div class="calm">Отсутствие находки не значит, что всё хорошо. Процента уверенности у находок нет намеренно: вероятности у нас нет, есть измерение, порог и оговорка.</div></div>'
+   +'<div class="csec"><h4>Журнал</h4><div class="tl">'+log.map(function(e){return '<div class="ev" style="--i:'+(i0++)+'"><time>'+esc(e.t)+'</time>'+esc(e.x)+'</div>'}).join('')+'</div></div>';
+  var tp=$('#toPat');if(tp)tp.addEventListener('click',function(){go(ro?'#/':'#/patient/'+cur)});
+}
+
+/* ---------- профиль врача ---------- */
+function drawProfile(){
+  var d=S.doc,P=allP(),ok=0,rj=0,sg=0,cn=0,acts=[];
+  P.forEach(function(p){if(!readyVisit(p))return;var C=cs(p.id);cn++;Object.keys(C.rev).forEach(function(k){if(C.rev[k]==='ok')ok++;else rj++});if(C.signed)sg++;(C.log||[]).forEach(function(e){acts.push({t:e.t,x:e.x+' · '+p.name})})});
+  acts.reverse();
+  $('#prbody').innerHTML='<div class="crumb"><button id="pb">← Пациенты</button></div>'
+   +'<div class="card prof-h rise"><span class="avw" id="pav">'+avatar('doctor',d.name,104)+'<button class="cam" id="pcam" aria-label="Загрузить фото">📷</button></span>'
+   +'<div><h1>Др. '+esc(d.name)+'</h1><div class="muted">'+esc(d.spec)+'</div><div class="muted" style="margin-top:2px">'+esc(d.clinic)+'</div><div class="chips" style="margin:10px 0 0"><span class="c"><small>Стаж</small>'+esc(d.exp)+' лет</span><span class="c"><small>Лицензия</small>'+esc(d.license)+'</span></div></div>'
+   +'<div class="sp"></div><button class="btn" id="pout">Выйти из аккаунта</button></div>'
+   +'<div class="stats"><div class="card stat rise" style="--i:1"><b>'+cn+'</b><span>разборов в работе</span></div><div class="card stat rise" style="--i:2"><b>'+ok+'</b><span>находок подтверждено</span></div><div class="card stat rise" style="--i:3"><b>'+rj+'</b><span>находок отклонено</span></div><div class="card stat rise" style="--i:4"><b>'+sg+'</b><span>заключений подписано</span></div></div>'
+   +'<div class="pgrid pf2"><div class="card pcard" style="--i:2"><h3>О враче</h3><div class="pf">'
+   +'<div><label>Фамилия и имя</label><input id="dName" value="'+esc(d.name)+'"></div><div><label>Специальность</label><input id="dSpec" value="'+esc(d.spec)+'"></div>'
+   +'<div><label>Клиника</label><input id="dClinic" value="'+esc(d.clinic)+'"></div><div><label>Стаж, лет</label><input id="dExp" type="number" min="0" max="60" value="'+esc(d.exp)+'"></div>'
+   +'<div><label>Телефон</label><input id="dPhone" value="'+esc(d.phone)+'"></div><div><label>Почта</label><input id="dMail" value="'+esc(d.email)+'"></div>'
+   +'<div><label>Номер лицензии</label><input id="dLic" value="'+esc(d.license)+'"></div><div><label>Языки приёма</label><input id="dLang" value="'+esc(d.langs)+'"></div>'
+   +'<div class="full"><label>О себе</label><textarea id="dAbout" rows="3">'+esc(d.about)+'</textarea></div></div>'
+   +'<div class="btns"><button class="btn pri" id="dSave">Сохранить</button></div></div>'
+   +'<div><div class="card pcard" style="--i:3"><h3>Вход и безопасность</h3>'+kv([['Вход','по номеру телефона и коду из SMS'],['Этот компьютер',S.session&&S.session.trust?'запомнен':'не запомнен'],['С телефона','вход закрыт: аккаунт работает на ноутбуке или компьютере клиники']])+'</div>'
+   +'<div class="card pcard" style="--i:4"><h3>Последние действия</h3>'+(acts.length?acts.slice(0,8).map(function(a){return '<div class="act"><time>'+esc(a.t)+'</time><span>'+esc(a.x)+'</span></div>'}).join(''):'<div class="muted">Пока нет. Откройте разбор и подтвердите находку.</div>')+'</div></div></div>';
+  $('#pb').addEventListener('click',function(){go('#/patients')});
+  $('#pout').addEventListener('click',function(){S.session=null;save();go('#/')});
+  $('#pcam').addEventListener('click',function(){readPhoto(function(u){S.photos.doctor=u;save();$('#pav').firstChild.outerHTML=avatar('doctor',S.doc.name,104);$('#meAv').innerHTML=avatar('doctor',S.doc.name,30);toast('Фото сохранено')})});
+  $('#dSave').addEventListener('click',function(){
+    var nm=$('#dName').value.trim();if(nm.length<3){toast('Укажите фамилию и имя');return}
+    S.doc={name:nm,spec:$('#dSpec').value.trim(),clinic:$('#dClinic').value.trim(),exp:$('#dExp').value,phone:$('#dPhone').value.trim(),email:$('#dMail').value.trim(),license:$('#dLic').value.trim(),langs:$('#dLang').value.trim(),about:$('#dAbout').value.trim()};
+    if(S.session)S.session.name=nm;save();$('#docName').textContent='Др. '+nm;drawProfile();toast('Профиль сохранён')});
 }
 
 /* ---------- PDF (окно предпросмотра) ---------- */
@@ -730,7 +1149,7 @@ function showDocs(which){
   var doc='<div class="doc"><h3>Заключение по КЛКТ</h3><div class="m">'+esc(p.name)+' · '+p.id+' · снимок '+v.d+'</div><div>Жалоба: '+esc(v.cmp||'')+'</div><div>Подтверждено: критичных '+c.k+', важных '+c.v+', незначительных '+c.n+'</div><ul>'
    +ok.map(function(f){return '<li><b>Зуб '+f.tooth+'</b>, '+esc(ftext(f)).toLowerCase()+' ('+LVW[lvOf(f)].toLowerCase()+'). Основание: '+esc(f.why)+' <i>Комментарий врача: «'+esc(C.comm[f.id])+'»</i></li>'}).join('')+'</ul>'
    +(rj.length?'<div class="m">Отклонено врачом: '+rj.map(function(f){return 'зуб '+f.tooth}).join(', ')+'</div>':'')
-   +'<div class="foot">Предварительный разбор выполнен ИИ (nnU-Net v2, правила версии 16, точность распознавания зубов 96.9%) и проверен врачом: Др. '+esc(S.session.name)+', '+TODAY+'.</div></div>';
+   +'<div class="foot">Предварительный разбор выполнен ИИ (nnU-Net v2, правила версии 16, точность распознавания зубов 96.9%) и проверен врачом: Др. '+esc(docName())+', '+TODAY+'.</div></div>';
   var pat='<div class="doc"><h3>Ваши зубы простыми словами</h3><div class="m">'+esc(p.name)+'</div>'+(ok.length?'<p>Врач внимательно посмотрел ваш снимок. Вот что важно:</p>':'<p>Серьёзных проблем врач не подтвердил.</p>');
   ['k','v','n'].forEach(function(l){var a=ok.filter(function(f){return lvOf(f)===l});if(!a.length)return;pat+='<p><b>'+LVP[l][0].toUpperCase()+LVP[l].slice(1)+'</b></p>'+a.map(function(f){return '<p>Зуб '+f.tooth+': '+esc(ftext(f)).toLowerCase()+'. Что делать: '+f.plan+'.</p>'}).join('')});
   if(visits)pat+='<p>Примерно визитов: '+visits+'. Точные сроки назовёт врач.</p>';
