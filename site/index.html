@@ -221,6 +221,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .mtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:10px 0 14px}
 .mtabs button{border:0;background:none;padding:8px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
 .mtabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.sheet{background:#fff;color:#14171c;border-radius:10px;padding:26px 30px;margin-bottom:14px}.sheet .m,.sheet .foot{color:#5b6470}.sheet .foot{border-top-color:#d5d9e0}.sheet b{color:#000}
 .doc{font-size:14px}.doc h3{font-size:18px;margin-bottom:2px}.doc ul{padding-left:18px}.doc .m{color:var(--muted);font-size:13px;margin-bottom:10px}
 .doc .foot{margin-top:12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
 .toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:44px;z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center}
@@ -428,7 +429,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .chpane .chfoot .cin textarea{height:42px;font-size:14px;padding:9px 12px}
 @media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
 @page{size:A4;margin:16mm 15mm}
-@media print{html,body{height:auto!important;overflow:visible!important;background:#fff!important}body>*:not(.modal){display:none!important}.modal{position:static!important;display:block!important;background:none!important;padding:0!important;animation:none!important}.modal[hidden]{display:none!important}.mbox{border:0!important;border-radius:0!important;max-height:none!important;max-width:none!important;overflow:visible!important;padding:0!important;color:#000!important;background:#fff!important;animation:none!important;box-shadow:none!important}.mbox>h2,.mbox .btns,.mtabs{display:none!important}.doc{font-size:12pt;color:#000}.doc .m,.doc .foot{color:#444}.doc .foot{border-top-color:#999}.doc li,.doc p{break-inside:avoid}}
+@media print{html,body{height:auto!important;overflow:visible!important;background:#fff!important}body>*:not(.modal){display:none!important}.modal{position:static!important;display:block!important;background:none!important;padding:0!important;animation:none!important}.modal[hidden]{display:none!important}.mbox{border:0!important;border-radius:0!important;max-height:none!important;max-width:none!important;overflow:visible!important;padding:0!important;color:#000!important;background:#fff!important;animation:none!important;box-shadow:none!important}.mbox>h2,.mbox .btns,.mtabs{display:none!important}.doc{font-size:12pt;color:#000}.doc .m,.doc .foot{color:#444}.doc .foot{border-top-color:#999}.doc li,.doc p{break-inside:avoid}.sheet{padding:0!important;border-radius:0!important;margin:0!important}}
 </style>
 </head>
 <body>
@@ -1187,10 +1188,14 @@ function showDocs(which){
   ['k','v','n'].forEach(function(l){var a=ok.filter(function(f){return lvOf(f)===l});if(!a.length)return;pat+='<p><b>'+LVP[l][0].toUpperCase()+LVP[l].slice(1)+'</b></p>'+a.map(function(f){return '<p>Зуб '+f.tooth+': '+esc(ftext(f)).toLowerCase()+'. Что делать: '+f.plan+'.</p>'}).join('')});
   if(visits)pat+='<p>Примерно визитов: '+visits+'. Точные сроки назовёт врач.</p>';
   pat+='<div class="foot">Разбор подготовлен ИИ и проверен врачом. Это не замена консультации.</div></div>';
-  $('#mbox').innerHTML='<h2>Заключение готово</h2><div class="mtabs"><button data-t="d" aria-selected="'+(which==='d')+'">PDF врачу</button><button data-t="p" aria-selected="'+(which==='p')+'">PDF пациенту</button></div><div id="dbody">'+(which==='d'?doc:pat)+'</div><div class="btns"><button class="btn" id="dc">Закрыть</button><button class="btn pri" id="dpr">Печать / сохранить PDF</button></div>';
+  $('#mbox').innerHTML='<h2>Заключение готово</h2><div class="mtabs"><button data-t="d" aria-selected="'+(which==='d')+'">PDF врачу</button><button data-t="p" aria-selected="'+(which==='p')+'">PDF пациенту</button></div><div class="sheet" id="dbody">'+(which==='d'?doc:pat)+'</div><div class="btns"><button class="btn" id="dc">Закрыть</button><button class="btn" id="ddl">Скачать .doc</button><button class="btn pri" id="dpr">Печать / PDF</button></div>';
+  var curT=which;
   $('#modal').hidden=false;
-  $$('.mtabs button').forEach(function(b){b.addEventListener('click',function(){$$('.mtabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});$('#dbody').innerHTML=b.dataset.t==='d'?doc:pat})});
+  $$('.mtabs button').forEach(function(b){b.addEventListener('click',function(){$$('.mtabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});curT=b.dataset.t;$('#dbody').innerHTML=curT==='d'?doc:pat})});
   $('#dc').addEventListener('click',function(){$('#modal').hidden=true});$('#dpr').addEventListener('click',function(){window.print()});
+  $('#ddl').addEventListener('click',function(){
+    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Заключение</title><style>body{font-family:Arial,sans-serif;font-size:12pt;color:#000}h3{font-size:16pt}.m,.foot{color:#555}.foot{border-top:1px solid #999;margin-top:12pt;padding-top:6pt}</style></head><body>'+(curT==='d'?doc:pat)+'</body></html>';
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h],{type:'application/msword'}));a.download='Заключение_'+p.id+(curT==='d'?'_врачу':'_пациенту')+'.doc';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)});
 }
 $('#modal').addEventListener('mousedown',function(e){if(e.target===this)this.hidden=true});
 
