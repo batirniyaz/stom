@@ -143,6 +143,13 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 #gl{position:absolute;inset:0}
 #gl canvas{display:block;width:100%;height:100%}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:#7d8896;font-size:14px;text-align:center;padding:20px;pointer-events:none}
+.objcard{position:absolute;right:12px;top:52px;z-index:4;width:min(290px,calc(100% - 24px));background:rgba(17,21,27,.92);border:1px solid var(--line);border-radius:12px;padding:12px 34px 12px 14px;backdrop-filter:blur(6px);animation:pop .3s both}
+.objcard[hidden]{display:none}
+.objcard b{display:block;font-size:15px}.objcard small{display:block;color:var(--accent);font-size:12px;margin-top:2px}
+.objcard p{margin:6px 0 0;font-size:13px;line-height:1.45;color:#c1cad6}
+.objcard .x{position:absolute;right:8px;top:8px;border:0;background:none;color:var(--muted);font-size:14px;padding:2px 6px;cursor:pointer}
+.objcard .of{display:flex;gap:8px;align-items:flex-start;margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:13px}
+.objcard .of i{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none;background:var(--info)}.objcard .of.k i{background:var(--crit)}.objcard .of.v i{background:var(--warn)}
 .pp{position:absolute;right:12px;top:12px;background:rgba(17,21,27,.8);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px;color:var(--muted)}
 .scn{position:absolute;left:12px;bottom:12px;z-index:3}
 .scn>button{background:rgba(17,21,27,.85);border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:13px;color:var(--muted)}
@@ -515,6 +522,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <div class="stage">
       <div id="gl"></div>
       <div class="loading" id="loading">Загрузка 3D-модели…</div>
+      <div class="objcard" id="objc" hidden></div>
       <button class="pp" id="pp" title="Пауза / вращение">❚❚ вращение</button>
       <div id="lbls"></div>
       <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span><span><i style="background:var(--accent)"></i>Выбранный зуб</span></div>
@@ -850,7 +858,7 @@ function runProcess(id){
 
 /* ---------- 3D (одна сцена на главную и разбор) ---------- */
 var selMeshes=[],scene,camera,renderer,controls,model,teethMesh={},G={maxilla:[],mandible:[],nerve:[],sinus:[],pulp:[],canal:[],resto:[],airway:[]},tc={},lblEl={},origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null,shotReq=false;
-var cur=null,sel=null,HERO={36:'k',16:'k',37:'v',46:'v',26:'v',47:'v'};
+var cur=null,sel=null,partSel=null,HERO={36:'k',16:'k',37:'v',46:'v',26:'v',47:'v'};
 var V0={maxilla:true,mandible:true,nerve:true,sinus:false,pulp:false,canal:false,resto:false,airway:false,teeth:true,boneOp:.22,toothOp:1,color:'lvl',jaw:'all',only:false,wire:false,labels:false,speed:1.2};
 var V=Object.assign({},V0);
 var ANAT={1:0x8fd3c8,2:0x8fd3c8,3:0xf2c26b,4:0x9db7ff,5:0x9db7ff,6:0xe59ad0,7:0xe59ad0,8:0xe59ad0};
@@ -872,10 +880,19 @@ function ensure3d(){
   }).catch(function(){$$('.loading').forEach(function(l){l.textContent='Не удалось загрузить модель. Запустите сайт через локальный сервер.'})});
   var ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),down=null,pv=new THREE.Vector3();
   function hit(e){var r=renderer.domElement.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);
-    var tg=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)tg.push(m)})});var h=ray.intersectObjects(tg,false)[0];return h?h.object.userData.fdi:null}
+    var tg=[];Object.keys(teethMesh).forEach(function(k){teethMesh[k].forEach(function(m){if(m.visible)tg.push(m)})});
+    ['nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){G[g].forEach(function(m){if(m.visible)tg.push(m)})});
+    var h=ray.intersectObjects(tg,false)[0];
+    if(h){var o=h.object;return o.userData.fdi?{kind:'tooth',fdi:o.userData.fdi}:{kind:o.userData.kind}}
+    var thin=[];['nerve','canal','pulp'].forEach(function(g){G[g].forEach(function(m){if(m.visible)thin.push(m)})});
+    if(thin.length)[[7,0],[-7,0],[0,7],[0,-7],[5,5],[-5,5],[5,-5],[-5,-5],[14,0],[-14,0],[0,14],[0,-14],[10,10],[-10,10],[10,-10],[-10,-10]].some(function(d){mouse.set(((e.clientX+d[0]-r.left)/r.width)*2-1,-((e.clientY+d[1]-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);var t=ray.intersectObjects(thin,false)[0];if(t){h=t;return true}return false});
+    if(h){var o2=h.object;return {kind:o2.userData.kind}}
+    var jb=[];['maxilla','mandible'].forEach(function(g){G[g].forEach(function(m){if(m.visible)jb.push(m)})});
+    var j=ray.intersectObjects(jb,false)[0];return j?{kind:j.object.userData.kind}:null}
   renderer.domElement.addEventListener('pointerdown',function(e){down=[e.clientX,e.clientY]});
-  renderer.domElement.addEventListener('pointerup',function(e){if(mode!=='case'||!down||Math.abs(e.clientX-down[0])+Math.abs(e.clientY-down[1])>5||!model)return;var n=hit(e);if(n)pickTooth(n)});
-  renderer.domElement.addEventListener('dblclick',function(e){if(mode!=='case'||!model)return;var n=hit(e);if(n){isolate(n);flyTo(n)}});
+  renderer.domElement.addEventListener('pointerup',function(e){if(mode!=='case'||!down||Math.abs(e.clientX-down[0])+Math.abs(e.clientY-down[1])>5||!model)return;
+    var h=hit(e);if(!h){closeObj();return}if(h.kind==='tooth')pickTooth(h.fdi);else pickPart(h.kind)});
+  renderer.domElement.addEventListener('dblclick',function(e){if(mode!=='case'||!model)return;var h=hit(e);if(h&&h.kind==='tooth'){isolate(h.fdi);flyTo(h.fdi)}});
   var lastN=0;
   (function loop(){requestAnimationFrame(loop);
     if(anim){anim.t+=1/anim.n;var k=Math.min(anim.t,1),e=k*k*k*(k*(6*k-15)+10);
@@ -908,7 +925,7 @@ function prepare(){
     if(!o.isMesh)return;
     if(o.geometry&&!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
     if(tooth){o.material=new THREE.MeshStandardMaterial({color:0xefeadf,roughness:.45,metalness:0,side:THREE.DoubleSide});o.userData.fdi=tooth;(teethMesh[tooth]=teethMesh[tooth]||[]).push(o)}
-    else if(kind){var mt=Object.assign({side:THREE.DoubleSide},MAT[kind]);o.material=new THREE.MeshStandardMaterial(mt);G[kind].push(o)}
+    else if(kind){var mt=Object.assign({side:THREE.DoubleSide},MAT[kind]);o.material=new THREE.MeshStandardMaterial(mt);o.userData.kind=kind;G[kind].push(o)}
     else o.visible=false});
   Object.keys(teethMesh).forEach(function(k){var b=new THREE.Box3();teethMesh[k].forEach(function(m){b.expandByObject(m)});tc[k]=b.getCenter(new THREE.Vector3());
     var d=el('div','lbl',k);d.style.display='none';$('#lbls').appendChild(d);lblEl[k]=d});
@@ -919,7 +936,7 @@ function applyMode(){
   ['maxilla','mandible'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g);m.material.opacity=home?0.1:(sel?Math.min(V.boneOp,0.1):V.boneOp);m.material.wireframe=!home&&V.wire})});
   ['nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){G[g].forEach(function(m){m.visible=vis(g)})});
   selMeshes=[];
-  Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),isSel=!home&&!!sel&&!!f2&&f2.id===sel,useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
+  Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),isSel=(!home&&!!sel&&!!f2&&f2.id===sel)||(!home&&!!partSel&&partSel.fdi===kk),useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
     var show=home||(V.teeth&&(!iso||isolated===kk)&&(V.jaw==='all'||(V.jaw==='up')===(kk<30))&&(!V.only||!!f2));
     var tr=!home&&V.toothOp<1;
     teethMesh[k].forEach(function(m){var c=new THREE.Color(V.color==='anat'&&!home?ANAT[kk%10]:0xefeadf);
@@ -929,6 +946,7 @@ function applyMode(){
       if(m.material.transparent!==tr){m.material.transparent=tr;m.material.depthWrite=!tr;m.material.needsUpdate=true}
       m.material.opacity=tr?V.toothOp:1;m.visible=show});
     var e=lblEl[k];if(e){e.className='lbl '+(lvl&&!home?lvl:'')}});
+  ['maxilla','mandible','nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){var on=!home&&!!partSel&&partSel.kind===g;G[g].forEach(function(m){m.material.emissive=new THREE.Color(on?0x0e8a7c:0x000000);m.material.emissiveIntensity=on?.8:1;if(on){selMeshes.push(m);if(g==='maxilla'||g==='mandible')m.material.opacity=.5}})});
   $('#lbls').style.display=(!home&&V.labels)?'':'none';
   $('#legend').style.display=(!home&&V.color==='lvl')?'':'none';
   controls.autoRotateSpeed=home?2:V.speed;controls.autoRotate=home?true:(!paused&&V.speed>0);
@@ -943,9 +961,11 @@ function fit(apply){
 }
 function flyTo(n){
   var ms=teethMesh[n];if(!ms||!camera)return;
-  var b=new THREE.Box3();ms.forEach(function(m){b.expandByObject(m)});
+  var b=new THREE.Box3();ms.forEach(function(m){b.expandByObject(m)});flyBox(b,85)}
+function flyBox(b,dist){
+  if(!camera)return;
   var c=b.getCenter(new THREE.Vector3()),dir=c.clone().sub(origTarget);dir.y=0;if(dir.length()<1)dir.set(0,0,1);dir.normalize();
-  var p0=camera.position.clone(),p1=c.clone().add(dir.clone().multiplyScalar(85)).add(new THREE.Vector3(0,16,0));
+  var p0=camera.position.clone(),p1=c.clone().add(dir.clone().multiplyScalar(dist)).add(new THREE.Vector3(0,dist*.19,0));
   var mid=p0.clone().add(p1).multiplyScalar(.5),out=mid.clone().sub(origTarget);out.y=0;if(out.length()<1)out.set(0,0,1);out.normalize();
   var kk=Math.max(35,p0.distanceTo(p1)*.55),pm=mid.add(out.multiplyScalar(kk)).add(new THREE.Vector3(0,kk*.45,0));
   controls.autoRotate=false;anim={t:0,n:85,p0:p0,pm:pm,p1:p1,c0:controls.target.clone(),c1:c};holdThenSpin()}
@@ -968,7 +988,7 @@ function syncScene(){
 var openForm=null,col0=null,findAnim=true;
 function addLog(id,x){var C=cs(id);C.log=C.log||[];C.log.push({t:TODAY.slice(0,5)+' '+new Date().toTimeString().slice(0,5),x:x});save()}
 function openCase(id){
-  cur=id;sel=null;isolated=null;openForm=null;mode='case';var p=getP(id),v=readyVisit(p);
+  cur=id;sel=null;partSel=null;if($('#objc'))$('#objc').hidden=true;isolated=null;openForm=null;mode='case';var p=getP(id),v=readyVisit(p);
   $('#vwho').innerHTML=esc(p.name)+'<span>'+p.id+' · '+v.d+'</span>';
   $('#vcmp').textContent=v.cmp||'Жалоба не указана';
   $('#roBadge').hidden=!ro;$('#tabChat').hidden=ro;$('#share').hidden=ro;$('#vBack').textContent=ro?'← На главную':'← Пациенты';
@@ -982,8 +1002,34 @@ function drawAll(){drawFind();drawPlan();drawInfo();drawMap();initChat()}
 var curTab='find';
 function tab(t){curTab=t;$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','chat','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t});if(t==='chat'&&cur){renderMsgs(false)}}
 $$('.tabs .t').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.t)})});
-function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else if(teethMesh[n])flyTo(n)}
-function select(id){sel=id;openForm=null;tab('find');applyMode();drawFind();drawMap();var f=findF(id);if(f)flyTo(f.tooth);var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
+var PART={
+ mandible:['Нижняя челюсть','Подвижная кость, на которой стоят нижние зубы. Внутри проходит нижнечелюстной канал с нервом.'],
+ maxilla:['Верхняя челюсть','Неподвижная кость, держит верхние зубы. Над боковыми зубами лежат верхнечелюстные пазухи.'],
+ nerve:['Нижнечелюстной нерв','Канал нерва нижней челюсти. Отвечает за чувствительность нижних зубов, губы и подбородка. При имплантации и удалении восьмёрок его обходят.'],
+ sinus:['Верхнечелюстная пазуха','Воздушная полость над верхними боковыми зубами. Корни верхних моляров могут лежать близко к её дну.'],
+ pulp:['Пульпа зуба','Мягкая ткань внутри зуба: камера и каналы корней. Её воспаление называют пульпитом.'],
+ canal:['Резцовый и язычный каналы','Тонкие каналы в передней части нижней челюсти с сосудами и нервными ветвями. Учитывают при имплантации во фронтальном отделе.'],
+ resto:['Реставрации','Пломбы, коронки или импланты: плотные материалы, которые ярко видны на снимке.'],
+ airway:['Дыхательные пути','Воздушное пространство глотки. Показано как ориентир.']};
+var TTYPE={1:['Центральный резец','Режущий зуб с одним корнем. Откусывает пищу, задаёт линию улыбки.'],2:['Боковой резец','Режущий зуб с одним корнем. Стоит рядом с центральным, обычно мельче.'],3:['Клык','Самый длинный зуб с одним мощным корнем. Направляет движения челюсти при смыкании.'],4:['Первый премоляр','Зуб с двумя буграми, один или два корня. Раскусывает и перетирает пищу.'],5:['Второй премоляр','Зуб с двумя буграми и одним корнем. Переход от клыка к моляру.'],6:['Первый моляр','Жевательный зуб: нижний с двумя корнями, верхний с тремя. Несёт основную нагрузку.'],7:['Второй моляр','Жевательный зуб с двумя или тремя корнями, прорезывается около 12 лет.'],8:['Зуб мудрости','Третий моляр. Прорезывается после 17 лет, часто остаётся в кости или отсутствует.']};
+var TQ={1:'верхняя челюсть, справа',2:'верхняя челюсть, слева',3:'нижняя челюсть, слева',4:'нижняя челюсть, справа'};
+function showObj(title,sub,text,extra){
+  $('#objc').innerHTML='<button class="x" id="objx" aria-label="Закрыть">✕</button><b>'+esc(title)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'<p>'+esc(text)+'</p>'+(extra||'');
+  $('#objc').hidden=false;$('#objx').addEventListener('click',closeObj)}
+function showTooth(n){
+  var t=TTYPE[n%10],f=fByTooth(n);if(!t)return;
+  var ex=f?'<div class="of '+lvOf(f)+'"><i></i>'+esc(ftext(f))+'</div>':'';
+  showObj('Зуб '+n+' · '+t[0].toLowerCase(),TQ[Math.floor(n/10)],t[1],ex)}
+function closeObj(){var had=!!partSel;partSel=null;if($('#objc'))$('#objc').hidden=true;if(had)applyMode()}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('#objc')&&!$('#objc').hidden)closeObj()});
+function pickPart(kind){
+  var inf=PART[kind];if(!inf||!G[kind].length)return;
+  sel=null;openForm=null;partSel={kind:kind};drawFind();drawMap();applyMode();
+  var b=new THREE.Box3();G[kind].forEach(function(m){if(m.visible)b.expandByObject(m)});
+  if(!b.isEmpty()){var sz=b.getSize(new THREE.Vector3());flyBox(b,Math.max(90,Math.min(280,Math.max(sz.x,sz.y,sz.z)*1.5)))}
+  showObj(inf[0],'',inf[1])}
+function pickTooth(n){var f=fByTooth(n);if(f)select(f.id);else if(teethMesh[n]){partSel={fdi:n};sel=null;drawFind();drawMap();applyMode();flyTo(n);showTooth(n)}}
+function select(id){sel=id;partSel=null;openForm=null;tab('find');applyMode();drawFind();drawMap();var f=findF(id);if(f){flyTo(f.tooth);showTooth(f.tooth)}var o=$('.fcard.open');if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function drawFind(){
   var p=$('#p-find');if(!p||!cur)return;var C=cs(cur),n=reviewed(cur),all=n>=F.length,st=p.scrollTop;
   p.className='pane'+(findAnim?' stag':'');
