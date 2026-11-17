@@ -68,3 +68,4 @@ research_3d/ToothFairy2-Benchmark/
 
 # Отчёты собираются на лету и лежат рядом с кейсом — в гит не нужны.
 fixtures/**/*.pdf
+fixtures/**/*.glb.gz

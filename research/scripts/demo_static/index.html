@@ -481,6 +481,13 @@
   .view-switch button.active {
     background: rgba(34,211,238,.16); color: var(--cyan); border-color: var(--cyan);
   }
+  /* Тумблер автовращения стоит рядом с переключателем вида: он про то же —
+     как смотреть модель. */
+  .rot-switch {
+    display: flex; align-items: center; gap: 6px; margin-left: auto;
+    font-size: 12.5px; color: var(--muted); cursor: pointer;
+    user-select: none;
+  }
   #pano-inner { position: relative; display: inline-block; max-width: 100%; }
   #pano-img { width: 100%; display: block; border-radius: 10px; }
   #pano-marks { position: absolute; inset: 0; pointer-events: none; }
@@ -563,6 +570,98 @@
     border-radius: 5px; padding: 1px 5px; margin-left: 6px; white-space: nowrap;
   }
   .find-empty { font-size: 13px; color: var(--muted); }
+  /* Уровень критичности: слово и цвет приходят С СЕРВЕРА (clinic_routes),
+     здесь их не подбираем. Иначе на экране и в PDF окажутся разные слова —
+     это уже было. */
+  .find-level {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+    border-radius: 5px; padding: 1px 6px; margin-right: 6px;
+    white-space: nowrap; color: #0b1220;
+  }
+  .find-level.by-doctor::after { content: " · врач"; font-weight: 400; }
+  .find-meta {
+    font-size: 11px; color: #7c8798; margin-top: 3px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .find-note {
+    margin-top: 5px; font-size: 12px; color: #a7d7b4;
+    border-left: 2px solid rgba(74,222,128,.5); padding-left: 7px;
+  }
+  /* Форма подтверждения. Разворачивается прямо в строке находки: уводить
+     врача в модальное окно на каждую из семнадцати находок нельзя. */
+  .rev-form { margin-top: 7px; display: grid; gap: 6px; }
+  .rev-form textarea {
+    width: 100%; min-height: 48px; resize: vertical; font: inherit;
+    font-size: 12.5px; padding: 6px 8px; border-radius: 7px;
+    border: 1px solid var(--border); background: rgba(15,23,42,.6);
+    color: var(--fg);
+  }
+  .rev-form .rev-row { display: flex; gap: 6px; align-items: center;
+                       flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .rev-form select, .rev-form input {
+    font: inherit; font-size: 12.5px; padding: 4px 7px; border-radius: 7px;
+    border: 1px solid var(--border); background: rgba(15,23,42,.6);
+    color: var(--fg);
+  }
+  .rev-form input { flex: 1 1 200px; }
+  .rev-form button {
+    font: inherit; font-size: 12.5px; padding: 5px 12px; border-radius: 7px;
+    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    color: var(--fg); cursor: pointer;
+  }
+  .rev-form button.ghost { background: transparent; color: var(--muted); }
+  .rev-err { font-size: 12px; color: #fca5a5; }
+  .rev-hint { font-size: 11px; color: #7c8798; }
+  /* Чат по кейсу */
+  #chat-log { display: grid; gap: 10px; margin-bottom: 10px; }
+  .chat-msg {
+    font-size: 13px; line-height: 1.5; padding: 8px 10px; border-radius: 10px;
+    background: rgba(148,163,184,.08); white-space: pre-wrap;
+  }
+  .chat-msg.me { background: rgba(34,211,238,.10); }
+  .chat-who {
+    font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+    color: #7c8798; margin-bottom: 3px;
+  }
+  .chat-msg.err { background: rgba(239,68,68,.10); color: #fca5a5; }
+  .chat-used { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .chat-used button {
+    font: inherit; font-size: 11px; padding: 2px 7px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer;
+  }
+  .chat-used button:hover { color: var(--fg); border-color: #22d3ee; }
+  .chat-form { display: flex; gap: 6px; align-items: flex-end; }
+  .chat-form textarea {
+    flex: 1 1 auto; resize: vertical; font: inherit; font-size: 13px;
+    padding: 7px 9px; border-radius: 9px; border: 1px solid var(--border);
+    background: rgba(15,23,42,.6); color: var(--fg);
+  }
+  .chat-form button {
+    font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 9px;
+    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    color: var(--fg); cursor: pointer; white-space: nowrap;
+  }
+  .chat-note { font-size: 11px; color: #7c8798; margin-top: 7px; }
+  /* Чек-лист и кнопки отчёта */
+  .rev-progress {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 10px; border-radius: 9px; margin-bottom: 10px;
+    background: rgba(148,163,184,.08); font-size: 12.5px;
+  }
+  .rev-bar {
+    flex: 1 1 120px; height: 6px; border-radius: 3px;
+    background: rgba(148,163,184,.2); overflow: hidden; min-width: 80px;
+  }
+  .rev-bar > i { display: block; height: 100%; background: #4ade80; }
+  .rev-progress .pdf-btn {
+    font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: rgba(34,211,238,.14);
+    color: var(--fg); cursor: pointer; text-decoration: none;
+  }
+  .rev-progress .pdf-btn[aria-disabled="true"] {
+    opacity: .4; cursor: not-allowed; background: transparent;
+  }
   /* Основание находки: число, порог и оговорка. Процент уверенности мы не
      рисуем — калибровать его не на чем, см. cbct_findings._basis. */
   .find-why { margin-top: 6px; }
@@ -979,6 +1078,10 @@
           <div class="view-switch">
             <button id="vm-3d" class="active" data-i18n>3D-модель</button>
             <button id="vm-pano" data-i18n>Панорама (ОПТГ)</button>
+            <label class="rot-switch" title="Модель медленно поворачивается сама; вращать руками можно всегда">
+              <input type="checkbox" id="auto-rot" checked>
+              <span data-i18n>Вращать</span>
+            </label>
           </div>
           <div id="gl-wrap">
             <canvas id="gl-canvas"></canvas>
@@ -1022,6 +1125,7 @@
         <div>
           <div class="pane-tabs" id="cbct-tabs">
             <button data-pane="find" class="on"><span data-i18n>Находки</span><span class="cnt" id="cnt-find">·</span></button>
+            <button data-pane="chat"><span data-i18n>Чат</span><span class="cnt" id="cnt-chat">·</span></button>
             <button data-pane="plan"><span data-i18n>План</span><span class="cnt" id="cnt-plan">·</span></button>
             <button data-pane="tooth"><span data-i18n>Зуб</span><span class="cnt" id="cnt-tooth">·</span></button>
             <button data-pane="mpr" data-i18n>Срезы</button>
@@ -1041,6 +1145,22 @@
             <div class="card-title"><span data-i18n>План лечения</span> — черновик</div>
             <div id="cbct-plan"><span class="find-empty">Собираем…</span></div>
             <div class="sign-box" id="cbct-sign"></div>
+          </div>
+          </div>
+
+          <!-- Чат по кейсу. Отвечает ТОЛЬКО по находкам этого пациента:
+               контекст собирает сервер, снимки и ФИО в него не попадают. -->
+          <div class="cbct-pane" id="pane-chat" hidden>
+          <div class="card">
+            <div class="card-title" data-i18n>Вопросы по этому пациенту</div>
+            <div id="chat-log"></div>
+            <div class="chat-form">
+              <textarea id="chat-q" rows="2"
+                placeholder="Например: почему уровень кости у 12 критичный?"></textarea>
+              <button id="chat-send">Спросить</button>
+            </div>
+            <div class="chat-note">Отвечает по находкам этого снимка и плану.
+              Чего нет в данных — скажет, что не знает. Диагноз ставит врач.</div>
           </div>
           </div>
 
@@ -1906,12 +2026,31 @@ function selectCbctPane(name) {
   curPane = name;
   document.querySelectorAll("#cbct-tabs button").forEach(b =>
     b.classList.toggle("on", b.dataset.pane === name));
-  for (const k of ["find", "plan", "tooth", "mpr", "info"])
+  for (const k of ["find", "chat", "plan", "tooth", "mpr", "info"])
     $c("pane-" + k).hidden = k !== name;
+  // Сводку запрашиваем при ПЕРВОМ открытии вкладки, а не при открытии
+  // кейса: это обращение к внешней модели, и платить за него, когда врач
+  // чат не открывал, незачем.
+  if (name === "chat" && curCase) chatSummary(curCase);
   if (curCase) writePath("cbct", curCase, chosenModel());
 }
 document.querySelectorAll("#cbct-tabs button").forEach(b => {
   b.onclick = () => selectCbctPane(b.dataset.pane);
+});
+$c("auto-rot").onchange = ev => { autoRotateOn = ev.target.checked; };
+$c("chat-send").onclick = () => {
+  const q = $c("chat-q").value.trim();
+  if (!q || !curCase) return;
+  $c("chat-q").value = "";
+  chatAsk(q);
+};
+// Enter отправляет, Shift+Enter — перенос строки: вопрос обычно в одну
+// строку, и лишний клик по кнопке на приёме раздражает.
+$c("chat-q").addEventListener("keydown", ev => {
+  if (ev.key === "Enter" && !ev.shiftKey) {
+    ev.preventDefault();
+    $c("chat-send").click();
+  }
 });
 $c("cbct-share").onclick = async () => {
   const el = $c("cbct-share");
@@ -2068,7 +2207,21 @@ async function showCbctResult(caseId) {
   curInfo = info;
   $c("cbct-case-name").textContent = `${info.name} · ${info.model_label}`;
   renderCbctInfo(info);
-  initMPR(caseId, info.shape);
+  // У кейса может не быть исходного тома (демо-кейс из fixtures: том весит
+  // сотни мегабайт и в репозиторий не кладётся). Тогда всё, что считается
+  // по вокселям, просто не показываем: 3D, находки и план работают, а
+  // вкладка, которая всегда отвечает ошибкой, выглядит поломкой.
+  const vox = info.has_voxels !== false;
+  for (const p of ["mpr", "tooth"]) {
+    const b = document.querySelector(`#cbct-tabs button[data-pane="${p}"]`);
+    if (b) b.hidden = !vox;
+  }
+  // Панорама строится из тома — кнопка переключения вида тоже уходит.
+  const vmp = $c("vm-pano");
+  if (vmp) vmp.hidden = !vox;
+  if (!vox) setViewMode("3d");
+  if (!vox && (curPane === "mpr" || curPane === "tooth")) selectCbctPane("find");
+  if (vox) initMPR(caseId, info.shape);
   const start = readPath();
   // Ссылка может указывать не только на кейс, но и на вкладку и зуб.
   // Камеру наводим после загрузки меша — до неё наводить не на что.
@@ -2143,20 +2296,159 @@ function doctorName() {
   catch (e) { return ""; }
 }
 
-async function setReview(key, state) {
-  if (!curCase) return;
+/* Отметка врача. Возвращает ТЕКСТ ОШИБКИ сервера (или пусто при успехе):
+   сервер отказывает по делу — короткий комментарий, пересказ ИИ, чужой
+   уровень, — и эту фразу надо показать врачу, а не «не удалось сохранить». */
+async function setReview(key, state, body) {
+  if (!curCase) return "";
+  let data = {};
   try {
     const r = await fetch(`/api/cbct/review/${encodeURIComponent(curCase)}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, state, by: doctorName() }),
+      body: JSON.stringify(body || { key, state, by: doctorName() }),
     });
-    if (!r.ok) throw new Error(r.status);
+    data = await r.json().catch(() => ({}));
+    if (!r.ok) return data.error || `Ошибка ${r.status}`;
   } catch (e) {
-    showError("Не удалось сохранить отметку врача");
-    return;
+    showError("Сервер не отвечает — отметка не сохранена");
+    return "Сервер не отвечает";
   }
   await loadFindings(curCase);     // список, план и подпись зависят от отметки
   loadCbctPlan(curCase);
+  return "";
+}
+
+/* Автовращение 3D: пауза, пока врач крутит модель сам, и ещё столько после
+   того, как отпустил. Три секунды подобраны на глаз: меньше — модель
+   «вырывается» из рук, больше — на показе кажется, что вращение сломалось. */
+const AUTO_ROTATE_HOLD_MS = 3000;
+let autoRotateOn = true;
+
+/* ================= чат по кейсу =================
+   Отвечает ТОЛЬКО по данным этого пациента: контекст собирает сервер
+   (case_chat.py), ответ без опоры на существующую находку он отбрасывает.
+   Фронт здесь — переписка и ссылки на находки, на которые чат сослался. */
+let chatCase = null;           // для какого кейса уже загружена сводка
+
+function chatAdd(who, text, used, cls) {
+  const log = $c("chat-log");
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const div = document.createElement("div");
+  div.className = "chat-msg " + (cls || "");
+  div.innerHTML = `<div class="chat-who">${esc(who)}</div>${esc(text)}`;
+  if (used && used.length) {
+    // Ключи находок те же, что у отметок врача, поэтому ссылка ведёт
+    // ровно в ту строку ленты, на которой чат построил ответ.
+    const box = document.createElement("div");
+    box.className = "chat-used";
+    box.innerHTML = `<span class="chat-who">на основании:</span>` +
+      used.map(k => `<button data-key="${esc(k)}">${esc(findingTitle(k))}</button>`).join("");
+    box.querySelectorAll("button").forEach(b => {
+      b.onclick = () => showFinding(b.dataset.key);
+    });
+    div.appendChild(box);
+  }
+  log.appendChild(div);
+  div.scrollIntoView({ block: "nearest" });
+}
+
+/** Короткое имя находки по её ключу — для подписи на ссылке. */
+function findingTitle(key) {
+  const all = [...((cbctFindings || {}).findings || []),
+               ...((cbctFindings || {}).quality || [])];
+  const f = all.find(x => x.key === key);
+  if (!f) return key;
+  const teeth = f.teeth && f.teeth.length ? f.teeth.join(", ")
+                                          : (f.tooth || "");
+  return (teeth ? `зуб ${teeth}: ` : "") + String(f.text || "").slice(0, 40);
+}
+
+/** Перейти к находке, на которую сослался чат. */
+function showFinding(key) {
+  const all = [...((cbctFindings || {}).findings || []),
+               ...((cbctFindings || {}).quality || [])];
+  const f = all.find(x => x.key === key);
+  selectCbctPane("find");
+  if (f && f.tooth) focusTooth(f.tooth);
+  // Подсвечиваем строку: в ленте из сорока находок иначе не найти, какую
+  // именно имел в виду ответ.
+  const el = [...document.querySelectorAll("#cbct-findings .find-rev")]
+    .find(x => x.dataset.key === key);
+  if (el) {
+    const row = el.parentElement;
+    row.scrollIntoView({ block: "center" });
+    row.style.outline = "2px solid #22d3ee";
+    setTimeout(() => { row.style.outline = ""; }, 2000);
+  }
+}
+
+async function chatAsk(question) {
+  chatAdd("врач", question, null, "me");
+  const sent = $c("chat-send");
+  sent.disabled = true;
+  sent.textContent = "Думает…";
+  try {
+    const r = await fetch(`/api/cbct/chat/${encodeURIComponent(curCase)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || `ошибка ${r.status}`);
+    chatAdd("ИИ", d.answer || "—", d.used);
+  } catch (e) {
+    chatAdd("чат недоступен", String(e.message || e), null, "err");
+  } finally {
+    sent.disabled = false;
+    sent.textContent = "Спросить";
+  }
+}
+
+/** Первое сообщение: сводка находок с учётом жалоб. Один раз на кейс. */
+async function chatSummary(caseId) {
+  if (chatCase === caseId) return;
+  chatCase = caseId;
+  $c("chat-log").innerHTML = "";
+  $c("cnt-chat").textContent = "…";
+  try {
+    const r = await fetch(`/api/cbct/summary/${encodeURIComponent(caseId)}`,
+                          { method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: "{}" });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || `ошибка ${r.status}`);
+    chatAdd("ИИ", d.answer || "—", d.used);
+    $c("cnt-chat").textContent = "1";
+  } catch (e) {
+    chatAdd("чат недоступен", String(e.message || e), null, "err");
+    $c("cnt-chat").textContent = "—";
+  }
+}
+
+/* Порядок уровня для сортировки ленты: критичные сверху. Берём с сервера,
+   чтобы правка врача двигала находку вместе с цветом. */
+function lvOrder(f) {
+  const o = f.level && typeof f.level.order === "number" ? f.level.order : 9;
+  return o;
+}
+
+/* Чек-лист: сколько находок разобрано и можно ли собирать отчёт. */
+function progressHtml(rv) {
+  if (!rv || !rv.total) return "";
+  const pct = Math.round(100 * (rv.reviewed || 0) / rv.total);
+  const ready = rv.report_ready;
+  // Пока не всё разобрано, ссылка не ведёт никуда: сервер её всё равно
+  // отклонит (409), и пустая вкладка с ошибкой хуже погашенной кнопки.
+  const dis = ready ? "" : ` aria-disabled="true" onclick="return false"
+       title="Сначала разберите все находки"`;
+  const url = k => `/api/cbct/report/${encodeURIComponent(curCase)}?kind=${k}`;
+  return `<div class="rev-progress">
+    <span>Разобрано <b>${rv.reviewed || 0}</b> из <b>${rv.total}</b></span>
+    <span class="rev-bar"><i style="width:${pct}%"></i></span>
+    <a class="pdf-btn" href="${ready ? url("doctor") : "#"}"${dis}
+       ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF врачу</a>
+    <a class="pdf-btn" href="${ready ? url("patient") : "#"}"${dis}
+       ${ready ? 'target="_blank" rel="noopener"' : ""}>PDF пациенту</a>
+  </div>`;
 }
 
 function renderSignBox(review) {
@@ -2268,7 +2560,11 @@ async function loadFindings(caseId) {
     renderFindings(cbctFindings);
     drawPanoMarks();          // если панорама уже открыта — обновить маркеры
   } catch (e) {
-    box.innerHTML = `<span class="find-empty">Находки недоступны</span>`;
+    // Причину в консоль: сюда попадает и отказ сервера, и ошибка отрисовки,
+    // а «находки недоступны» на экране одинаково молчит про обе. Один раз
+    // это уже стоило получаса: данные пришли, падал рендер.
+    console.error("[находки]", e);
+    box.innerHTML = `<span class="find-empty">Находки недоступны: ${e.message || e}</span>`;
   }
 }
 
@@ -2316,8 +2612,11 @@ function renderChart(data) {
   const sev = {}, codes = {};
   for (const f of all) {
     if (f.review === "rejected") continue;      // врач отклонил — не подсвечиваем
+    // Уровень с сервера: если врач поднял находку до критичной, зуб на
+    // карте обязан покраснеть вместе с ней.
+    const lk = (f.level && f.level.key) || f.severity;
     for (const t of (f.tooth ? [f.tooth] : (f.teeth || []))) {
-      if ((rank[f.severity] || 0) > (rank[sev[t]] || 0)) sev[t] = f.severity;
+      if ((rank[lk] || 0) > (rank[sev[t]] || 0)) sev[t] = lk;
       (codes[t] = codes[t] || new Set()).add(f.code);
     }
   }
@@ -2385,22 +2684,33 @@ function renderFindings(data) {
   const byRoute = {};
   for (const f of all) (byRoute[f.route] = byRoute[f.route] || []).push(f);
 
-  let html = data.draft
+  let html = progressHtml(data.review);
+  html += data.draft
     ? `<div class="find-draft">Черновик: пороги ещё не подтверждены врачом.
        Не является назначением — только материал для приёма.</div>` : "";
 
   for (const r of data.routes) {
     const items = byRoute[r.key];
     if (!items) continue;
-    // сначала alert, внутри — по номеру зуба
-    items.sort((a, b) => (a.severity !== "alert") - (b.severity !== "alert")
+    // Сортировка по УРОВНЮ с сервера, а не по severity: врач мог поднять
+    // находку до критичной, и она обязана уехать наверх списка вместе с
+    // цветом — иначе в ленте она остаётся там, где её поставила машина.
+    items.sort((a, b) => (lvOrder(a) - lvOrder(b))
                          || (a.tooth || 0) - (b.tooth || 0));
     html += `<div class="find-group">
       <div class="find-group-h"><span class="find-order">${r.order}</span>${r.label}</div>`;
     for (const f of items) {
-      const cls = r.key === "review" ? "review" : f.severity;
-      const conf = f.confidence === "high" ? ""
-        : `<span class="find-conf">доверие: ${f.confidence === "medium" ? "среднее" : "низкое"}</span>`;
+      const lv = f.level || {};
+      const cls = r.key === "review" ? "review" : (lv.key || "info");
+      // Уровень и надёжность — словом, с сервера. Процента уверенности нет
+      // и не будет: вероятности у находки не существует, она посчитана
+      // геометрией (см. cbct_findings._basis).
+      const level = lv.label
+        ? `<span class="find-level${f.level_by_doctor ? " by-doctor" : ""}"
+                 style="background:${lv.color}"
+                 title="${lv.meaning || ""}">${lv.short || lv.label}</span>` : "";
+      const trust = (f.trust && f.trust.key !== "high")
+        ? `<span class="find-conf" title="${f.trust.note || ""}">надёжность: ${f.trust.label}</span>` : "";
       // Находка относится либо к одному зубу (tooth), либо к списку (teeth) —
       // список дают пародонт и эндодонтия. Значок кликабелен в обоих случаях:
       // он для того и нужен, чтобы подвести камеру к зубу.
@@ -2415,9 +2725,14 @@ function renderFindings(data) {
       html += `<div class="find-item ${cls} ${rv}${f.tooth ? " clickable" : ""}"
                     ${f.tooth ? `data-tooth="${f.tooth}"` : ""}>
         ${badge}
-        <div><div>${f.text}${conf}</div>
+        <div><div>${level}${f.text}</div>
         ${f.action ? `<div class="find-action">→ ${f.action}</div>` : ""}
-        ${basisHtml(f, false)}</div>
+        ${trust ? `<div class="find-meta">${trust}</div>` : ""}
+        ${f.text_by_doctor && f.text_ai
+            ? `<div class="find-meta">формулировка ИИ: ${f.text_ai}</div>` : ""}
+        ${basisHtml(f, false)}
+        ${f.comment ? `<div class="find-note">врач: ${f.comment}</div>` : ""}
+        <div class="rev-slot"></div></div>
         <div class="find-rev" data-key="${f.key || ""}">
           <button class="rv-ok${rv === "confirmed" ? " on" : ""}"
                   title="Подтвердить находку">✓</button>
@@ -2446,14 +2761,82 @@ function renderFindings(data) {
     });
   });
   // Отметка врача. Повторный клик по горящей кнопке снимает отметку.
+  //
+  // ПОДТВЕРЖДЕНИЕ открывает форму, а не ставит галочку сразу: сервер требует
+  // собственных слов врача (спека §7), и без формы кнопка просто возвращала
+  // бы ошибку. ОТКЛОНЕНИЕ остаётся в один клик — лишнее поле на пути к
+  // «нет» подталкивает соглашаться.
   box.querySelectorAll(".find-rev button").forEach(b => {
     b.addEventListener("click", ev => {
       ev.stopPropagation();
-      const key = b.parentElement.dataset.key;
+      const slot = b.parentElement;
+      const key = slot.dataset.key;
       if (!key) return;
-      const want = b.classList.contains("rv-ok") ? "confirmed" : "rejected";
-      setReview(key, b.classList.contains("on") ? null : want);
+      const f = all.find(x => x.key === key) || {};
+      if (b.classList.contains("rv-ok")) {
+        if (b.classList.contains("on")) { setReview(key, null); return; }
+        openReviewForm(slot.parentElement.querySelector(".rev-slot"), f);
+      } else {
+        setReview(key, b.classList.contains("on") ? null : "rejected");
+      }
     });
+  });
+}
+
+/* Форма подтверждения находки: комментарий своими словами, при желании —
+   другой уровень и другая формулировка диагноза. */
+function openReviewForm(slot, f) {
+  if (!slot) return;
+  if (slot.dataset.open === "1") { slot.innerHTML = ""; slot.dataset.open = ""; return; }
+  slot.dataset.open = "1";
+  const levels = (cbctFindings && cbctFindings.levels) || [];
+  const cur = (f.level && f.level.key) || f.severity || "info";
+  slot.innerHTML = `<div class="rev-form" onclick="event.stopPropagation()">
+    <textarea placeholder="Что вы увидели сами? Например: «на срезе видна зона разрежения у верхушки, щель расширена»"></textarea>
+    <div class="rev-row">
+      <span>уровень:</span>
+      <select class="rev-level">${levels.map(l =>
+        `<option value="${l.key}"${l.key === cur ? " selected" : ""}>${l.label}</option>`).join("")}</select>
+      <label class="rev-hint"><input type="checkbox" class="rev-edit-on"> поправить формулировку</label>
+    </div>
+    <input class="rev-text" style="display:none" value="${(f.text || "").replace(/"/g, "&quot;")}">
+    <div class="rev-row">
+      <button class="rev-save">Подтвердить</button>
+      <button class="ghost rev-cancel">Отмена</button>
+      <span class="rev-err"></span>
+    </div>
+    <div class="rev-hint">Комментарий обязателен и не должен повторять текст ИИ:
+      под подписью стоит ваш вывод, а не пересказ программы.</div>
+  </div>`;
+  const ta = slot.querySelector("textarea");
+  ta.focus();
+  slot.querySelector(".rev-edit-on").onchange = ev => {
+    slot.querySelector(".rev-text").style.display = ev.target.checked ? "" : "none";
+  };
+  slot.querySelector(".rev-cancel").onclick = () => {
+    slot.innerHTML = ""; slot.dataset.open = "";
+  };
+  const save = async () => {
+    const err = slot.querySelector(".rev-err");
+    err.textContent = "";
+    const body = {
+      key: f.key, state: "confirmed", by: doctorName(),
+      comment: ta.value,
+      level: slot.querySelector(".rev-level").value,
+    };
+    if (slot.querySelector(".rev-edit-on").checked) {
+      body.text = slot.querySelector(".rev-text").value;
+    }
+    const msg = await setReview(f.key, "confirmed", body);
+    // Текст ошибки показываем ПРЯМО В ФОРМЕ, слово в слово с сервера: он
+    // объясняет, чего не хватает («нет ни одного слова по существу»), и
+    // это единственное место, где врач это прочитает.
+    if (msg) err.textContent = msg;
+  };
+  slot.querySelector(".rev-save").onclick = save;
+  // Ctrl+Enter — привычное «отправить» в текстовом поле.
+  ta.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) save();
   });
 }
 
@@ -2766,8 +3149,25 @@ function initGL() {
   const d2 = new THREE.DirectionalLight(0x88aaff, 0.30);
   d2.position.set(-1.2, -0.6, -1);
   scene.add(d2);
+  // АВТОВРАЩЕНИЕ. Модель сама медленно поворачивается вокруг вертикальной
+  // оси сцены — на показе и на экране в кабинете она должна жить, а не
+  // стоять. Крутить руками при этом можно: `autoRotate` у OrbitControls
+  // складывается с обычным вращением, а не заменяет его.
+  //
+  // Пауза на время работы мышью и ещё на несколько секунд после: иначе
+  // врач отпускает мышь, чтобы рассмотреть зуб, а модель тут же уезжает.
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.55;         // ~один оборот за 110 секунд
+  let holdUntil = 0;
+  const hold = () => { holdUntil = performance.now() + AUTO_ROTATE_HOLD_MS; };
+  for (const ev of ["pointerdown", "wheel", "touchstart"]) {
+    renderer.domElement.addEventListener(ev, hold, { passive: true });
+  }
+  controls.addEventListener("start", hold);
+  controls.addEventListener("end", hold);
   (function anim() {
     requestAnimationFrame(anim);
+    controls.autoRotate = autoRotateOn && performance.now() > holdUntil;
     controls.update();
     renderer.render(scene, camera);
   })();

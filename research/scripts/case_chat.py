@@ -54,7 +54,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cbct_backend as cb      # noqa: E402
 import plan_agent              # noqa: E402
 
-TIMEOUT = 60
+# Ждём ответа НЕ ДОЛГО и на каждую модель отдельно. Замер: обычный ответ
+# приходит за 1-4 с, а 60 секунд ожидания на трёх моделях подряд — это три
+# минуты, которые врач на приёме просто не станет ждать, и демо выглядит
+# зависшим. Лучше быстро перейти к следующей модели.
+TIMEOUT = 20
 MAX_QUESTION = 500
 
 ANTHROPIC_MODEL = "claude-haiku-5-5"
@@ -242,24 +246,31 @@ def ask_llm(question: str, ctx: dict) -> tuple[dict, str]:
     user = ("данные:\n" + json.dumps(ctx, ensure_ascii=False, indent=1)
             + "\n\nвопрос: " + question)
 
+    problems = []
     akey = _read_key("ANTHROPIC_API_KEY")
     if akey:
-        data = _post(
-            "https://api.anthropic.com/v1/messages",
-            {"model": ANTHROPIC_MODEL, "max_tokens": 700, "temperature": 0.2,
-             "system": SYSTEM,
-             "messages": [{"role": "user", "content": user}]},
-            {"content-type": "application/json", "x-api-key": akey,
-             "anthropic-version": "2023-06-01"})
-        text = "".join(b.get("text", "") for b in data.get("content", []))
-        return _loads(text), ANTHROPIC_MODEL
+        try:
+            data = _post(
+                "https://api.anthropic.com/v1/messages",
+                {"model": ANTHROPIC_MODEL, "max_tokens": 700,
+                 "temperature": 0.2, "system": SYSTEM,
+                 "messages": [{"role": "user", "content": user}]},
+                {"content-type": "application/json", "x-api-key": akey,
+                 "anthropic-version": "2023-06-01"})
+            text = "".join(b.get("text", "") for b in data.get("content", []))
+            return _loads(text), ANTHROPIC_MODEL
+        except Exception as exc:                       # noqa: BLE001
+            # Падать на отказе Anthropic нельзя: ключ Gemini в проекте уже
+            # есть, и чат обязан продолжать работать. Причина уходит в
+            # сообщение, чтобы не гадать, почему ответил не тот провайдер.
+            problems.append(f"{ANTHROPIC_MODEL}: {type(exc).__name__} {exc}")
 
     gkey = _read_key("GEMINI_API_KEY") or _read_key("STOMADENT_LLM_KEY")
     if not gkey:
         raise RuntimeError(
             "нет ключа. Положите ANTHROPIC_API_KEY в data/secrets.env "
-            "(файл в .gitignore) либо оставьте GEMINI_API_KEY.")
-    problems = []
+            "(файл в .gitignore) либо оставьте GEMINI_API_KEY."
+            + ("; " + "; ".join(problems) if problems else ""))
     for m in GEMINI_MODELS:
         try:
             data = _post(
@@ -284,6 +295,12 @@ def ask_llm(question: str, ctx: dict) -> tuple[dict, str]:
             problems.append(f"{m}: HTTP {exc.code} {why}".strip())
         except (KeyError, IndexError) as exc:
             problems.append(f"{m}: неожиданная форма ответа ({exc})")
+        except (TimeoutError, urllib.error.URLError, OSError) as exc:
+            # Сеть и таймаут — ТОЖЕ повод перейти к следующей модели, а не
+            # уронить запрос. Раньше TimeoutError летел наружу: сводка
+            # отвечала пятисоткой после минуты ожидания, и во фронте это
+            # выглядело как поломка чата, а не как «провайдер не ответил».
+            problems.append(f"{m}: нет ответа за {TIMEOUT} с ({exc})")
     raise RuntimeError("ни одна модель не ответила — " + "; ".join(problems))
 
 
@@ -351,6 +368,57 @@ def _unsupported_numbers(answer: str, ctx: dict) -> list[str]:
 REFUSAL = ("В данных этого пациента такого нет. Я отвечаю только по "
            "находкам, посчитанным по этому снимку.")
 
+# СЧЁТ: число вместе с тем, что оно считает. Проверять «все целые числа
+# ответа по всем числам данных» бессмысленно — номера зубов 11..48 покрывают
+# почти любое маленькое число, и выдумка проходит насквозь (проверено: при
+# таком правиле «9 проблемных зон» не ловилось). Поэтому сверяем число с
+# ТЕМ САМЫМ счётчиком, который оно называет.
+NUM_COUNT = re.compile(
+    r"(\d{1,4})\s+(находк|проблем|зон|критичн|важн|незначительн|зуб|"
+    r"визит|посещен|этап)", re.I)
+
+
+def _counters(ctx: dict) -> dict:
+    """Сколько чего на самом деле. None — величина не считается вовсе.
+
+    None здесь так же важен, как число: количество визитов и сроки лечения
+    по КЛКТ не считаются ничем, поэтому ЛЮБОЕ названное число визитов —
+    выдумка, и правило должно его блокировать, а не сверять.
+    """
+    cnt = ctx.get("счётчики") or {}
+    lv = cnt.get("по_важности") or {}
+    return {
+        "находк": cnt.get("находок_всего"),
+        "проблем": cnt.get("находок_всего"),
+        "зон": cnt.get("находок_всего"),
+        "критичн": lv.get("Критичная", 0),
+        "важн": lv.get("Важная", 0),
+        "незначительн": lv.get("Незначительная", 0),
+        "зуб": len(ctx.get("зубы_на_снимке") or []),
+        "этап": len(ctx.get("черновик_плана") or []),
+        "визит": None,
+        "посещен": None,
+    }
+
+
+def _unsupported_counts(answer: str, ctx: dict) -> list[str]:
+    """Счёт, не совпавший с данными: «9 проблемных зон» при семнадцати.
+
+    Зачем отдельно от `_unsupported_numbers`: тот проверяет величины с
+    единицами (мм, %, HU), а у счёта единицы нет. Именно на нём модель и
+    соврала в первый же запуск сводки, и сверка величин этого не поймала.
+    """
+    real = _counters(ctx)
+    bad = []
+    for m in NUM_COUNT.finditer(answer):
+        v, what = int(m.group(1)), m.group(2).lower()
+        want = real.get(what, "?")
+        if want == "?":
+            continue
+        if want is None or v != want:
+            bad.append(m.group(0))
+    return bad
+
 
 def _validate(reply: dict, ctx: dict) -> dict:
     """Отбросить всё, что не подкреплено данными кейса.
@@ -378,9 +446,20 @@ def _validate(reply: dict, ctx: dict) -> dict:
         return {"answer": answer or REFUSAL, "used": [], "grounded": False,
                 "blocked": None, "dropped_keys": dropped}
     if not used:
-        return {"answer": REFUSAL, "used": [], "grounded": False,
-                "blocked": "ответ не опирался ни на одну находку кейса",
-                "dropped_keys": dropped}
+        # Ответ может честно опираться не на отдельную находку, а на
+        # СЧЁТЧИКИ: «всего 17 находок, из них 1 критичная». Ключей у такого
+        # ответа нет и быть не может, и отказывать в нём — значит ломать
+        # сводку, с которой начинается разбор. Но пускаем его только если
+        # КАЖДОЕ число в нём есть во входных данных: именно на счёте модель
+        # и врала (9 вместо 17), а сверка величин с единицами этого не
+        # ловила — у счёта единицы нет.
+        bad_counts = _unsupported_counts(answer, ctx)
+        if bad_counts:
+            return {"answer": REFUSAL, "used": [], "grounded": False,
+                    "blocked": f"числа вне данных: {', '.join(bad_counts)}",
+                    "dropped_keys": dropped}
+        return {"answer": answer, "used": [], "grounded": True,
+                "blocked": None, "dropped_keys": dropped}
     return {"answer": answer, "used": used, "grounded": True,
             "blocked": None, "dropped_keys": dropped}
 
