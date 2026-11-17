@@ -141,6 +141,23 @@ RETENTION_ENCASED = 0.60
 # потому что клык длиннее моляра, и медиана по ряду это не выравнивает.
 RETENTION_ABOVE_MM = 8.0
 
+# Выше этого «не дошёл до ряда» означает не ретенцию, а сбой маски: зуб не
+# может стоять в сорока миллиметрах от окклюзионной плоскости — там уже дно
+# глазницы, а не позиция зуба.
+#
+# Порог НЕ подогнан под один случай, он выбран выше заведомо настоящего
+# максимума. Три опоры:
+#   * наша же калибровка ретенции: пять настоящих восьмёрок дали 29.5, 19.4,
+#     15.3, 10.8 и 10.7 мм (разрыв между 10.7 и 6.5 задал RETENTION_ABOVE_MM);
+#   * замер по всем кейсам на 17.11: 40 находок ретенции в 18 кейсах, все
+#     11-15.3 мм, и ОДИН выброс 41.4 мм (pair001, зуб 28) — у него маска
+#     разорвана на 53 куска, два тела по 193 и 103 мм³ плюс крошки, растянутые
+#     на 20 мм;
+#   * анатомия: высота верхней челюсти над окклюзионной плоскостью в этой
+#     области порядка 25-30 мм.
+# Поэтому 30.0: настоящую ретенцию не погасит никогда, а сбой поймает.
+RETENTION_ABOVE_MAX_MM = 30.0
+
 MIN_TOOTH_VOX = 100       # меньше — это шум сегментации, а не зуб
 
 # Объём ЗУБА (коронка + корень), ниже которого маска — огрызок, а не зуб.
@@ -508,6 +525,7 @@ def analyze_case(c: dict, model: str) -> dict:
         if len(peers) >= 4:
             occl[jaw_up] = float(np.median(
                 np.nonzero(np.isin(mask, peers))[0]))
+    implausible = []
     for t in sorted(present):
         enc = crown_encased_fraction(mask, t, jaw, z_up)
         upper = fdi_quadrant(t) in (1, 2)
@@ -518,6 +536,14 @@ def analyze_case(c: dict, model: str) -> dict:
             # вверх для верхних зубов и вниз для нижних.
             d = (z - occl[upper]) if z_up else (occl[upper] - z)
             above = (d if upper else -d) * float(spacing[0])
+        # НЕВОЗМОЖНОЕ ЗНАЧЕНИЕ — это сбой маски, а не находка. Отправляем зуб
+        # в ручную проверку и клинической находки по нему не делаем: врач не
+        # отличит недостоверное измерение от настоящего, а «не дошёл до ряда
+        # на 41.4 мм» он прочитает как ретенцию.
+        # Знак не важен: зуб настолько же ниже своего ряда тоже невозможен.
+        if above is not None and abs(above) > RETENTION_ABOVE_MAX_MM:
+            implausible.append((t, above))
+            continue
         by_bone = enc >= RETENTION_ENCASED
         by_pos = above is not None and above >= RETENTION_ABOVE_MM
         if not (by_bone or by_pos):
@@ -540,6 +566,23 @@ def analyze_case(c: dict, model: str) -> dict:
             "surgery", severity="warning", tooth=t, value=round(enc, 3),
             unit="доля", confidence="medium", basis=sbasis,
             action="хирург: оценить показания к удалению ретенированного зуба"))
+
+    if implausible:
+        quality.append(_finding(
+            "tooth_position_implausible",
+            "Положение зуба в маске невозможно у " + ", ".join(
+                f"{t} ({a:+.1f} мм от своего ряда)"
+                for t, a in sorted(implausible))
+            + f": по модулю это больше {RETENTION_ABOVE_MAX_MM:.0f} мм, тогда "
+              f"как у настоящей ретенции замерено не более 29.5 мм. Маска "
+              f"этого зуба собрана неверно — измерения по нему недостоверны",
+            "review", severity="warning", confidence="high",
+            basis=[_basis("отклонение от уровня своего ряда",
+                          round(max(abs(a) for _t, a in implausible), 1), "мм",
+                          f"невозможно выше {RETENTION_ABOVE_MAX_MM:.0f} мм",
+                          note="порог выше нашего же максимума настоящей "
+                               "ретенции (29.5 мм) и высоты челюсти над "
+                               "окклюзионной плоскостью (25-30 мм)")]))
 
     # ---- 5. реставрации ----
     for cls, name in PROSTH_RU.items():
