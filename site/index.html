@@ -67,8 +67,14 @@ kbd{font:600 12px var(--f);border:1px solid var(--line);border-bottom-width:2px;
 .hcred{position:absolute;z-index:2;left:max(24px,6vw);bottom:14px;font-size:12px;color:#5d6775}
 @media (max-width:760px){.home::after{background:linear-gradient(180deg,rgba(8,11,15,.9),rgba(8,11,15,.5) 70%,transparent)}.hcopy{top:56px;transform:none}.facts{display:none}}
 
-/* вход */
-.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(80% 70% at 50% 0%,#12202a,var(--bg))}
+/* вход: панель слева на главной, череп чуть вправо */
+.hlogin{position:absolute;z-index:3;left:max(24px,6vw);top:50%;width:min(380px,calc(100% - 48px));transform:translate(-24px,-50%);opacity:0;visibility:hidden;transition:opacity .45s ease,transform .6s cubic-bezier(.2,.7,.2,1),visibility 0s .45s}
+.home.login-mode .hlogin{opacity:1;visibility:visible;transform:translate(0,-50%);transition:opacity .5s ease .3s,transform .7s cubic-bezier(.2,.7,.2,1) .3s,visibility 0s}
+.hcopy{transition:opacity .4s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+.home.login-mode .hcopy{opacity:0;pointer-events:none;transform:translate(-32px,-52%)}
+#heroGl{transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+.home.login-mode #heroGl{transform:translateX(3.5vw)}
+@media (max-width:760px){.hlogin{top:56px;transform:translate(-24px,0)}.home.login-mode .hlogin{transform:none}.home.login-mode #heroGl{transform:none}}
 .lbox{width:100%;max-width:380px}
 .lbox h1{font-size:28px;margin:16px 0 6px}
 .lbox label{display:block;font-size:13px;color:var(--muted);margin:16px 0 5px}
@@ -453,13 +459,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     </div>
     <div class="hbtns"><button class="btn pri big" id="hOpen">Открыть пациентов</button><button class="btn ghost" id="hDemo">Посмотреть демо-кейс</button></div>
   </div>
-  <div class="hcred">Демо-данные · снимок: figshare 26965903, CC BY 4.0</div>
-  <div class="loading" id="loadingH">Загрузка 3D-модели…</div>
-</section>
-
-<!-- вход -->
-<section class="view login" id="v-login" hidden>
-  <div class="lbox">
+  <div class="hlogin" id="hlogin"><div class="lbox">
     <button class="wm" id="lLogo" style="font-size:22px"><i></i>Actina</button>
     <h1>Вход для врача</h1>
     <div id="lstep1">
@@ -477,8 +477,12 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
       <button class="btn ghost" id="back1" style="margin-top:6px">Изменить номер</button>
     </div>
     <div class="hintbox">Демо-доступ: любой номер, код <b>1234</b></div>
-  </div>
+  </div></div>
+  <div class="hcred">Демо-данные · снимок: figshare 26965903, CC BY 4.0</div>
+  <div class="loading" id="loadingH">Загрузка 3D-модели…</div>
 </section>
+
+
 
 <!-- пациенты -->
 <section class="view" id="v-patients" hidden><div class="wrap">
@@ -673,20 +677,21 @@ function pstatus(p){
   return {t:n>=F.length?'подписано, '+(C.signed||TODAY.slice(0,5)):n?'разобрано '+n+' из '+F.length:'не разобрано',dots:dots}}
 
 /* ---------- роутер ---------- */
-var VIEWS=['home','login','patients','patient','case','profile'],ALLV=VIEWS.concat(['shared','chat']),mode='home',after=null,ro=false,pendingSel=null;
+var VIEWS=['home','patients','patient','case','profile'],ALLV=VIEWS.concat(['login','shared','chat']),mode='home',after=null,ro=false,pendingSel=null;
 function go(h){if(location.hash===h)route();else location.hash=h}
 function route(){
   var parts=location.hash.replace(/^#\/?/,'').split('/'),v=parts[0]||'home',view;
   if(ALLV.indexOf(v)<0)v='home';
   if(v==='chat'){location.replace('#/case/'+(parts[1]||''));return}
-  view=v==='shared'?'case':v;ro=v==='shared';
+  view=v==='shared'?'case':v==='login'?'home':v;ro=v==='shared';
   if(v==='login'&&S.session){var t=after||'#/patients';after=null;go(t);return}
   if(['patients','patient','case','profile'].indexOf(v)>=0&&!S.session){after=location.hash;location.hash='#/login';return}
   VIEWS.forEach(function(x){$('#v-'+x).hidden=x!==view});
   $('#bar').hidden=!(view==='patients'||view==='patient'||view==='profile');
   $('#drawer').dataset.lock='';closeDrawer();window.scrollTo(0,0);
-  if(v==='home'){mode='home';ensure3d();mount($('#heroGl'));applyMode();fit(true)}
-  if(v==='login'){$('#lstep1').hidden=false;$('#lstep2').hidden=true}
+  if(v==='home'||v==='login'){mode='home';ensure3d();mount($('#heroGl'));applyMode();fit(true)}
+  $('#v-home').classList.toggle('login-mode',v==='login');
+  if(v==='login'){$('#lstep1').hidden=false;$('#lstep2').hidden=true;setTimeout(function(){if($('#v-home').classList.contains('login-mode'))$('#phone').focus()},700)}
   if(view==='patients'||view==='patient'||view==='profile'){$('#docName').textContent='Др. '+docName();$('#meAv').innerHTML=avatar('doctor',docName(),30)}
   if(v==='patients')drawPatients();
   if(v==='patient'){if(!getP(parts[1])){go('#/patients');return}drawPatient(parts[1])}
