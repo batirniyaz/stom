@@ -1,0 +1,24 @@
+# Core
+numpy>=1.24.0
+Pillow>=10.0.0
+matplotlib>=3.7.0
+opencv-python>=4.8.0
+
+# Dataset loading
+huggingface_hub>=0.20.0
+datasets>=2.15.0
+
+# DICOM processing
+pydicom>=2.4.0
+SimpleITK>=2.3.0
+
+# Object Detection
+ultralytics>=8.0.0
+
+# PDF Reports
+reportlab>=4.0.0
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+pandas>=2.0.0
