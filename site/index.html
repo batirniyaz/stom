@@ -149,7 +149,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .mm button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;cursor:pointer;--tf:#161b22;--ts:#3a4452;--tn:#6d7886}
 .mm button i{font:500 8.5px var(--mono);font-style:normal;color:var(--tn);line-height:11px}
 .mm button svg{width:19px;height:28px;display:block;overflow:visible}
-.mm button.lo svg{transform:scaleY(-1)}
+.mm button:not(.lo) svg{transform:scaleY(-1)}
 .mm button path{fill:var(--tf);stroke:var(--ts);stroke-width:1.1;stroke-linejoin:round;transition:fill .2s,stroke .2s}
 .mm button.k{--tf:var(--crit);--ts:var(--crit);--tn:var(--crit)}.mm button.v{--tf:var(--warn);--ts:var(--warn);--tn:var(--warn)}.mm button.n{--tf:var(--info);--ts:var(--info);--tn:var(--info)}
 .mm button.sel path{stroke:#fff;stroke-width:2}.mm button.sel i{color:#fff}
@@ -1010,14 +1010,11 @@ function drawFind(){
   findAnim=false;
   if(!ro){$('#pdfD').addEventListener('click',function(){showDocs('d')});$('#pdfP').addEventListener('click',function(){showDocs('p')})}
 }
-var TSH={inc:'M10 .5C11.6 .5 12.2 5 12.6 10C12.8 12.5 14.8 13.5 15.2 17C15.6 21 15 25 14.2 27C13.8 28.2 12.5 28.6 10 28.6C7.5 28.6 6.2 28.2 5.8 27C5 25 4.4 21 4.8 17C5.2 13.5 7.2 12.5 7.4 10C7.8 5 8.4 .5 10 .5Z',
- can:'M10 .5C11.8 .5 12.4 6 12.7 11C13 13 15 14 15 18C15 22 13 25 11.3 28C10.8 29 10.4 29.2 10 29.2C9.6 29.2 9.2 29 8.7 28C7 25 5 22 5 18C5 14 7 13 7.3 11C7.6 6 8.2 .5 10 .5Z',
- pre:'M10 .5C11.4 .5 11.9 5 12 9.5C12 11 13.2 11.7 14.4 12.6C16.2 14 16.4 17 16.2 20.5C16 24 15 27 13.6 28C12.4 28.8 11.2 27.2 10 26.6C8.8 27.2 7.6 28.8 6.4 28C5 27 4 24 3.8 20.5C3.6 17 3.8 14 5.6 12.6C6.8 11.7 8 11 8 9.5C8.1 5 8.6 .5 10 .5Z',
- mol:'M4.2 12C3 9 3.6 4.5 5.2 2C6.2 .6 7.4 1.6 7.8 4C8.1 6.5 8.6 9 10 9.4C11.4 9 11.9 6.5 12.2 4C12.6 1.6 13.8 .6 14.8 2C16.4 4.5 17 9 15.8 12C18 13.4 18.6 16.5 18.4 20.5C18.2 24.5 17.2 27 15.8 28C14.6 28.8 13.6 27.4 12.6 26.8C11.6 26.3 10.8 27.2 10 27.2C9.2 27.2 8.4 26.3 7.4 26.8C6.4 27.4 5.4 28.8 4.2 28C2.8 27 1.8 24.5 1.6 20.5C1.4 16.5 2 13.4 4.2 12Z'},
+var TOOTH='M10 4.5C8 3 5 2.5 3.5 5.5C2.5 8 3.5 11 4.5 14C5.5 17 5 22 6.3 24.5C7.3 26.5 8.8 25 9.2 21.5C9.4 20 10.6 20 10.8 21.5C11.2 25 12.7 26.5 13.7 24.5C15 22 14.5 17 15.5 14C16.5 11 17.5 8 16.5 5.5C15 2.5 12 3 10 4.5Z',
 UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 function drawMap(){
   if(!cur)return;
-  function row(a,cl,low){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n),d=n%10,sh=d<3?TSH.inc:d===3?TSH.can:d<6?TSH.pre:TSH.mol,sv='<svg viewBox="-1 -2 22 33" aria-hidden="true"><path d="'+sh+'"/></svg>';
+  function row(a,cl,low){return '<div class="r '+cl+'">'+a.map(function(n){var f=fByTooth(n),sv='<svg viewBox="0 1 20 28" aria-hidden="true"><path d="'+TOOTH+'"/></svg>';
     return '<button type="button" data-n="'+n+'" class="'+(low?'lo ':'')+(f?lvOf(f):'')+(f&&sel===f.id?' sel':'')+'" title="Зуб '+n+'">'+(low?sv+'<i>'+n+'</i>':'<i>'+n+'</i>'+sv)+'</button>'}).join('')+'</div>'}
   $('#mm').innerHTML=row(UP,'g',false)+row(LO,'',true);$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
 }
