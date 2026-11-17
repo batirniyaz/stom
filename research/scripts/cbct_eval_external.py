@@ -28,6 +28,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -126,19 +127,28 @@ def main() -> None:
         found = {t: (pred == t) for t in cb.TEETH_CLASSES
                  if (pred == t).sum() >= MIN_TOOTH_VOX}
         hit = sorted(set(gt) & set(found))
+        # Dice ПО НОМЕРАМ ЗУБОВ, а не списком. Доверительный интервал считается
+        # отдельно по типам зубов — у клыков случаев мало, и интервал там
+        # заведомо широкий; с плоским списком номер потерян и такую группу уже
+        # не выделить. TP/FP/FN названы явно, чтобы их не приходилось
+        # выводить из gt/pred/hit и не ошибиться знаком.
         row = {
             "case": stem,
             "gt": len(gt), "pred": len(found), "hit": len(hit),
+            "tp": len(hit),
+            "fp": len(found) - len(hit),
+            "fn": len(gt) - len(hit),
             "missed": sorted(set(gt) - set(found)),
             "extra": sorted(set(found) - set(gt)),
-            "dice": [float(dice(gt[t], found[t])) for t in hit],
+            "dice": {str(t): float(dice(gt[t], found[t])) for t in hit},
             "gt_upper": sum(1 for t in gt if t // 10 in (1, 2)),
             "hit_upper": sum(1 for t in hit if t // 10 in (1, 2)),
             "gt_lower": sum(1 for t in gt if t // 10 in (3, 4)),
             "hit_lower": sum(1 for t in hit if t // 10 in (3, 4)),
         }
         rows.append(row)
-        d = np.mean(row["dice"]) if row["dice"] else float("nan")
+        dvals = list(row["dice"].values())
+        d = np.mean(dvals) if dvals else float("nan")
         print(f"  {i:>3}/{len(stems)} {stem}: эталон {row['gt']:>2}, "
               f"нашли {row['pred']:>2}, совпало {row['hit']:>2}, "
               f"Dice {d:.3f}", flush=True)
@@ -149,7 +159,7 @@ def main() -> None:
     gt_all = sum(r["gt"] for r in rows)
     hit_all = sum(r["hit"] for r in rows)
     pred_all = sum(r["pred"] for r in rows)
-    all_dice = [x for r in rows for x in r["dice"]]
+    all_dice = [x for r in rows for x in r["dice"].values()]
     print(f"\n{'='*66}")
     print(f"ИТОГ по {len(rows)} томам, модель «{a.model}»")
     print(f"{'='*66}")
@@ -180,8 +190,23 @@ def main() -> None:
               + ", ".join(f"{t} ({n})" for t, n in worst))
 
     if a.json:
-        a.json.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
-        print(f"\n  подробности: {a.json}")
+        # Файл самодостаточный: по нему считается доверительный интервал, и
+        # через месяц должно быть понятно, какая модель и какая выборка дали
+        # эти числа. Без этого таблица в отчёте — утверждение без источника.
+        out = {
+            "metric_source": "cbct_eval_external.py",
+            "model": a.model,
+            "dataset": "DentVoxel (внешняя выборка, модель её не видела)",
+            "unit_of_analysis": "пациент (один том = один пациент)",
+            "min_tooth_vox": MIN_TOOTH_VOX,
+            "created": datetime.now().isoformat(timespec="seconds"),
+            "cases": rows,
+        }
+        a.json.write_text(json.dumps(out, ensure_ascii=False, indent=1),
+                          encoding="utf-8")
+        print(f"\n  подробности: {a.json}  ({len(rows)} пациентов)")
+        print("  бутстреп считать ПО ПАЦИЕНТАМ: зубы одного человека зависимы,\n"
+              "  и выборка по зубам даст искусственно узкий интервал.")
 
 
 if __name__ == "__main__":
