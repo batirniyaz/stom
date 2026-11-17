@@ -802,6 +802,15 @@
     font-size: 26px; font-weight: 700; color: var(--cyan); line-height: 1;
   }
   .tooth-geom { font-size: 12px; color: var(--muted); }
+  .iso-btn {
+    margin-left: auto; font: inherit; font-size: 12px; padding: 5px 11px;
+    border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--muted); white-space: nowrap;
+  }
+  .iso-btn:hover { color: var(--text); border-color: var(--line-2); }
+  .iso-btn.on {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+  }
   .tooth-slices { display: grid; gap: 12px; }
   .tooth-slice img {
     width: 100%; border-radius: 10px; background: #000; display: block;
@@ -3123,6 +3132,8 @@ async function openToothCard(fdi) {
   let html = `<div class="tooth-head">
       <span class="tooth-num">${fdi}</span>
       <span class="tooth-geom">${geom}</span>
+      <button class="iso-btn" type="button" data-fdi="${fdi}"
+        title="Убрать из кадра всё, кроме этого зуба">Только этот зуб</button>
     </div>
     <div class="tooth-slices">`;
   for (const p of info.planes) {
@@ -3180,9 +3191,130 @@ async function openToothCard(fdi) {
       }, 120);
     });
   });
+
+  const iso = box.querySelector(".iso-btn");
+  if (iso) {
+    iso.addEventListener("click", () => {
+      isolateTooth(isolatedTooth === fdi ? null : fdi);
+    });
+  }
+  syncIsolateUi();
 }
 
 /** Подсветить зуб в 3D и подвести к нему камеру. */
+/* ================= пролёт камеры к зубу =================
+
+   Было: камера ПЕРЕПРЫГИВАЛА к зубу одним кадром. На приёме это
+   дезориентирует — врач не понимает, куда его перенесло, и каждый раз
+   заново ищет, где он находится относительно челюсти.
+
+   Стало: дуга из трёх точек. Камера сначала отходит и приподнимается
+   (средняя точка вынесена наружу от центра челюсти и вверх), потом
+   подлетает к зубу. Движение по квадратичной кривой Безье со смягчением
+   на обоих концах — глаз успевает проследить путь и не теряет ориентир.
+   Приём и числа взяты из прототипа (`site/index.html`, flyBox). */
+let camFly = null;
+let sceneCenter = null;     // центр челюсти: от него считается «наружу»
+let homeCam = null;         // общий вид, к которому возвращает сброс
+
+/* ================= один зуб отдельно =================
+
+   Задача §11.3.11. Зуб в ряду закрыт соседями с трёх сторон: чтобы
+   показать пациенту, почему этот корень близко к каналу, врач крутит
+   модель и всё равно смотрит сквозь чужие коронки. Изоляция убирает из
+   кадра всё, кроме выбранного зуба.
+
+   Прежнюю видимость ЗАПОМИНАЕМ и возвращаем: врач доходит до изоляции,
+   уже настроив сцену (погасил верхнюю челюсть, поднял прозрачность), и
+   выход из неё не должен сбрасывать эти настройки. */
+let isolatedTooth = null;
+let visBeforeIsolate = null;
+
+function isolateTooth(fdi) {
+  if (!meshRoot) return;
+  if (fdi == null) {                       // выход
+    if (visBeforeIsolate) {
+      for (const [mesh, vis] of visBeforeIsolate) mesh.visible = vis;
+    }
+    visBeforeIsolate = null;
+    isolatedTooth = null;
+    syncIsolateUi();
+    return;
+  }
+  const keep = meshRoot.getObjectByName(`tooth_${fdi}`);
+  if (!keep) return;
+  if (!visBeforeIsolate) {
+    visBeforeIsolate = new Map();
+    meshRoot.traverse(o => { if (o.isMesh) visBeforeIsolate.set(o, o.visible); });
+  }
+  meshRoot.traverse(o => { if (o.isMesh) o.visible = (o === keep); });
+  // Пульпа своего зуба остаётся: ради неё изоляцию чаще всего и включают.
+  const pulp = meshRoot.getObjectByName(`pulp_${fdi}`);
+  if (pulp) pulp.visible = true;
+  isolatedTooth = fdi;
+  syncIsolateUi();
+  const box = new THREE.Box3().setFromObject(keep);
+  flyToBox(box, Math.max(box.getSize(new THREE.Vector3()).length(), 6) * 2.6);
+}
+
+function syncIsolateUi() {
+  const b = document.querySelector("#tooth-card .iso-btn");
+  if (b) {
+    b.textContent = isolatedTooth != null ? "Показать все зубы" : "Только этот зуб";
+    b.classList.toggle("on", isolatedTooth != null);
+  }
+}
+
+function flyToBox(box, dist) {
+  if (!camera || !controls) return;
+  const c = box.getCenter(new THREE.Vector3());
+  const home = sceneCenter || new THREE.Vector3();
+  // Подлетаем СНАРУЖИ челюсти: если зайти с внутренней стороны, зуб
+  // закроют соседние, и врач увидит чужую коронку вместо своей.
+  const dir = c.clone().sub(home); dir.y = 0;
+  if (dir.length() < 1) dir.set(0, 0, 1);
+  dir.normalize();
+
+  const p0 = camera.position.clone();
+  const p1 = c.clone().add(dir.clone().multiplyScalar(dist))
+              .add(new THREE.Vector3(0, dist * 0.19, 0));
+  const mid = p0.clone().add(p1).multiplyScalar(0.5);
+  const out = mid.clone().sub(home); out.y = 0;
+  if (out.length() < 1) out.set(0, 0, 1);
+  out.normalize();
+  const k = Math.max(35, p0.distanceTo(p1) * 0.55);
+  const pm = mid.add(out.multiplyScalar(k)).add(new THREE.Vector3(0, k * 0.45, 0));
+
+  camFly = { t: 0, n: 85, p0, pm, p1,
+             c0: controls.target.clone(), c1: c };
+}
+
+function stepCamFly() {
+  if (!camFly) return;
+  camFly.t += 1 / camFly.n;
+  const k = Math.min(camFly.t, 1);
+  // Смягчение на обоих концах (smootherstep): линейное движение выглядит
+  // механическим, а рывок в начале сбивает взгляд.
+  const e = k * k * k * (k * (6 * k - 15) + 10);
+  const u = 1 - e;
+  camera.position.set(
+    u * u * camFly.p0.x + 2 * u * e * camFly.pm.x + e * e * camFly.p1.x,
+    u * u * camFly.p0.y + 2 * u * e * camFly.pm.y + e * e * camFly.p1.y,
+    u * u * camFly.p0.z + 2 * u * e * camFly.pm.z + e * e * camFly.p1.z);
+  controls.target.lerpVectors(camFly.c0, camFly.c1, e);
+  if (k >= 1) camFly = null;
+}
+
+/* Выбранный зуб дышит подсветкой. Статичная заливка на белой эмали
+   читается как дефект материала, пульсация — как «вот этот». */
+function pulseSelected() {
+  if (!hlMesh || !hlMesh.material.emissive) return;
+  // Размах подсветки небольшой: на полной яркости бирюза заливает эмаль
+  // целиком, и врач перестаёт видеть сам зуб — а смотреть он пришёл на
+  // зуб, а не на подсветку.
+  hlMesh.material.emissiveIntensity = 0.26 + 0.16 * Math.sin(performance.now() / 260);
+}
+
 function focusTooth(fdi) {
   if (!meshRoot) return;
   const mesh = meshRoot.getObjectByName(`tooth_${fdi}`);
@@ -3200,18 +3332,15 @@ function focusTooth(fdi) {
   if (!mesh) { hlMesh = null; return; }       // зуб отсутствует — меша нет
   hlEmissive = mesh.material.emissive.clone();
   hlMesh = mesh;
-  mesh.material.emissive = new THREE.Color(0xff9500);
-  mesh.material.emissiveIntensity = 0.9;
+  // Бирюза, а не оранжевый: оранжевый в этом интерфейсе означает
+  // уровень «важная», и подсветка выбора спорила бы с ним.
+  mesh.material.emissive = new THREE.Color(0x2fc4b2);
+  mesh.material.emissiveIntensity = 0.3;
   mesh.visible = true;
 
   const box = new THREE.Box3().setFromObject(mesh);
-  const center = box.getCenter(new THREE.Vector3());
   const size = Math.max(box.getSize(new THREE.Vector3()).length(), 6);
-  // направление взгляда сохраняем — иначе врача дезориентирует рывок камеры
-  const dir = camera.position.clone().sub(controls.target).normalize();
-  controls.target.copy(center);
-  camera.position.copy(center.clone().add(dir.multiplyScalar(size * 4)));
-  camera.updateProjectionMatrix();
+  flyToBox(box, size * 4.2);
 }
 
 /* ================= MPR-срезы =================
@@ -3405,7 +3534,10 @@ function initGL() {
   controls.addEventListener("end", hold);
   (function anim() {
     requestAnimationFrame(anim);
-    controls.autoRotate = autoRotateOn && performance.now() > holdUntil;
+    stepCamFly();
+    controls.autoRotate = autoRotateOn && !camFly
+                          && performance.now() > holdUntil;
+    pulseSelected();
     controls.update();
     renderer.render(scene, camera);
   })();
@@ -3526,6 +3658,24 @@ function initPicking() {
     setHover(null);
     focusTooth(fdi);
     openToothCard(fdi);
+  });
+  // Двойной клик по зубу — показать только его. Самый короткий путь к
+  // изоляции: врач уже навёлся на зуб, и лезть за кнопкой во вкладку
+  // «Зуб» ради этого не нужно.
+  el.addEventListener("dblclick", ev => {
+    const mesh = toothMeshAt(ev);
+    const fdi = mesh && fdiOf(mesh);
+    if (!fdi) return;
+    isolateTooth(isolatedTooth === fdi ? null : fdi);
+    if (isolatedTooth) openToothCard(fdi);
+  });
+  // Esc выводит из изоляции: это состояние, из которого должен быть выход
+  // без поиска кнопки.
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && isolatedTooth != null
+        && !$c("cbct-result-view").hidden) {
+      isolateTooth(null);
+    }
   });
 }
 
@@ -3740,9 +3890,12 @@ function frameOnTeeth() {
   if (!fwd) fwd = new THREE.Vector3(0, 0, 1);
 
   controls.target.copy(center);
+  sceneCenter = center.clone();     // нужен пролёту камеры: «наружу» от него
+  homeCam = null;                   // домашнее положение запомним ниже
   camera.position.copy(center)
     .addScaledVector(fwd, size * 0.95)
     .addScaledVector(new THREE.Vector3(0, 1, 0), size * 0.28);
+  homeCam = camera.position.clone();
   camera.near = size / 100;
   camera.far = size * 20;
   camera.updateProjectionMatrix();
