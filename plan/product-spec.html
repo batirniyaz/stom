@@ -64,6 +64,19 @@ code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surf
 .lv.bp{background:var(--yel);color:#1a1400;border-color:var(--yel)}
 .lv.b{color:var(--yel);border-color:var(--yel)}
 .lv.c{background:var(--gray-soft);color:var(--gray);border-color:var(--gray)}
+.lv.krit{background:var(--red);color:#fff;border-color:var(--red)}
+.lv.vazh{background:var(--yel);color:#1a1400;border-color:var(--yel)}
+.lv.nez{background:var(--gray-soft);color:var(--gray);border-color:var(--gray)}
+.scale3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:800px){.scale3{grid-template-columns:1fr}}
+.scale3 .card{padding:16px}
+.scale3 .full{font-size:18px;font-weight:700;margin-top:10px}
+.scale3 p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.st{white-space:nowrap;font-weight:600}
+.st.done{color:var(--ok)} .st.part{color:var(--yel)} .st.todo{color:var(--muted)} .st.hold{color:var(--muted);font-style:italic}
+.prog{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.prog span{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:14px}
+.prog b{font-size:18px;margin-right:4px}
 .scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 @media (max-width:800px){.scale{grid-template-columns:1fr}}
 .scale .card{padding:14px}
@@ -163,15 +176,55 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
 <div class="wrap">
 
 <header>
-  <span class="tag">v0.3 · 17.11.2026 · на проверке у Бегзада · MVP сегодня к 22:00–23:00</span>
+  <span class="tag">v0.4 · 17.11.2026, 21:10 · MVP сегодня к 22:00–23:00 · чекпоинт 18.11 в 15:00</span>
   <h1>Stomadent: ИИ-разбор КЛКТ с проверкой врачом</h1>
-  <p class="lead">Стоматолог загружает 3D-снимок. Система находит проблемы, ставит уровень A+…C и процент уверенности, объясняет и отвечает в чате. Врач проверяет каждую находку своим комментарием, и в конце выходят два PDF — для врача и для пациента.</p>
+  <p class="lead">Стоматолог загружает 3D-снимок. Система находит проблемы, ставит уровень критичности и уверенность, объясняет и отвечает в чате. Врач проверяет каждую находку своим комментарием, и в конце выходят два PDF — для врача и для пациента.</p>
   <div class="principle"><b>Принцип:</b> ИИ находит, измеряет и объясняет. Диагноз ставит врач. Пациенту ничего не уходит без подтверждения врача.</div>
   <nav>
-    <a href="#why">Зачем</a><a href="#flow">Сценарий</a><a href="#screen">Экран</a><a href="#scale">Шкала</a><a href="#review">Проверка</a>
-    <a href="#reports">Отчёты</a><a href="#chat">Чат</a><a href="#patient">Пациент</a><a href="#arch">Как устроено</a><a href="#tasks">Задачи</a><a href="#stages">Этапы</a><a href="#questions">Вопросы</a>
+    <a href="#progress">Прогресс</a><a href="#why">Зачем</a><a href="#flow">Сценарий</a><a href="#screen">Экран</a><a href="#scale">Шкала</a><a href="#review">Проверка</a>
+    <a href="#reports">Отчёты</a><a href="#chat">Чат</a><a href="#patient">Пациент</a><a href="#arch">Как устроено</a><a href="#tasks">Задачи</a><a href="#stages">Этапы</a><a href="#eval">Оценка</a><a href="#questions">Вопросы</a>
   </nav>
 </header>
+
+<section id="progress">
+  <h2><span class="n">00</span>Прогресс: что сделано, что нет</h2>
+  <p class="small muted" style="margin-top:0">Состояние на 17.11, 21:10 — по коду в <code>main</code> и <code>HACKATHON.md</code>. Обновляется по ходу.</p>
+  <div class="prog"><span><b>1</b>сделано</span><span><b>3</b>частично</span><span><b>7</b>не начато</span><span><b>1</b>отложено</span><span class="muted">из 12 задач продукта</span></div>
+  <div class="tbl"><table>
+    <tr><th>#</th><th>Задача</th><th>Статус</th><th>Комментарий</th></tr>
+    <tr><td>1</td><td>Сайдбар: «Находки» / «Чек-лист», карточки, ⤢</td><td class="st todo">⬜ не начато</td><td>в плане Батыра на сегодня</td></tr>
+    <tr><td>2</td><td>Шкала Крит / Важн / Незнач</td><td class="st todo">⬜ не начато</td><td>перевод из <code>severity</code> один к одному</td></tr>
+    <tr><td>3</td><td>Уверенность на карточке</td><td class="st todo">⬜ не начато</td><td>ждёт решения В1</td></tr>
+    <tr><td>4</td><td>Смена уровня и правка диагноза врачом</td><td class="st todo">⬜ не начато</td><td></td></tr>
+    <tr><td>5</td><td>Обязательный комментарий</td><td class="st todo">⬜ не начато</td><td><code>review</code> есть, проверки нет</td></tr>
+    <tr><td>6</td><td>Чат</td><td class="st part">🟡 частично</td><td>эндпоинт и модель есть; нет интерфейса, жалоб и плана в контексте</td></tr>
+    <tr><td>7</td><td>Первое сообщение-сводка</td><td class="st todo">⬜ не начато</td><td></td></tr>
+    <tr><td>8</td><td>PDF для врача</td><td class="st part">🟡 частично</td><td>работает из командной строки, к вебу не подключён</td></tr>
+    <tr><td>9</td><td>PDF для пациента</td><td class="st todo">⬜ не начато</td><td></td></tr>
+    <tr><td>10</td><td>Профиль пациента</td><td class="st part">🟡 частично</td><td>пациенты и исследования есть, жалоб нет</td></tr>
+    <tr><td>11</td><td>Изоляция зуба в 3D</td><td class="st todo">⬜ не начато</td><td>если успеем</td></tr>
+    <tr><td>12</td><td>Сравнение визитов, ОПТГ, мобильные приложения</td><td class="st hold">⏸ отложено</td><td>после хакатона (В8)</td></tr>
+  </table></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card small"><h3>Сверх спеки (Батыр)</h3>
+      <ul style="list-style:none;padding:0">
+        <li><span class="st done">✅</span> Проект поднимается без моделей, кейс <code>fixtures/cbct_pair001</code></li>
+        <li><span class="st done">✅</span> Сценарий показа только КЛКТ</li>
+        <li><span class="st part">🟡</span> Метрики точности с доверительными интервалами — считается</li>
+        <li><span class="st todo">⬜</span> Автовращение 3D</li>
+      </ul></div>
+    <div class="card small"><h3>Не код</h3>
+      <ul style="list-style:none;padding:0">
+        <li><span class="st done">✅</span> Спека v0.4 и страница по ссылке</li>
+        <li><span class="st done">✅</span> Репозиторий: <code>plan/</code>, <code>materials/</code>, ресёрч</li>
+        <li><span class="st done">✅</span> Документ для стоматолога</li>
+        <li><span class="st todo">⬜</span> Показать стоматологу, собрать фидбэк</li>
+        <li><span class="st todo">⬜</span> Замер времени разбора на 10 кейсах</li>
+        <li><span class="st todo">⬜</span> Бизнес-модель для бизнес-ментора</li>
+        <li><span class="st todo">⬜</span> Питч-дек</li>
+      </ul></div>
+  </div>
+</section>
 
 <section id="why">
   <h2><span class="n">01</span>Для кого и зачем</h2>
@@ -194,7 +247,7 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
     <li><b>Пациент</b>Найти по ID или создать профиль. Записать жалобы и самочувствие.</li>
     <li><b>Загрузка</b>КЛКТ (DICOM / ZIP) сохраняется в профиль пациента.</li>
     <li><b>Разбор</b>Сегментация → находки → уровни, с индикатором прогресса.</li>
-    <li><b>Сводка в чате</b>«Нашёл 5 проблем: 1 × A+, 2 × A… Жалоба слева снизу — начните с 36».</li>
+    <li><b>Сводка в чате</b>«Нашёл 5 проблем: 1 критичная, 2 важные… Жалоба слева снизу — начните с 36».</li>
     <li><b>Работа по находкам</b>Клик → камера к зубу. ИИ направляет: «посмотрите срез через верхушку корня».</li>
     <li><b>Объяснение</b>«Почему ИИ так думает» — свёрнуто, раскрывается по клику.</li>
     <li><b>Вопросы</b>«Почему пульпит?», «Сколько зубов с проблемами?», «Сколько визитов?»</li>
@@ -216,11 +269,11 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
         <div class="jaw">
           <div class="row">
             <div class="t c"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div>
-            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t b"></div><div class="t"></div><div class="t"></div>
+            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t c"></div><div class="t"></div><div class="t"></div>
           </div>
           <div class="row low">
             <div class="t"></div><div class="t bp"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div>
-            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t ap sel"></div><div class="t a"></div><div class="t"></div>
+            <div class="t"></div><div class="t"></div><div class="t"></div><div class="t"></div><div class="t ap sel"></div><div class="t bp"></div><div class="t"></div>
           </div>
         </div>
         <div class="vhint">Зубы обычного цвета, проблемные — цветом уровня. Клик по зубу: остальные скрываются, остаётся зуб с корнем (последняя очередь).</div>
@@ -229,16 +282,16 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
         <div class="grip" title="Потяните, чтобы расширить"></div>
         <div class="tabs"><span class="on">Находки</span><span>Чек-лист 1/5</span><span class="exp" title="Развернуть">⤢</span></div>
         <div class="sb">
-          <div class="msg">Нашёл 5 проблем: 1 × A+, 1 × A, 1 × B+, 1 × B, 1 × C. Жалоба на боль слева снизу — предлагаю начать с <b>36</b> и <b>37</b>.</div>
+          <div class="msg">Нашёл 5 проблем: 1 критичная, 2 важные, 2 незначительные. Жалоба на боль слева снизу — предлагаю начать с <b>36</b> и <b>37</b>.</div>
           <div class="f">
-            <div class="top"><span class="lv ap">A+</span><span>Зуб 36 · периапикальный очаг</span><span class="pct">87%</span></div>
+            <div class="top"><span class="lv krit">Крит</span><span>Зуб 36 · периапикальный очаг</span><span class="pct">87%</span></div>
             <details open><summary>Почему ИИ так думает</summary>Зона разрежения у верхушки медиального корня ~3 мм, порог 2 мм. Посмотрите поперечный срез у верхушки.</details>
-            <div class="ctl">Уровень <span class="sel-l">A+ ▾</span> <span class="btn">✎ диагноз</span> <span class="btn">Показать на модели</span></div>
+            <div class="ctl">Уровень <span class="sel-l">Критичная ▾</span> <span class="btn">✎ диагноз</span> <span class="btn">Показать на модели</span></div>
             <div class="cm">Комментарий врача: «Согласен, разрежение видно, щель расширена…»</div>
             <div class="ctl"><span class="btn ok">Подтвердить</span><span class="btn">Отклонить</span></div>
           </div>
-          <div class="f"><div class="top"><span class="lv a">A</span><span>Зуб 37 · глубокий кариес</span><span class="pct">74%</span></div><details><summary>Почему ИИ так думает</summary>…</details></div>
-          <div class="f done"><div class="top"><span class="lv bp">B+</span><span>Зуб 46 · кариес</span><span class="pct">68%</span></div></div>
+          <div class="f"><div class="top"><span class="lv vazh">Важн</span><span>Зуб 37 · глубокий кариес</span><span class="pct">74%</span></div><details><summary>Почему ИИ так думает</summary>…</details></div>
+          <div class="f done"><div class="top"><span class="lv vazh">Важн</span><span>Зуб 46 · кариес</span><span class="pct">68%</span></div></div>
         </div>
         <div class="ask">Спросить ИИ: «Почему ты считаешь, что это очаг?»</div>
       </div>
@@ -263,15 +316,18 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
 </section>
 
 <section id="scale">
-  <h2><span class="n">04</span>Шкала: A+ / A / B+ / B / C</h2>
-  <div class="scale">
-    <div class="card"><span class="lv ap">A+</span><p>Срочно, требует вмешательства</p></div>
-    <div class="card"><span class="lv a">A</span><p>Серьёзно, лечить в ближайшее время</p></div>
-    <div class="card"><span class="lv bp">B+</span><p>Нужно лечение, не срочно</p></div>
-    <div class="card"><span class="lv b">B</span><p>Наблюдать, плановое внимание</p></div>
-    <div class="card"><span class="lv c">C</span><p>Информационно, вариант нормы</p></div>
+  <h2><span class="n">04</span>Шкала: Критичная / Важная / Незначительная</h2>
+  <p class="small muted" style="margin-top:0">Решено 17.11: три уровня вместо A+…C. Полное слово — в карточке и отчёте, короткое — на бейдже и в 3D.</p>
+  <div class="scale3">
+    <div class="card"><span class="lv krit">Крит</span><div class="full">Критичная</div><p>Требует вмешательства в первую очередь</p></div>
+    <div class="card"><span class="lv vazh">Важн</span><div class="full">Важная</div><p>Нужно лечение или решение врача</p></div>
+    <div class="card"><span class="lv nez">Незнач</span><div class="full">Незначительная</div><p>Вариант нормы, учесть, наблюдать</p></div>
   </div>
-  <p class="small muted">Три цвета вместо пяти: красный, жёлтый, серый — без оранжевого. Уровни внутри цвета различаются заливкой и контуром. Уровень ставит система, врач может поменять. Порядок и смысл — подтвердить (В2).</p>
+  <div class="card small" style="margin-top:14px">
+    <b>Уровень уже считается в коде.</b> У находок поле <code>severity</code> ровно трёх значений, перевод один к одному:
+    <code>alert</code> → Критичная · <code>warning</code> → Важная · <code>info</code> → Незначительная.
+    <p class="muted" style="margin:8px 0 0">Цвета: красный, жёлтый, серый — без оранжевого. Уровень ставит система, врач может поменять. Пациенту: «требует срочного внимания / нужно лечение / для сведения».</p>
+  </div>
 </section>
 
 <section id="review">
@@ -305,9 +361,9 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
       <div>Клиника · пациент #A-0142 · снимок 17.11.2026 · врач</div>
       <div class="ln"></div><div class="ln s"></div>
       <div><b>Жалобы:</b> боль слева снизу на холодное</div>
-      <div><b>Сводка:</b> A+ 1 · A 1 · B+ 1 · B 1 · C 1</div>
+      <div><b>Сводка:</b> критичных 1 · важных 2 · незначительных 2</div>
       <div class="ln"></div>
-      <div><b>36 · периапикальный очаг · A+ · 87%</b><br>срез · почему ИИ так решил · комментарий врача</div>
+      <div><b>36 · периапикальный очаг · Критичная · 87%</b><br>срез · почему ИИ так решил · комментарий врача</div>
       <div class="ln s"></div><div class="ln"></div>
       <div class="foot">Предварительный разбор выполнен ИИ, проверен врачом.<br>Модели: nnU-Net (сегментация, версия) · Anthropic Claude Haiku (объяснения, точная версия).<br>Подтвердил: Имя Фамилия врача, дата.</div>
     </div>
@@ -330,7 +386,7 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
     <div class="card small">
       <h3>Модель</h3>
       <ul>
-        <li>В Stomadent LLM сейчас нет.</li>
+        <li><b>Уже есть:</b> <code>case_chat.py</code>, <code>POST /api/cbct/chat/{id}</code>, модель <code>claude-haiku-5-5</code>. Числа, которых нет в находках, из ответа отбрасываются. Интерфейса пока нет.</li>
         <li><b>Claude Haiku через Anthropic API.</b> Бюджет: по $3–4 с человека плюс неиспользованные $5 у участника.</li>
         <li>Ключ в <code>.env</code>, не в репозитории. Нужен интернет на площадке.</li>
         <li>Локальную Ollama отклонили — медленно.</li>
@@ -382,8 +438,8 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
     <span class="node">КЛКТ (DICOM)</span><span class="arr">→</span>
     <span class="node">nnU-Net: зубы, пульпа, кость, нерв</span><span class="arr">→</span>
     <span class="node">находки: геометрия + пороги из исследований</span><span class="arr">→</span>
-    <span class="node new">уровень A+…C</span><span class="arr">→</span>
-    <span class="node new">сайдбар + Claude Haiku</span><span class="arr">→</span>
+    <span class="node new">уровень Крит / Важн / Незнач</span><span class="arr">→</span>
+    <span class="node new">сайдбар</span><span class="arr">+</span><span class="node">чат Claude Haiku</span><span class="arr">→</span>
     <span class="node">проверка врачом</span><span class="arr">→</span>
     <span class="node new">2 PDF</span>
   </div>
@@ -396,7 +452,10 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
     <tr><td>Находки (<code>severity</code>: info / warning / alert, <code>confidence</code>, <code>basis</code>)</td><td><code>/api/cbct/findings/{id}</code></td></tr>
     <tr><td>Подтверждение / отклонение, подпись</td><td><code>/api/cbct/review/{id}</code>, <code>/api/cbct/sign/{id}</code></td></tr>
     <tr><td>Карточка и срезы зуба</td><td><code>/api/cbct/tooth/{id}/{fdi}</code></td></tr>
-    <tr><td>План лечения, PDF (reportlab)</td><td><code>cbct_plan.py</code>, <code>cbct_report.py</code></td></tr>
+    <tr><td>План лечения, PDF (reportlab, к вебу не подключён)</td><td><code>cbct_plan.py</code>, <code>cbct_report.py</code></td></tr>
+    <tr><td>Чат по кейсу на Claude Haiku (без интерфейса)</td><td><code>case_chat.py</code>, <code>/api/cbct/chat/{id}</code></td></tr>
+    <tr><td>Пациенты и исследования (без жалоб)</td><td><code>/api/patients</code>, <code>/api/patients/{pid}/studies</code></td></tr>
+    <tr><td>Кейс для разработки без моделей</td><td><code>fixtures/cbct_pair001/</code>, <code>SETUP.md</code></td></tr>
   </table>
   </div>
 </section>
@@ -407,11 +466,11 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
   <table>
     <tr><th>#</th><th>Задача</th><th>Где</th><th>Когда</th></tr>
     <tr><td>1</td><td>Сайдбар: вкладки «Находки» / «Чек-лист», карточки, расширение ⤢</td><td><code>demo_static/index.html</code></td><td class="pr mvp">MVP</td></tr>
-    <tr><td>2</td><td>Шкала A+…C: правило из <code>severity</code> + <code>confidence</code>, цвета в 3D и карточках</td><td>слой находок, фронт</td><td class="pr mvp">MVP</td></tr>
+    <tr><td>2</td><td>Шкала Крит / Важн / Незнач из <code>severity</code>, цвета в 3D и карточках</td><td>фронт</td><td class="pr mvp">MVP</td></tr>
     <tr><td>3</td><td>Процент уверенности на карточке</td><td>см. В1</td><td class="pr mvp">MVP</td></tr>
     <tr><td>4</td><td>Смена уровня и правка диагноза врачом</td><td><code>demo_server.py</code>, <code>meta.json</code></td><td class="pr mvp">MVP</td></tr>
     <tr><td>5</td><td>Обязательный комментарий при подтверждении</td><td><code>/api/cbct/review</code>, фронт</td><td class="pr mvp">MVP</td></tr>
-    <tr><td>6</td><td>Эндпоинт чата: сбор контекста + Claude Haiku</td><td><code>POST /api/cbct/chat/{id}</code></td><td class="pr mvp">MVP</td></tr>
+    <tr><td>6</td><td>Чат: эндпоинт есть; добавить жалобы и план в контекст, язык вопроса, интерфейс</td><td><code>case_chat.py</code>, фронт</td><td class="pr mvp">MVP</td></tr>
     <tr><td>7</td><td>Первое сообщение-сводка после разбора</td><td>модуль чата</td><td class="pr mvp">MVP</td></tr>
     <tr><td>8</td><td>PDF для врача: уровни, проценты, комментарии, модели ИИ, ФИО врача</td><td><code>cbct_report.py</code></td><td class="pr mvp">MVP</td></tr>
     <tr><td>9</td><td>PDF для пациента простым языком</td><td><code>cbct_report.py</code> + чат</td><td class="pr mvp">MVP</td></tr>
@@ -432,11 +491,27 @@ footer{margin-top:56px;color:var(--muted);font-size:13px}
   <div class="note">Параллельно и срочно (не код): показать <code>plan/for-dentist.html</code> знакомому стоматологу и по фидбэку решить, что остаётся в MVP.</div>
 </section>
 
+<section id="eval">
+  <h2><span class="n">12</span>Критерии оценки на чекпоинте 18.11</h2>
+  <div class="grid g3">
+    <div class="card small"><h3>Как идёт</h3>Три ментора, к каждому <b>отдельно</b>, по <b>10 минут</b> — 30 минут на команду.</div>
+    <div class="card small"><h3>Как считают</h3>Каждый ставит 5 оценок от 1 до 10, балл ментора — среднее. Итог = (Тех + Бизнес + Отрасль) ÷ 3.</div>
+    <div class="card small"><h3>Что дальше</h3>По 5 команд из трека, 15 в финал. В финале — один победитель на трек.</div>
+  </div>
+  <div class="tbl" style="margin-top:14px"><table>
+    <tr><th>Ментор</th><th>Критерии (1–10)</th><th>Что показываем / чего не хватает</th></tr>
+    <tr><td><b>Технический</b></td><td>T1 реализация · T2 готовность кода · T3 инновационность · T4 знания команды · T5 технологии</td><td><span class="st done">✅ сильное место.</span> nnU-Net на КЛКТ, находки по порогам из исследований, чат с проверкой чисел. Показывать живое демо, не слайды.</td></tr>
+    <tr><td><b>Бизнес</b></td><td>B1 идея и актуальность · B2 бизнес-модель · B3 конкурентное преимущество · B4 финансовая устойчивость · B5 рост</td><td><span class="st" style="color:var(--red)">⚠️ слабое место.</span> B2 и B4 не готовы: кто платит, сколько, себестоимость разбора. B3 — против Diagnocat: языки, цена, врач в контуре. B5 — ОПТГ, сканы, мобильные приложения, страны ЦА.</td></tr>
+    <tr><td><b>Отраслевой</b></td><td>S1 актуальность · S2 понимание отрасли · S3 применимость · S4 <b>законодательство</b> · S5 масштаб влияния</td><td>S2 — сделано с врачами клиники. S3 — нужен фидбэк стоматолога. <span class="st" style="color:var(--red)">⚠️ S4</span> — подготовить ответ: решает врач, персональные данные отдельно, статус медицинского ПО. S5 — сколько КЛКТ в год в стране.</td></tr>
+  </table></div>
+  <p class="small muted">Источник: презентация организаторов, слайды 6–9 (<code>materials/organizers/presentation-organizers.md</code>).</p>
+</section>
+
 <section id="questions">
-  <h2><span class="n">12</span>Открытые вопросы</h2>
+  <h2><span class="n">13</span>Открытые вопросы</h2>
   <div class="grid">
     <div class="q block"><b class="id">В1</b><b>Процент уверенности</b><span class="pill">к Батыру</span><p>Решили показывать. Но у находок КЛКТ <code>confidence</code> — категория (<code>high</code> и ниже), а не процент: находки считаются геометрией. Откуда брать число — из выхода сети, из категории или показывать категорию?</p></div>
-    <div class="q block"><b class="id">В2</b><b>Шкала</b><span class="pill">блокирует</span><p>A+ — самый тяжёлый? Как переводить нынешние 3 уровня (info / warning / alert) в 5? Кто утверждает правило?</p></div>
+    <div class="q"><b class="id">В2</b><b>Шкала — решено</b><p>Три уровня: Критичная / Важная / Незначительная (Крит / Важн / Незнач), перевод из <code>severity</code> один к одному.</p></div>
     <div class="q"><b class="id">В3</b><b>Формат 3D для Claude</b><p>Меш — GLB, маска — <code>.mha</code>. В MVP передаём только JSON с находками; что отдавать агенту потом?</p></div>
     <div class="q block"><b class="id">В4</b><b>Где работает демо</b><span class="pill">к Батыру</span><p>Сервер с RTX 5090 в клинике, доступ через Cloudflare Tunnel. Кто держит ноутбук включённым и до какого времени?</p></div>
     <div class="q"><b class="id">В5</b><b>Проверка комментария</b><p>Хватит длины и несовпадения с текстом ИИ, или проверять самим ИИ?</p></div>
