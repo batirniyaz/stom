@@ -128,7 +128,11 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .prt { text-align: right; font-size: 12.5px; white-space: nowrap; }
-  .prt .st2 { color: var(--dim); display: block; margin-top: 2px; }
+  /* Состояние разбора — капителью: это служебная строка, и она не должна
+     спорить с жалобой пациента за внимание. */
+  .prt .st2 { color: var(--dim); display: block; margin-top: 3px;
+              font-size: 10.5px; text-transform: uppercase;
+              letter-spacing: .07em; }
   .prt .st2.done { color: var(--ok); }
   .dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
@@ -454,9 +458,12 @@
             >{{ (p.last && p.last.complaints) || "" }}</span>
           <span class="prt">
             <span v-if="p.last && p.last.levels">
-              <span class="dot k"></span><span>{{ p.last.levels.alert }}</span>
-              <span class="dot v"></span><span>{{ p.last.levels.warning }}</span>
-              <span class="dot n"></span><span>{{ p.last.levels.info }}</span>
+              <!-- Числа со СЛОВОМ, как в макете: три голых числа подряд
+                   читаются как «0 2 4» и требуют вспоминать, что из них
+                   важнее. Слова короткие, иначе строка не помещается. -->
+              <span class="dot k"></span><span>{{ p.last.levels.alert }} крит.</span>
+              <span class="dot v"></span><span>{{ p.last.levels.warning }} важн.</span>
+              <span class="dot n"></span><span>{{ p.last.levels.info }} незнач.</span>
             </span>
             <span class="st2" :class="{ done: reviewDone(p) }">{{ rowStatus(p) }}</span>
           </span>
