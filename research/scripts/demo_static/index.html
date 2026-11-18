@@ -443,6 +443,8 @@
     background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
     padding: 18px 20px;
   }
+  .work-steps .cbct-stage { display: flex; align-items: flex-start; gap: 11px;
+                            padding: 0; font-size: 13.5px; }
   .cbct-stage {
     display: flex; align-items: center; gap: 11px; padding: 9px 4px;
     font-size: 14px; color: var(--muted); transition: color .3s;
@@ -460,7 +462,59 @@
   .cbct-stage.done { color: var(--ok); }
   .cbct-stage.done .st-ico { border-color: var(--ok); background: rgba(34,197,94,.15); }
   .cbct-stage.done .st-ico::before { content: "✓"; }
-  .cbct-detail { font-size: 12px; color: var(--muted); padding: 6px 4px 0 35px; min-height: 18px; }
+  .cbct-detail { font-size: 12px; color: var(--muted); min-height: 18px; }
+
+  /* ---- экран обработки ---- */
+  /* Пока снимок считается, страница загрузки не нужна: врач пришёл из
+     карточки пациента с конкретным снимком, а не выбирать файл. */
+  body.cbct-busy #cbct-upload-view .hero,
+  body.cbct-busy #cbct-dropzone,
+  body.cbct-busy .cbct-model-pick,
+  body.cbct-busy .examples-title,
+  body.cbct-busy #cbct-examples { display: none; }
+
+  .work { max-width: 620px; margin: 18px auto 0; }
+  .work #work-patient .pbar { border-radius: 12px; border: 1px solid var(--line);
+                              margin-bottom: 12px; }
+  .work-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  .work-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .work-top h3 { margin: 0 0 3px; font-size: 18px; font-weight: 600; }
+  .work-time { font-size: 12.5px; color: var(--muted);
+               font-variant-numeric: tabular-nums; }
+  .work-spin {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    border: 2px solid var(--line); border-top-color: var(--cyan);
+    animation: workspin 1s linear infinite;
+  }
+  @keyframes workspin { to { transform: rotate(360deg); } }
+  /* Полоса показывает ПРОЙДЕННЫЕ стадии, а не проценты: сколько осталось
+     до конца сегментации, мы не знаем, и нарисованные «68%» были бы
+     выдумкой. Мерцание — признак того, что работа идёт сейчас. */
+  .work-bar { height: 4px; border-radius: 99px; background: var(--panel-2);
+              overflow: hidden; margin-bottom: 16px; }
+  .work-bar i { display: block; height: 100%; width: 0; border-radius: 99px;
+                background: linear-gradient(90deg, var(--cyan), #1b6f8f);
+                transition: width .6s ease; animation: workpulse 1.6s infinite; }
+  @keyframes workpulse { 50% { opacity: .55; } }
+  .work-steps { list-style: none; margin: 0 0 12px; padding: 0;
+                display: flex; flex-direction: column; gap: 11px; }
+  .work-steps small { display: block; font-size: 11.5px; color: var(--muted);
+                      margin-top: 2px; }
+  .work-back { display: inline-block; margin-top: 12px; text-decoration: none; }
+  .work-while {
+    margin-top: 14px; padding: 14px 16px; border-radius: 12px;
+    border: 1px solid var(--line); background: rgba(255,255,255,.02);
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .work-while b { color: var(--text); font-size: 12.5px; font-weight: 600;
+                  margin-bottom: 2px; }
+  .work-while span { padding-left: 14px; position: relative; }
+  .work-while span::before { content: "·"; position: absolute; left: 4px;
+                             color: var(--cyan); }
   .cbct-error { color: #f0a3a3; font-size: 13px; padding: 10px 4px 0 35px; }
 
   .cbct-grid {
@@ -1378,11 +1432,64 @@
       <div class="examples-title" data-i18n>Или откройте готовый пример (без ожидания сегментации)</div>
       <div id="cbct-examples"></div>
 
+      <!-- ЭКРАН ОБРАБОТКИ.
+
+           Врач нажимает в карточке «Открыть разбор» конкретного снимка —
+           и до этой правки попадал на страницу про загрузку файлов, выбор
+           модели и чужие примеры, под которой где-то внизу шли три
+           строчки стадий. Теперь, пока снимок считается, видно ровно одно:
+           чей это снимок, что с ним делают и сколько это идёт.
+
+           Разметка стадий (`.cbct-stage`, `#cbct-detail`) оставлена той
+           же: её ведёт существующий `setStage`, и переписывать логику
+           ради вида значило бы рисковать работающим опросом статуса. -->
       <div id="cbct-progress" style="display:none">
-        <div class="cbct-stage" data-stage="converting"><span class="st-ico"></span>Конвертация DICOM</div>
-        <div class="cbct-stage" data-stage="predicting"><span class="st-ico"></span>Сегментация нейросетью</div>
-        <div class="cbct-stage" data-stage="meshing"><span class="st-ico"></span>Построение 3D-модели</div>
-        <div class="cbct-detail" id="cbct-detail"></div>
+        <div class="work">
+          <div id="work-patient"></div>
+          <div class="work-card">
+            <div class="work-top">
+              <span class="work-spin" aria-hidden="true"></span>
+              <div>
+                <h3 id="work-title">Разбираем снимок</h3>
+                <div class="work-time"><span id="work-elapsed">идёт 0:00</span>
+                  · обычно 2–4 минуты</div>
+              </div>
+            </div>
+
+            <div class="work-bar"><i id="work-fill"></i></div>
+
+            <ol class="work-steps">
+              <li class="cbct-stage" data-stage="converting">
+                <span class="st-ico"></span>
+                <span>Чтение снимка<small>DICOM-серия собирается в объём</small></span>
+              </li>
+              <li class="cbct-stage" data-stage="predicting">
+                <span class="st-ico"></span>
+                <span>Сегментация нейросетью<small>челюсти, зубы, нерв,
+                  пазухи — 48 структур</small></span>
+              </li>
+              <li class="cbct-stage" data-stage="meshing">
+                <span class="st-ico"></span>
+                <span>Построение 3D и находок<small>поверхности, измерения,
+                  черновик плана</small></span>
+              </li>
+            </ol>
+
+            <div class="cbct-detail" id="cbct-detail"></div>
+            <a class="btn-ghost sm work-back" id="work-back" href="/patients">
+              ← К пациентам</a>
+          </div>
+
+          <!-- Ожидание стоит занять делом: врач читает, ЧТО именно будет
+               посчитано, и не ждёт от разбора того, чего мы не считаем. -->
+          <div class="work-while">
+            <b>Пока считается, будет готово:</b>
+            <span>расстояние от корней до нижнечелюстного канала и до дна пазухи</span>
+            <span>уровень кости у каждого зуба — в миллиметрах и в долях корня</span>
+            <span>эндодонтический статус: пролечен канал или зуб витален</span>
+            <span>черновик плана по этапам — с основанием под каждой позицией</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -2527,13 +2634,60 @@ let pollTimer = null;
 
 const STAGE_ORDER = ["converting", "predicting", "meshing"];
 
+/* Счётчик времени обработки.
+
+   Врач ждёт 2–4 минуты, и единственный вопрос в это время — «оно вообще
+   идёт?». Прошедшее время отвечает на него честнее любой полосы: его
+   видно, оно растёт, и когда оно уходит далеко за обычное, это само по
+   себе сигнал посмотреть логи. Процентов НЕ рисуем: сколько осталось до
+   конца сегментации, мы не знаем. */
+let workTimer = null, workStart = 0;
+
+function workTick() {
+  const el = $c("work-elapsed");
+  if (!el) return;
+  const sec = Math.floor((Date.now() - workStart) / 1000);
+  el.textContent = `идёт ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
+
 function showProgress() {
   $c("cbct-progress").style.display = "block";
   $c("cbct-detail").textContent = "";
   document.querySelectorAll(".cbct-stage").forEach(el => {
     el.classList.remove("active", "done");
   });
+  // Страница загрузки прячется: пришли из карточки за конкретным снимком.
+  document.body.classList.add("cbct-busy");
+  const fill = $c("work-fill");
+  if (fill) fill.style.width = "6%";
+  const title = $c("work-title");
+  if (title) title.textContent = "Разбираем снимок";
+  // Чей снимок считается — той же полосой, что и в самом разборе.
+  const box = $c("work-patient");
+  if (box && curCase && window.patientBar) {
+    box.innerHTML = "";
+    patientBar.mount(curCase, box).then(bar => {
+      // Из обработки возвращаться правильно в карточку пациента, а не в
+      // общий список: врач пришёл оттуда.
+      const back = $c("work-back");
+      const own = bar && bar.querySelector(".pb-back");
+      if (back && own) { back.href = own.getAttribute("href");
+                         back.textContent = "← В карточку пациента"; }
+    });
+  }
+  clearInterval(workTimer);
+  workStart = Date.now();
+  workTick();
+  workTimer = setInterval(workTick, 1000);
 }
+
+function hideProgress() {
+  clearInterval(workTimer);
+  workTimer = null;
+  document.body.classList.remove("cbct-busy");
+  $c("cbct-progress").style.display = "none";
+}
+
 function setStage(stage, detail) {
   const idx = STAGE_ORDER.indexOf(stage);
   document.querySelectorAll(".cbct-stage").forEach(el => {
@@ -2542,10 +2696,24 @@ function setStage(stage, detail) {
     el.classList.toggle("active", i === idx && stage !== "done");
   });
   $c("cbct-detail").textContent = detail || "";
+  // Полоса показывает пройденные стадии, а не проценты.
+  const fill = $c("work-fill");
+  if (fill) {
+    const n = STAGE_ORDER.length || 3;
+    fill.style.width = stage === "done" ? "100%"
+      : `${Math.max(6, Math.round((idx / n) * 100 + 6))}%`;
+  }
 }
+
 function failProgress(msg) {
   clearInterval(pollTimer);
+  clearInterval(workTimer);
+  workTimer = null;
   setStage("converting", "");
+  const title = $c("work-title");
+  if (title) title.textContent = "Снимок разобрать не удалось";
+  const spin = document.querySelector(".work-spin");
+  if (spin) spin.style.animation = "none";
   $c("cbct-detail").innerHTML =
     `<span class="cbct-error">Ошибка: ${msg || "неизвестная"}</span>`;
 }
@@ -2686,6 +2854,7 @@ async function showCbctResult(caseId) {
   // Монтируем и здесь: кейс открывают не только после сегментации, но и по
   // прямой ссылке из карточки пациента — тогда startSegment не вызывается.
   mountPatientBar(caseId);
+  hideProgress();
   $c("cbct-upload-view").style.display = "none";
   $c("cbct-result-view").style.display = "flex";
   // Полноэкранный режим: страница перестаёт прокручиваться, 3D занимает
@@ -3015,7 +3184,7 @@ $c("cbct-back").addEventListener("click", () => {
   document.body.classList.remove("case-mode");
   caseHeader(false);
   $c("cbct-upload-view").style.display = "block";
-  $c("cbct-progress").style.display = "none";
+  hideProgress();
 });
 
 /* Аппарат и статус сторон.
