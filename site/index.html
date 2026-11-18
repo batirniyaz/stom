@@ -89,6 +89,17 @@ kbd{font:600 12px var(--f);border:1px solid var(--line);border-bottom-width:2px;
 .head h1{font-size:26px;flex:1}
 .search{width:100%;font:inherit;font-size:15px;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);margin-bottom:12px}
 .plist{display:grid;gap:8px}
+.fchips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.fchip{font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.fchip b{font-weight:600;font-size:12px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.07);color:var(--text)}
+.fchip:hover{border-color:var(--accent);color:var(--text)}
+.fchip[aria-selected=true]{background:rgba(47,227,207,.14);border-color:var(--accent);color:var(--accent)}
+.fchip[aria-selected=true] b{background:rgba(47,227,207,.25);color:var(--accent)}
+.apt{display:inline-block;margin-top:3px;font-size:11.5px;padding:1px 8px;border-radius:999px;background:rgba(125,140,255,.16);color:#a9b3ff;border:1px solid rgba(125,140,255,.35);font-family:inherit}
+.prow .nm .apt{font-family:inherit;font-size:11.5px;color:#a9b3ff;white-space:nowrap}
+.prow .nm .apt.now{color:var(--accent)}.prow .nm .apt.new{color:#e6bf5a}
+.apt.now{background:rgba(47,227,207,.14);color:var(--accent);border-color:rgba(47,227,207,.4)}
+.apt.new{background:rgba(214,163,39,.14);color:#e6bf5a;border-color:rgba(214,163,39,.4)}
 .prow{display:grid;grid-template-columns:170px 60px 190px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px 16px;cursor:pointer;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px}
 .prow:hover{border-color:var(--accent)}
 .prow .nm b{display:block;font-weight:600}
@@ -139,7 +150,10 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .ctop .cmpl{flex:1;min-width:0;text-align:center;color:var(--muted);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ctop .mini{color:var(--muted);font-size:12px;white-space:nowrap}
 .cmain{flex:1;min-height:0;display:flex}
-.stage{position:relative;flex:1;min-width:0;background:radial-gradient(120% 120% at 45% 20%,#18202b,#07090d);overflow:hidden}
+.cmain.sc-open .col{width:max(320px,calc(var(--colw,38%) - 150px))}
+.cmain.sc-anim .col{transition:width .25s ease}
+@media (max-width:900px){.scside{width:100%;max-height:50vh;border-right:0;border-bottom:1px solid var(--line)}}
+.stage{position:relative;flex:1;min-width:0;background:radial-gradient(120% 120% at 45% 20%,#070a10,#04060b);overflow:hidden}
 #gl{position:absolute;inset:0}
 #gl canvas{display:block;width:100%;height:100%}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:#7d8896;font-size:14px;text-align:center;padding:20px;pointer-events:none}
@@ -192,7 +206,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .tabs button.t{flex:none;border:0;background:transparent;padding:11px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;font-size:14px}
 .tabs button.t[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
 .tabs .ex{margin-left:auto;border:0;background:none;color:var(--muted);padding:8px 12px;font-size:16px}
-.f2 .ai{font-size:13px;color:#c1cad6;margin:2px 0 6px}
+.f2 .ai{font-size:14px;line-height:1.45;color:#d5dce6;margin:4px 0 2px}
 .f2 .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .mchip{font:600 12px 'JetBrains Mono',ui-monospace,monospace;padding:2px 8px;border-radius:6px;background:rgba(47,227,207,.12);color:var(--accent);border:1px solid rgba(47,227,207,.28)}
 .pane{padding:12px 14px;overflow:auto;flex:1;min-height:0}
@@ -394,7 +408,11 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 @media (max-width:900px){.chside{display:none}.chatv{height:auto;min-height:100vh}}
 
 /* ---------- сцена (подробная панель) ---------- */
-.scn .pnl{width:292px;max-height:min(62vh,520px);overflow:auto;padding:0;animation:pop .25s both}
+.scside{width:292px;flex:none;overflow:auto;padding:0;background:rgba(14,18,24,.98);border-right:1px solid var(--line);font-size:13px;animation:slidein .25s both}
+.scside[hidden]{display:none}
+.scside label{display:flex;justify-content:space-between;gap:8px;margin:6px 0;color:var(--text)}
+.scside input[type=range]{width:100%;accent-color:var(--accent)}
+@keyframes slidein{from{opacity:0;transform:translateX(-14px)}}
 .pnl .ph{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(17,21,27,.98);z-index:1}
 .pnl details{border-bottom:1px solid var(--line);padding:0 14px}
 .pnl summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);list-style:none}
@@ -462,7 +480,19 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .chpane .cm{max-width:96%}
 .chpane .cm .bub{font-size:14px;padding:8px 12px}
 .chpane .chfoot{padding:8px 14px 12px}
-.mic{padding:0 10px!important;display:inline-flex;align-items:center}.mic.rec{color:#fff;background:var(--crit);border-color:var(--crit);animation:micp 1.1s infinite}
+.cin{align-items:center}
+.ibtn{flex:none;width:40px;height:40px;border-radius:50%;border:0;display:inline-grid;place-items:center;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.ibtn:active{transform:scale(.92)}
+.ibtn.mic{background:rgba(88,140,255,.2);color:#7fa8ff}.ibtn.mic:hover{background:rgba(88,140,255,.32)}
+.ibtn.send{background:transparent;color:var(--muted)}
+.ibtn.send:not(:disabled){background:var(--accent);color:#04201c}
+.ibtn.send:disabled{cursor:default;opacity:.55}
+.ibtn.mic .i-wave{display:none;gap:2px;align-items:center;height:16px}
+.ibtn.mic .i-wave i{width:3px;height:6px;border-radius:2px;background:#fff;animation:wv .9s ease-in-out infinite}
+.ibtn.mic .i-wave i:nth-child(2){animation-delay:.15s}.ibtn.mic .i-wave i:nth-child(3){animation-delay:.3s}.ibtn.mic .i-wave i:nth-child(4){animation-delay:.45s}
+@keyframes wv{50%{height:16px}}
+.ibtn.mic.rec{background:var(--crit);color:#fff}.ibtn.mic.rec .i-mic{display:none}.ibtn.mic.rec .i-wave{display:inline-flex}
+.cin textarea.live{border-color:var(--crit)}
 @keyframes micp{50%{opacity:.55}}
 .chpane .chfoot .cin textarea{height:42px;font-size:14px;padding:9px 12px}
 @media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
@@ -518,7 +548,8 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 <!-- пациенты -->
 <section class="view" id="v-patients" hidden><div class="wrap">
   <div class="head"><h1>Пациенты</h1><button class="btn pri big" id="newP">+ Новый пациент</button></div>
-  <input class="search" id="q" placeholder="Поиск по фамилии или номеру карты" autocomplete="off">
+  <input class="search" id="q" placeholder="Поиск по фамилии, номеру карты или телефону" autocomplete="off">
+  <div class="fchips" id="pf" role="tablist" aria-label="Фильтр пациентов"></div>
   <div class="plist" id="plist"></div>
 </div></section>
 
@@ -539,14 +570,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
     <button class="btn sm" id="share">Поделиться ссылкой</button>
   </header>
   <div class="cmain">
-    <div class="stage">
-      <div id="gl"></div>
-      <div class="loading" id="loading">Загрузка 3D-модели…</div>
-      <div class="objcard" id="objc" hidden></div>
-      <button class="pp" id="pp" title="Пауза / вращение">❚❚ вращение</button>
-      <div id="lbls"></div>
-      <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span><span><i style="background:var(--accent)"></i>Выбранный зуб</span></div>
-      <div class="scn"><div class="pnl" id="pnl" hidden>
+    <aside class="pnl scside" id="pnl" hidden>
         <div class="ph"><b>Сцена</b><button class="btn sm ghost" id="scReset">Сбросить</button></div>
         <details open><summary>Слои</summary><div>
           <label class="sw"><span>Верхняя челюсть</span><input type="checkbox" data-l="maxilla" checked></label>
@@ -574,7 +598,15 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
           <div class="rg"><div><span>Скорость вращения</span><b id="spv">1.2</b></div><input type="range" id="rSp" min="0" max="40" value="12"></div>
           <button class="btn sm" id="scShot" style="width:100%;margin-top:8px">Сохранить снимок экрана</button>
         </div></details>
-      </div><button id="scnBtn">⚙ Сцена</button></div>
+    </aside>
+    <div class="stage">
+      <div id="gl"></div>
+      <div class="loading" id="loading">Загрузка 3D-модели…</div>
+      <div class="objcard" id="objc" hidden></div>
+      <button class="pp" id="pp" title="Пауза / вращение">❚❚ вращение</button>
+      <div id="lbls"></div>
+      <div class="legend" id="legend"><span><i style="background:var(--crit)"></i>Критичная</span><span><i style="background:var(--warn)"></i>Важная</span><span><i style="background:var(--info)"></i>Незначительная</span><span><i style="background:var(--accent)"></i>Выбранный зуб</span></div>
+      <div class="scn"><button id="scnBtn" aria-expanded="false">⚙ Сцена</button></div>
       <div class="mm" id="mm"></div>
     </div>
     <div class="handle" id="handle" title="Потяните, чтобы изменить ширину"></div>
@@ -588,7 +620,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
         <button class="ex" id="expand" title="Развернуть колонку">⤢</button>
       </div>
       <div class="pane" id="p-find"></div>
-      <div class="pane chpane" id="p-chat" hidden><div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div><div class="chmsgs" id="chmsgs"></div><div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn sm mic" type="button" id="chmic" title="Голосовой ввод" aria-label="Голосовой ввод"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn pri sm" type="submit">Спросить</button></form></div></div>
+      <div class="pane chpane" id="p-chat" hidden><div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div><div class="chmsgs" id="chmsgs"></div><div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="ibtn mic" type="button" id="chmic" title="Голосовой ввод" aria-label="Голосовой ввод"><svg class="i-mic" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15z"/><path d="M5.5 11a1 1 0 0 1 2 0 4.5 4.5 0 0 0 9 0 1 1 0 0 1 2 0 6.5 6.5 0 0 1-5.5 6.4V20h2a1 1 0 0 1 0 2h-6a1 1 0 0 1 0-2h2v-2.6A6.5 6.5 0 0 1 5.5 11z"/></svg><span class="i-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button><button class="ibtn send" type="submit" id="chsend" title="Отправить" aria-label="Отправить" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5v6a3 3 0 0 1-3 3H5"/><path d="M9 10l-4 4 4 4"/></svg></button></form></div></div>
       <div class="pane" id="p-plan" hidden></div>
       <div class="pane" id="p-mpr" hidden></div>
       <div class="pane" id="p-info" hidden></div>
@@ -616,22 +648,22 @@ var TODAY=new Date().toLocaleDateString('ru-RU');
 
 /* ---------- данные (выдуманные) ---------- */
 var F=[
- {id:'f36',m:'4,2 мм',tooth:36,t:'Периапикальный очаг',lv:'k',role:'Терапевт',rel:'высокая',why:'На срезе через верхушку корня зона разрежения 4,2 мм. Порог для очага в исследованиях — 3 мм.',cav:'Очаг на КЛКТ виден уверенно, но природу (гранулёма или киста) по снимку не определить.',ai:'Зона разрежения у верхушки корня',plan:'лечение канала',visits:3},
- {id:'f37',m:'0,8 мм до пульпы',tooth:37,t:'Глубокий кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Полость доходит до 0,8 мм от пульпы. Порог близости — 1 мм.',cav:'Шаг вокселя 0,25 мм: 0,8 мм это три вокселя, граница полости определена с небольшой погрешностью.',ai:'Полость близко к пульпе',plan:'пломбирование',visits:1},
- {id:'f46',m:'глубина 2 мм',tooth:46,t:'Кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',cav:'Рядом старая пломба, она может давать артефакты.',ai:'Снижение плотности на контактной поверхности',plan:'пломбирование',visits:1},
- {id:'f16',m:'6,8 мм · выше 91% выборки',tooth:16,t:'Убыль костной ткани',lv:'v',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 6,8 мм, выше, чем у 91% участков опорной выборки.',cav:'Это сравнение с выборкой, а не клиническая стадия пародонтита: зондирования нет.',ai:'Расстояние от шейки до гребня больше обычного',plan:'консультация пародонтолога',visits:1},
- {id:'f48',m:'−10,7 мм от ряда',tooth:48,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:1},
- {id:'f38',m:'−9,2 мм от ряда',tooth:38,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 9,2 мм ниже уровня ряда. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:0},
- {id:'f15',m:'0,9 мм до дна',tooth:15,t:'Корень близко к дну пазухи',lv:'n',role:'Хирург',rel:'средняя',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних зубов и сама по себе не патология.',cav:'Объём пазухи и слизистую программа не измеряет.',ai:'Корень близко к пазухе',plan:'учесть при планировании имплантации',visits:0},
- {id:'f26',m:'+1590 HU',tooth:26,t:'Пролеченный канал',lv:'n',role:'Терапевт',rel:'высокая',why:'Плотность в канале выше дентина на 1590 HU, это признак пломбировочного материала.',cav:'Качество пломбирования по снимку не оценивается.',ai:'В канале пломбировочный материал',plan:'наблюдение',visits:0},
- {id:'f14',m:'глубина 1,6 мм',tooth:14,t:'Кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Снижение плотности на жевательной поверхности, глубина 1,6 мм от эмали, до пульпы около 3 мм.',cav:'Начальные поражения на КЛКТ видны хуже, чем на прицельном снимке.',ai:'Снижение плотности на жевательной поверхности',plan:'пломбирование',visits:1},
- {id:'f47',m:'щель 0,6 мм',tooth:47,t:'Расширение периодонтальной щели',lv:'v',role:'Терапевт',rel:'средняя',why:'Ширина щели у дистального корня 0,6 мм, на соседних зубах 0,2–0,3 мм.',cav:'Расширение щели бывает и при повышенной нагрузке на зуб, не только при воспалении.',ai:'Щель у корня шире, чем у соседних зубов',plan:'контрольный осмотр, проверка прикуса',visits:1},
- {id:'f11',m:'композит',tooth:11,t:'Реставрация коронки',lv:'n',role:'Терапевт',rel:'высокая',why:'Материал плотнее дентина на 640 HU, граница реставрации непрерывная, зазоров нет.',cav:'Качество краевого прилегания на КЛКТ оценивается ограниченно.',ai:'Пломба в коронковой части',plan:'наблюдение',visits:0},
- {id:'f44',m:'5,1 мм · выше 78% выборки',tooth:44,t:'Убыль костной ткани',lv:'v',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 5,1 мм с мезиальной стороны, 3,7 мм с дистальной.',cav:'Сравнение с выборкой, а не клиническая стадия: зондирования нет.',ai:'Гребень ниже обычного уровня',plan:'консультация пародонтолога',visits:1},
- {id:'f33',m:'4,0 мм · выше 62% выборки',tooth:33,t:'Убыль костной ткани',lv:'n',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 4,0 мм, находится в пределах обычного разброса выборки.',cav:'Сравнение с выборкой, а не клиническая стадия.',ai:'Уровень кости на границе обычного',plan:'наблюдение',visits:0},
- {id:'f28',m:'−11,3 мм от ряда',tooth:28,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 11,3 мм выше уровня зубного ряда, прорезывания нет. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:0},
- {id:'f18',m:'отсутствует',tooth:18,t:'Зуб отсутствует',lv:'n',role:'Ортопед',rel:'высокая',why:'В маске нет зуба 18, на месте лунки кость сформирована.',cav:'Зубы мудрости не имплантируют, замещение не требуется.',ai:'Зуба нет, лунка заполнена костью',plan:'наблюдение',visits:0},
- {id:'f24',m:'коронка',tooth:24,t:'Коронка',lv:'n',role:'Ортопед',rel:'высокая',why:'Плотный материал, охватывающий коронку, +2100 HU к дентину, под ней сохранён корень.',cav:'Состояние зуба под коронкой из-за артефактов не оценивается.',ai:'Искусственная коронка на зубе',plan:'наблюдение',visits:0}
+ {id:'f36',d:'Зона разрежения кости 4,2 мм в диаметре у верхушки дистального корня зуба 36. Кортикальная пластинка лунки на этом участке истончена.',m:'4,2 мм',tooth:36,t:'Периапикальный очаг',lv:'k',role:'Терапевт',rel:'высокая',why:'На срезе через верхушку корня зона разрежения 4,2 мм. Порог для очага в исследованиях — 3 мм.',cav:'Очаг на КЛКТ виден уверенно, но природу (гранулёма или киста) по снимку не определить.',ai:'Зона разрежения у верхушки корня',plan:'лечение канала',visits:3},
+ {id:'f37',d:'Кариозная полость на жевательной поверхности зуба 37 доходит до 0,8 мм от пульпы. Дентинная перегородка между полостью и пульпой почти отсутствует.',m:'0,8 мм до пульпы',tooth:37,t:'Глубокий кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Полость доходит до 0,8 мм от пульпы. Порог близости — 1 мм.',cav:'Шаг вокселя 0,25 мм: 0,8 мм это три вокселя, граница полости определена с небольшой погрешностью.',ai:'Полость близко к пульпе',plan:'пломбирование',visits:1},
+ {id:'f46',d:'Кариозное поражение на контактной (мезиальной) поверхности коронки зуба 46, глубина 2 мм, в пределах дентина. Пульпа не затронута.',m:'глубина 2 мм',tooth:46,t:'Кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Снижение плотности на контактной поверхности коронки, глубина 2 мм, пульпа не затронута.',cav:'Рядом старая пломба, она может давать артефакты.',ai:'Снижение плотности на контактной поверхности',plan:'пломбирование',visits:1},
+ {id:'f16',d:'Убыль костной ткани у зуба 16: от эмалево-цементной границы до гребня альвеолы 6,8 мм. Это больше, чем у 91% участков опорной выборки.',m:'6,8 мм · выше 91% выборки',tooth:16,t:'Убыль костной ткани',lv:'v',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 6,8 мм, выше, чем у 91% участков опорной выборки.',cav:'Это сравнение с выборкой, а не клиническая стадия пародонтита: зондирования нет.',ai:'Расстояние от шейки до гребня больше обычного',plan:'консультация пародонтолога',visits:1},
+ {id:'f48',d:'Зуб 48 ретенирован: коронка расположена на 10,7 мм ниже окклюзионной плоскости, прорезывания нет. Коронка полностью в кости.',m:'−10,7 мм от ряда',tooth:48,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 10,7 мм ниже уровня зубного ряда, прорезывания нет. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:1},
+ {id:'f38',d:'Зуб 38 ретенирован: коронка на 9,2 мм ниже окклюзионной плоскости, прорезывания нет.',m:'−9,2 мм от ряда',tooth:38,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 9,2 мм ниже уровня ряда. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:0},
+ {id:'f15',d:'Верхушка корня зуба 15 на расстоянии 0,9 мм от дна верхнечелюстной пазухи. Костная пластинка между ними тонкая.',m:'0,9 мм до дна',tooth:15,t:'Корень близко к дну пазухи',lv:'n',role:'Хирург',rel:'средняя',why:'Расстояние от корня до дна пазухи 0,9 мм. Такая близость бывает у большинства верхних зубов и сама по себе не патология.',cav:'Объём пазухи и слизистую программа не измеряет.',ai:'Корень близко к пазухе',plan:'учесть при планировании имплантации',visits:0},
+ {id:'f26',d:'Канал зуба 26 заполнен плотным материалом: плотность в канале выше дентина на 1590 HU. Зуб ранее эндодонтически пролечен.',m:'+1590 HU',tooth:26,t:'Пролеченный канал',lv:'n',role:'Терапевт',rel:'высокая',why:'Плотность в канале выше дентина на 1590 HU, это признак пломбировочного материала.',cav:'Качество пломбирования по снимку не оценивается.',ai:'В канале пломбировочный материал',plan:'наблюдение',visits:0},
+ {id:'f14',d:'Кариозное поражение жевательной поверхности зуба 14, глубина 1,6 мм от эмали. До пульпы около 3 мм.',m:'глубина 1,6 мм',tooth:14,t:'Кариес',lv:'v',role:'Терапевт',rel:'средняя',why:'Снижение плотности на жевательной поверхности, глубина 1,6 мм от эмали, до пульпы около 3 мм.',cav:'Начальные поражения на КЛКТ видны хуже, чем на прицельном снимке.',ai:'Снижение плотности на жевательной поверхности',plan:'пломбирование',visits:1},
+ {id:'f47',d:'Периодонтальная щель у дистального корня зуба 47 шире нормы: 0,6 мм при 0,2–0,3 мм у соседних зубов.',m:'щель 0,6 мм',tooth:47,t:'Расширение периодонтальной щели',lv:'v',role:'Терапевт',rel:'средняя',why:'Ширина щели у дистального корня 0,6 мм, на соседних зубах 0,2–0,3 мм.',cav:'Расширение щели бывает и при повышенной нагрузке на зуб, не только при воспалении.',ai:'Щель у корня шире, чем у соседних зубов',plan:'контрольный осмотр, проверка прикуса',visits:1},
+ {id:'f11',d:'На коронке зуба 11 композитная реставрация. Граница с тканями зуба непрерывная, зазоров и вторичного кариеса не видно.',m:'композит',tooth:11,t:'Реставрация коронки',lv:'n',role:'Терапевт',rel:'высокая',why:'Материал плотнее дентина на 640 HU, граница реставрации непрерывная, зазоров нет.',cav:'Качество краевого прилегания на КЛКТ оценивается ограниченно.',ai:'Пломба в коронковой части',plan:'наблюдение',visits:0},
+ {id:'f44',d:'Убыль кости у зуба 44: от шейки до гребня 5,1 мм с мезиальной стороны и 3,7 мм с дистальной.',m:'5,1 мм · выше 78% выборки',tooth:44,t:'Убыль костной ткани',lv:'v',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 5,1 мм с мезиальной стороны, 3,7 мм с дистальной.',cav:'Сравнение с выборкой, а не клиническая стадия: зондирования нет.',ai:'Гребень ниже обычного уровня',plan:'консультация пародонтолога',visits:1},
+ {id:'f33',d:'Уровень кости у зуба 33: от шейки до гребня 4,0 мм. В пределах обычного разброса выборки.',m:'4,0 мм · выше 62% выборки',tooth:33,t:'Убыль костной ткани',lv:'n',role:'Пародонтолог',rel:'средняя',why:'От шейки до гребня 4,0 мм, находится в пределах обычного разброса выборки.',cav:'Сравнение с выборкой, а не клиническая стадия.',ai:'Уровень кости на границе обычного',plan:'наблюдение',visits:0},
+ {id:'f28',d:'Зуб 28 ретенирован: коронка на 11,3 мм выше окклюзионной плоскости, прорезывания нет.',m:'−11,3 мм от ряда',tooth:28,t:'Ретенция зуба мудрости',lv:'n',role:'Хирург',rel:'высокая',why:'Коронка на 11,3 мм выше уровня зубного ряда, прорезывания нет. Порог — 8 мм.',cav:'Положение зуба измерено надёжно, показания к удалению определяет врач.',ai:'Зуб не прорезался',plan:'наблюдение, консультация хирурга',visits:0},
+ {id:'f18',d:'Зуб 18 отсутствует. Лунка заполнена сформированной костью, признаков воспаления нет.',m:'отсутствует',tooth:18,t:'Зуб отсутствует',lv:'n',role:'Ортопед',rel:'высокая',why:'В маске нет зуба 18, на месте лунки кость сформирована.',cav:'Зубы мудрости не имплантируют, замещение не требуется.',ai:'Зуба нет, лунка заполнена костью',plan:'наблюдение',visits:0},
+ {id:'f24',d:'На зубе 24 искусственная коронка (+2100 HU к дентину). Корень под коронкой сохранён.',m:'коронка',tooth:24,t:'Коронка',lv:'n',role:'Ортопед',rel:'высокая',why:'Плотный материал, охватывающий коронку, +2100 HU к дентину, под ней сохранён корень.',cav:'Состояние зуба под коронкой из-за артефактов не оценивается.',ai:'Искусственная коронка на зубе',plan:'наблюдение',visits:0}
 ];
 var ROLES=['Терапевт','Пародонтолог','Хирург','Ортопед'];
 function findF(id){return F.filter(function(f){return f.id===id})[0]}
@@ -649,6 +681,29 @@ var PAT0=[
  {id:'DEMO-005',name:'Назарова Лола',born:1965,dob:'08.05.1965',sex:'Ж',blood:'II (A) Rh+',allergy:'Нет',meds:'Бисопролол',chronic:'Гипертония',habit:'Не курит',phone:'+998 90 987 65 43',addr:'Ташкент, Сергелийский р-н',job:'Учитель на пенсии',emerg:'Назаров Бахтиёр (сын), +998 90 333 44 55',since:'02.02.2022',ref:'Рекомендация знакомых',cleaning:'06.2026',visits:[
    {d:'11.11.2026',type:'Осмотр',cmp:'Подвижность нижних резцов, назначена КЛКТ'}]}
 ];
+/* демо-«сегодня» зафиксировано, чтобы фильтры «сегодня / вчера» не уплывали со временем */
+var DTODAY='18.11.2026',DYEST='17.11.2026';
+function pd(s){var a=String(s).split('.');return new Date(+a[2],+a[1]-1,+a[0]).getTime()}
+function mk(id,name,born,sex,since,ref,visits,appt,o){o=o||{};var dd=('0'+(1+hash(id)%27)).slice(-2),mm=('0'+(1+hash(id+'m')%12)).slice(-2);
+  return {id:id,name:name,born:born,dob:dd+'.'+mm+'.'+born,sex:sex,blood:o.blood||['I (0) Rh+','II (A) Rh+','III (B) Rh+','II (A) Rh−'][hash(id)%4],allergy:o.allergy||'Нет',meds:o.meds||'Нет',chronic:o.chronic||'Нет',habit:o.habit||'Не курит',phone:'+998 '+['90','91','93','94','97','99'][hash(id)%6]+' '+(100+hash(id)%900)+' '+(10+hash(id+'a')%90)+' '+(10+hash(id+'b')%90),addr:'Ташкент, '+['Мирзо-Улугбекский','Чиланзарский','Юнусабадский','Яккасарайский','Сергелийский','Алмазарский'][hash(id)%6]+' р-н',job:o.job||'',emerg:'',since:since,ref:ref,cleaning:o.cl||'не было',visits:visits,appt:appt||null}}
+PAT0.push(
+ mk('DEMO-006','Юсупова Нилуфар',1990,'Ж','04.05.2025','Самообращение',[{d:'18.11.2026',type:'КЛКТ',cmp:'Боль при накусывании справа снизу',st:'ready'}],null,{job:'Дизайнер',cl:'08.2026'}),
+ mk('DEMO-007','Рахимов Азиз',1987,'М','18.11.2026','Рекомендация знакомых',[{d:'18.11.2026',type:'ОПТГ',cmp:'Проверка перед протезированием',st:'proc'}],null,{job:'Водитель',habit:'Курит, около 5 сигарет в день'}),
+ mk('DEMO-008','Исмоилова Дилноза',1995,'Ж','10.10.2026','Instagram клиники',[{d:'17.11.2026',type:'КЛКТ',cmp:'Нужна консультация по имплантации 46',st:'ready'}],null,{job:'Врач-педиатр',allergy:'Нет'}),
+ mk('DEMO-009','Холматов Сардор',1978,'М','21.03.2024','Самообращение',[{d:'17.11.2026',type:'КЛКТ',cmp:'Подготовка к синус-лифтингу',st:'ready'},{d:'12.08.2026',type:'ОПТГ',cmp:'Удаление 16'}],null,{job:'Юрист',chronic:'Гипертония',meds:'Лозартан'}),
+ mk('DEMO-010','Мирзаева Гульнора',1983,'Ж','01.02.2025','Рекомендация знакомых',[{d:'16.11.2026',type:'ОПТГ',cmp:'Кровоточат дёсны, неприятный запах',st:'ready'}],null,{job:'Менеджер'}),
+ mk('DEMO-011','Эргашев Тимур',2001,'М','09.09.2026','Направление ортодонта',[{d:'15.11.2026',type:'КЛКТ',cmp:'Ретенированный зуб 28, хочет удалить',st:'ready'}],null,{job:'Студент',allergy:'Нет'}),
+ mk('DEMO-012','Хасанова Зарина',1972,'Ж','14.06.2022','Самообращение',[{d:'12.11.2026',type:'Осмотр',cmp:'Профилактический осмотр, снимок не нужен'}],null,{job:'Преподаватель',cl:'11.2026'}),
+ mk('DEMO-013','Каюмов Отабек',1994,'М','18.11.2026','Telegram-бот клиники',[],{d:'18.11.2026',t:'16:30',why:'Первичный приём, КЛКТ',isNew:true},{job:'Программист'}),
+ mk('DEMO-014','Саидова Малика',2009,'Ж','02.09.2026','Направление школьного врача',[{d:'20.10.2026',type:'ОПТГ',cmp:'Смена зубов, контроль прикуса'}],{d:'18.11.2026',t:'11:00',why:'Контроль после ОПТГ'},{job:'Школьница'}),
+ mk('DEMO-015','Бекмуратов Рашид',1969,'М','15.01.2023','Рекомендация знакомых',[{d:'02.10.2026',type:'КЛКТ',cmp:'Подвижность 31, 41',st:'ready'}],{d:'19.11.2026',t:'10:00',why:'Повторная КЛКТ'},{job:'Фермер',chronic:'Сахарный диабет 2 типа',meds:'Метформин'}),
+ mk('DEMO-016','Алиева Севара',1999,'Ж','17.11.2026','Instagram клиники',[],{d:'19.11.2026',t:'15:00',why:'Первичный приём',isNew:true},{job:'Маркетолог'}),
+ mk('DEMO-017','Нормуродов Ильхом',1985,'М','22.04.2024','Самообращение',[{d:'28.10.2026',type:'КЛКТ',cmp:'Боль в области 36 после лечения',st:'ready'}],{d:'20.11.2026',t:'09:30',why:'Обсуждение плана лечения'},{job:'Строитель',habit:'Курит, около 15 сигарет в день'}),
+ mk('DEMO-018','Курбанова Шахноза',1991,'Ж','16.11.2026','Telegram-бот клиники',[],{d:'21.11.2026',t:'12:00',why:'Первичный приём, КЛКТ',isNew:true},{job:'Бухгалтер'}),
+ mk('DEMO-019','Умаров Фарход',1976,'М','11.07.2021','Самообращение',[{d:'08.11.2026',type:'КЛКТ',cmp:'Контроль после имплантации 46',st:'ready'}],null,{job:'Таксист',cl:'05.2026'}),
+ mk('DEMO-020','Закирова Дильфуза',1958,'Ж','30.03.2020','Рекомендация знакомых',[{d:'05.11.2026',type:'ОПТГ',cmp:'Жалоб нет, плановый снимок'}],null,{job:'Пенсионерка',chronic:'Гипертония',meds:'Эналаприл',cl:'09.2026'})
+);
+PAT0[0].appt={d:'19.11.2026',t:'14:00',why:'Лечение по плану'};
 var KEY='actina_proto_v3';
 var S=(function(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}})();
 S.cases=S.cases||{};S.extra=S.extra||[];S.vis=S.vis||{};S.notes=S.notes||{};S.msgs=S.msgs||{};S.colw=S.colw||null;S.photos=S.photos||{};
@@ -705,7 +760,7 @@ function getP(id){return allP().filter(function(p){return p.id===id})[0]}
 function readyVisit(p){return p.visits.filter(function(v){return v.st==='ready'})[0]}
 function cs(id){
   if(!S.cases[id]){S.cases[id]={rev:{},comm:{},lv:{},txt:{}};
-    if(id==='DEMO-002'||id==='DEMO-004'){F.forEach(function(f){S.cases[id].rev[f.id]='ok';S.cases[id].comm[f.id]='Подтверждаю по срезам, вижу то же'});S.cases[id].signed=id==='DEMO-002'?'16.11':'14.11'}}
+    var SG={'DEMO-002':'16.11','DEMO-004':'14.11','DEMO-009':'17.11','DEMO-011':'15.11','DEMO-019':'08.11'};if(SG[id]){F.forEach(function(f){S.cases[id].rev[f.id]='ok';S.cases[id].comm[f.id]='Подтверждаю по срезам, вижу то же'});S.cases[id].signed=SG[id]}else if(id==='DEMO-010'||id==='DEMO-015'){F.slice(0,id==='DEMO-010'?6:11).forEach(function(f){S.cases[id].rev[f.id]='ok'})}}
   return S.cases[id]}
 function lvOf(f,id){var c=cs(id||cur);return (c.lv&&c.lv[f.id])||f.lv}
 function ftext(f,id){var c=cs(id||cur);return (c.txt&&c.txt[f.id])||f.t}
@@ -765,13 +820,30 @@ $('#code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()})
 $('#phone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#getCode').click()});
 
 /* ---------- список пациентов ---------- */
+var PF='all';
+var PFS=[['all','Все'],['appt','Записаны'],['today','Сегодня'],['yday','Вчера'],['wait','Ждут разбора'],['signed','Подписано'],['new','Новые'],['arch','Архив']];
+function aptWhen(a){return a.d===DTODAY?'сегодня':pd(a.d)-pd(DTODAY)===864e5?'завтра':a.d.slice(0,5)}
+function pcat(p){var v=p.visits[0],s=v?pstatus(p):null,c={};
+  c.all=1;if(p.appt)c.appt=1;
+  if(v&&v.d===DTODAY)c.today=1;if(v&&v.d===DYEST)c.yday=1;
+  if(v&&(v.st==='proc'||(v.st==='ready'&&!/подписано/.test(s.t))))c.wait=1;
+  if(v&&v.st==='ready'&&/подписано/.test(s.t))c.signed=1;
+  if(p.since&&pd(p.since)>=pd(DTODAY)-7*864e5)c.new=1;
+  if(v&&v.st!=='ready'&&v.st!=='proc')c.arch=1;
+  return c}
+function plast(p){var v=p.visits[0];return v?pd(v.d):p.appt?pd(p.appt.d):0}
 function drawPatients(){
-  var q=$('#q').value.trim().toLowerCase(),L=$('#plist');L.innerHTML='';var P=allP(),n=0;
-  P.forEach(function(p){
-    if(q&&(p.name+' '+p.id).toLowerCase().indexOf(q)<0)return;n++;
-    var v=p.visits[0]||{},s=pstatus(p),age=new Date().getFullYear()-p.born;
-    var b=el('button','prow',avatar(p.id,p.name,40)+'<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+'</span></div><div class="muted">'+age+' лет</div><div><span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d||'—')+'</span> · '+(v.type||'')+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):'')+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
-    b.type='button';b.style.setProperty('--i',n);b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
+  var q=$('#q').value.trim().toLowerCase().replace(/[\s\-+()]/g,''),L=$('#plist');L.innerHTML='';var P=allP(),n=0,cnt={};
+  P.forEach(function(p){p._c=pcat(p);Object.keys(p._c).forEach(function(k){cnt[k]=(cnt[k]||0)+1})});
+  $('#pf').innerHTML=PFS.map(function(f){return '<button type="button" class="fchip" role="tab" data-f="'+f[0]+'" aria-selected="'+(PF===f[0])+'">'+f[1]+' <b>'+(cnt[f[0]]||0)+'</b></button>'}).join('');
+  $$('.fchip',$('#pf')).forEach(function(b){b.addEventListener('click',function(){PF=b.dataset.f;drawPatients()})});
+  var R=P.filter(function(p){return p._c[PF]&&(!q||(p.name+p.id+(p.phone||'')).toLowerCase().replace(/[\s\-+()]/g,'').indexOf(q)>=0)});
+  R.sort(PF==='appt'?function(a,b){return (pd(a.appt.d)+parseInt(a.appt.t)*36e5)-(pd(b.appt.d)+parseInt(b.appt.t)*36e5)}:function(a,b){return plast(b)-plast(a)});
+  R.forEach(function(p){n++;
+    var v=p.visits[0]||{},s=p.visits[0]?pstatus(p):{t:p.appt&&p.appt.isNew?'Новый пациент':'Нет снимков',dots:''},age=new Date().getFullYear()-p.born;
+    var ap=p.appt?'<br><span class="apt'+(p.appt.d===DTODAY?' now':'')+(p.appt.isNew?' new':'')+'">'+(p.appt.isNew?'Новый · ':'')+'Запись: '+aptWhen(p.appt)+' '+p.appt.t+'</span>':'';
+    var b=el('button','prow',avatar(p.id,p.name,40)+'<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+'</span>'+ap+'</div><div class="muted">'+age+' лет</div><div>'+(v.d?'<span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d===DTODAY?'сегодня':v.d===DYEST?'вчера':v.d)+'</span> · '+v.type:'<span class="muted">снимков нет</span>')+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):p.appt?esc(p.appt.why):'')+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
+    b.type='button';b.style.setProperty('--i',Math.min(n,12));b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
   if(!n)L.innerHTML='<div class="empty">'+(P.length?'Никого не нашли по запросу.':'Пациентов пока нет.')+'<br><br><button class="btn pri" id="e1">Загрузить КЛКТ</button> <button class="btn" id="e2">Открыть демо-кейс</button></div>';
   if($('#e1'))$('#e1').addEventListener('click',function(){openDrawer(null)});
   if($('#e2'))$('#e2').addEventListener('click',function(){$('#hDemo').click()});
@@ -1148,7 +1220,7 @@ function drawFind(){
       var open=sel===f.id,r=C.rev[f.id],lv=lvOf(f),fo=!ro&&openForm&&openForm.id===f.id;
       var c=el('div','fcard'+(open?' open':'')+(r==='ok'?' ok':'')+(r==='rej'?' rej':''));
       c.innerHTML='<div class="f1"><div class="hd"><span class="lv '+lv+'">'+LV[lv]+'</span> <span class="tn">зуб '+f.tooth+'</span><span class="tx">'+esc(ftext(f))+'</span></div>'+(ro?'':'<div class="ic"><button class="y'+(r==='ok'?' on':'')+'" title="Подтвердить" aria-label="Подтвердить">✓</button><button class="x'+(r==='rej'?' on':'')+'" title="Отклонить" aria-label="Отклонить">✕</button></div>')+'</div>'
-       +'<div class="f2"><div class="ai">'+esc(f.ai)+'</div><div class="meta"><span class="mchip">'+esc(f.m)+'</span><span class="rel">надёжность: '+f.rel+'</span></div>'+(r&&C.comm[f.id]?'<div class="fc">Врач: '+esc(C.comm[f.id])+'</div>':'')+'</div>'
+       +'<div class="f2"><div class="ai">'+esc(f.d)+'</div>'+(r&&C.comm[f.id]?'<div class="fc">Врач: '+esc(C.comm[f.id])+'</div>':'')+'</div>'
        +(open?'<div class="f3"><div class="acts"><button class="btn sm" data-a="iso">'+(isolated===f.tooth?'Показать все зубы':'Изолировать зуб')+'</button></div><details><summary>На чём основано</summary><p style="margin:6px 0 0">'+esc(f.why)+'</p><p style="margin:6px 0 0;color:var(--muted)">Оговорка: '+esc(f.cav)+'</p></details></div>':'')
        +(fo?'<div class="form"><label>Ваш комментарий (от 10 символов)</label><textarea id="cmt" placeholder="Что вы увидели и почему так решили"></textarea><label>Уровень</label><select id="lvSel"><option value="k">Крит</option><option value="v">Важн</option><option value="n">Незнач</option></select><label class="cb"><input type="checkbox" id="fixT"> Поправить формулировку</label><input type="text" id="fixV" hidden><div class="err" id="err"></div><button class="btn pri sm" id="sv">'+(openForm.kind==='ok'?'Подтвердить':'Отклонить')+'</button> <button class="btn sm ghost" id="cn">Отмена</button></div>':'');
       c.style.setProperty('--i',fi++);p.appendChild(c);
@@ -1183,7 +1255,7 @@ function drawMap(){
   $('#mm').innerHTML=row(UP,'g',false)+row(LO,'',true);$$('#mm button').forEach(function(b){b.addEventListener('click',function(){pickTooth(+b.dataset.n)})});
 }
 $('#pp').addEventListener('click',function(){paused=!paused;controls.autoRotate=!paused&&V.speed>0;this.textContent=paused?'▶ вращение':'❚❚ вращение'});
-$('#scnBtn').addEventListener('click',function(){$('#pnl').hidden=!$('#pnl').hidden});
+$('#scnBtn').addEventListener('click',function(){var h=!$('#pnl').hidden;$('#pnl').hidden=h;var cm=$('.cmain');cm.classList.add('sc-anim');cm.classList.toggle('sc-open',!h);setTimeout(function(){cm.classList.remove('sc-anim')},350);this.setAttribute('aria-expanded',String(!h));setTimeout(function(){window.dispatchEvent(new Event('resize'))},30)});
 $$('#pnl [data-l]').forEach(function(i){i.addEventListener('change',function(){V[i.dataset.l]=i.checked;applyMode()})});
 $('#rOp').addEventListener('input',function(){V.boneOp=this.value/100;$('#opv').textContent=this.value+'%';applyMode()});
 $('#rTop').addEventListener('input',function(){V.toothOp=this.value/100;$('#topv').textContent=this.value+'%';applyMode()});
@@ -1232,18 +1304,20 @@ function answer(q){
   return {h:'Не понял вопрос. Назовите зуб или находку.',s:[]}}
 var thinking=false,typeT=null;
 function hist(){if(!S.msgs[cur]||!S.msgs[cur].length){S.msgs[cur]=[firstMsg()];save()}return S.msgs[cur]}
+function syncSend(){var t=$('#chta'),b=$('#chsend');if(t&&b)b.disabled=!t.value.trim()}
 function initMic(){
+  $('#chta').addEventListener('input',syncSend);$('#chform').addEventListener('submit',function(){setTimeout(syncSend,0)});syncSend();
   var b=$('#chmic'),SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){b.hidden=true;return}
-  var rec=null,on=false;
+  var rec=null,on=false;window.stopMic=function(){if(on)rec.stop()};
   b.addEventListener('click',function(){
     if(on){rec.stop();return}
-    rec=new SR();rec.lang='ru-RU';rec.interimResults=true;rec.continuous=false;
+    rec=new SR();rec.lang='ru-RU';rec.interimResults=true;rec.continuous=true;
     var base=$('#chta').value;
-    rec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$('#chta').value=(base?base+' ':'')+t};
-    rec.onstart=function(){on=true;b.classList.add('rec')};
-    rec.onend=function(){on=false;b.classList.remove('rec');if($('#chta').value.trim()&&$('#chta').value!==base)$('#chta').focus()};
-    rec.onerror=function(e){on=false;b.classList.remove('rec');if(e.error==='not-allowed')toast('Нет доступа к микрофону')};
+    rec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$('#chta').value=(base?base+' ':'')+t;syncSend()};
+    rec.onstart=function(){on=true;b.classList.add('rec');$('#chta').classList.add('live')};
+    rec.onend=function(){on=false;b.classList.remove('rec');$('#chta').classList.remove('live');syncSend();if($('#chta').value.trim()&&$('#chta').value!==base)$('#chta').focus()};
+    rec.onerror=function(e){on=false;b.classList.remove('rec');$('#chta').classList.remove('live');if(e.error==='not-allowed')toast('Нет доступа к микрофону')};
     rec.start()})}
 function initChat(){
   thinking=false;clearInterval(typeT);
@@ -1270,7 +1344,7 @@ function renderMsgs(animLast){
 function ask(q){
   if(thinking)return;var id=cur;hist().push({w:'me',h:esc(q)});thinking=true;renderMsgs(false);
   setTimeout(function(){var a=answer(q);S.msgs[id].push({w:'bot',h:esc(a.h),s:a.s});thinking=false;save();if(cur===id&&curTab==='chat')renderMsgs(true)},900+Math.random()*600)}
-$('#chform').addEventListener('submit',function(e){e.preventDefault();var t=$('#chta'),v=t.value.trim();if(!v||thinking)return;t.value='';ask(v)});
+$('#chform').addEventListener('submit',function(e){e.preventDefault();var t=$('#chta'),v=t.value.trim();if(!v||thinking)return;if(window.stopMic)window.stopMic();t.value='';ask(v)});
 $('#chta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chform').requestSubmit()}});
 
 /* ---------- план (шаг за шагом, со стрелками) ---------- */
