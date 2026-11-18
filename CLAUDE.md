@@ -58,9 +58,12 @@ pycocotools. Реальный набор — в `.venv`; при необходи
 
 ## Сервисы
 
+Все скрипты запуска и установки лежат в `scripts/`; пути внутри них считаются
+от КОРНЯ проекта, а не от папки скрипта, поэтому запускать можно откуда угодно.
+
 ```bash
-start_all.bat            # все четыре сразу
-start_demo.bat           # только демо (:7861)
+scripts\start_all.bat     # все четыре сразу
+scripts\start_demo.bat    # только демо (:7861)
 
 # вручную:
 .venv\Scripts\python.exe research\scripts\demo_server.py     --port 7861
@@ -102,7 +105,7 @@ start_demo.bat           # только демо (:7861)
 - **demo_server.py :7861** — главный: 2D-инференс + весь КЛКТ-функционал.
   FastAPI + `demo_static/index.html` (одна страница, ~1500 строк, three.js с CDN
   через importmap). Слушает `127.0.0.1`; наружу — только через Cloudflare Tunnel
-  (`install_tunnel_service.bat`, запуск от администратора).
+  (`scripts/install_tunnel_service.bat`, запуск от администратора).
 - **annotate_server.py :7862** — менеджер клинических датасетов и проверка
   AI-разметки врачом.
 - **app_ui.py :7860** — старый Gradio-UI на одной модели YOLO12x. Легаси, не
@@ -3559,7 +3562,7 @@ BON  резорбция кости      0.079  НЕ берём — полнот�
 **Состояние на 14.10:** обе половины на месте — служба туннеля
 (`C:\PROGRA~2\cloudflared\cloudflared.exe --config <config.yml> tunnel run`,
 запуск Auto) и задача планировщика `Stomadent` (старт при загрузке, от
-SYSTEM, задержка 30 с, `install_boot_task.bat`).
+SYSTEM, задержка 30 с, `scripts/install_boot_task.bat`).
 
 **ПРОВЕРЕНО перезагрузкой 12.11: демо под SYSTEM поднимается, CUDA в нулевом
 сеансе работает.** Опасение было ровно в этом — там грузятся веса nnU-Net на
@@ -3597,18 +3600,18 @@ SYSTEM, задержка 30 с, `install_boot_task.bat`).
 PowerShell разбирают их по-разному): пути берутся без пробелов —
 `C:\PROGRA~2\...` и `D:\code\dbc\stomadent\...`.
 
-### Что делает установщик (`install_services.bat`)
+### Что делает установщик (`scripts/install_services.bat`)
 
 Автозапуск из папки «Автозагрузка» работает только ПОСЛЕ входа в учётную
 запись. Пока сервер стоит перезагруженный и никто не залогинился, клиника
-видит 530. Поэтому `install_services.ps1` (запуск от администратора, иначе
+видит 530. Поэтому `scripts/install_services.ps1` (запуск от администратора, иначе
 Windows не даст):
 
 * `cloudflared --config <config.yml> service install` — туннель службой,
   автозапуск, перезапуск при падении. Явный `--config` обязателен: служба
   работает от SYSTEM, и профиль у неё свой.
 * задача планировщика `Stomadent` при загрузке от имени SYSTEM, запускает
-  `start_stomadent.bat /auto` с задержкой 30 секунд. Без неё туннель
+  `scripts/start_stomadent.bat /auto` с задержкой 30 секунд. Без неё туннель
   поднимется в пустоту: снаружи вместо 530 будет 502.
 
 Чужой туннель (`gamerly.yml`) службой не делается и не трогается.

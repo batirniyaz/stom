@@ -18,7 +18,7 @@ rem window is invisible to tooling, which is why an earlier attempt looked
 rem like "nothing happens".
 
 setlocal
-set "LOG=%~dp0data\logs\restart_tunnel.log"
+set "LOG=%~dp0..\data\logs\restart_tunnel.log"
 set "CFD=C:\PROGRA~2\cloudflared\cloudflared.exe"
 set "CFG=%USERPROFILE%\.cloudflared\config.yml"
 

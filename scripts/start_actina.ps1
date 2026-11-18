@@ -16,7 +16,9 @@
 # В гит рабочей копии он таким образом попасть не может.
 
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Скрипты лежат в scripts\, а работают с корнем проекта: .venv,
+# data\logs и research\scripts\ — на уровень выше.
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $live = 'D:\code\dbc\stomadent'
 $port = 7871
 $logs = Join-Path $root 'data\logs'

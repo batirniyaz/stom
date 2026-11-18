@@ -17,7 +17,7 @@ rem ASCII ONLY - cmd.exe reads .bat in the OEM codepage (see CLAUDE.md).
 rem No nested quotes needed: D:\code\dbc\stomadent has no spaces.
 
 setlocal
-set "LOG=%~dp0data\logs\boot_task.log"
+set "LOG=%~dp0..\data\logs\boot_task.log"
 set "BAT=%~dp0start_stomadent.bat"
 
 echo ==== %DATE% %TIME% > "%LOG%"

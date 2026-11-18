@@ -22,7 +22,7 @@ rem parsed differently by cmd, sc and PowerShell - another silent-failure
 rem source we already hit.
 
 setlocal
-set "LOG=%~dp0data\logs\fix_tunnel_service.log"
+set "LOG=%~dp0..\data\logs\fix_tunnel_service.log"
 set "CFD=C:\PROGRA~2\cloudflared\cloudflared.exe"
 set "CFG=%USERPROFILE%\.cloudflared\config.yml"
 set "BAT=%~dp0start_stomadent.bat"

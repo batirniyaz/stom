@@ -1,5 +1,5 @@
 @echo off
-cd /d D:\code\dbc\stomadent
+cd /d "%~dp0.."
 start "Stomadent Monitor :8080" /min .venv\Scripts\python.exe research\scripts\monitor_server.py --port 8080
 start "Stomadent Demo :7861" /min .venv\Scripts\python.exe research\scripts\demo_server.py --port 7861
 start "Stomadent UI :7860" /min .venv\Scripts\python.exe research\scripts\app_ui.py --port 7860

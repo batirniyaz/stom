@@ -33,7 +33,7 @@
 # ЧУЖОЙ ТУННЕЛЬ (`gamerly.yml`, другой проект) не трогаем: он запускается сам.
 
 $ErrorActionPreference = "Continue"
-$root  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$here  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $cfdS  = "C:\PROGRA~2\cloudflared\cloudflared.exe"
 $cfd   = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 $cfg   = Join-Path $env:USERPROFILE ".cloudflared\config.yml"
@@ -118,7 +118,7 @@ Say ("[ i] Команда: {0}" -f (Get-CimInstance Win32_Service -Filter "Name=
 
 # ---------- 2. Сервисы при загрузке ----------
 Say ""
-$bat = Join-Path $root "start_stomadent.bat"
+$bat = Join-Path $here "start_stomadent.bat"
 if (-not (Test-Path $bat)) {
     Say "[!!] Нет $bat"
 } else {

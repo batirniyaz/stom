@@ -7,5 +7,5 @@ rem explanation lives in start_actina.ps1 next to the logic.
 rem
 rem This is the EXPERIMENT copy of the project. The clinic demo runs from
 rem D:\code\dbc\stomadent on port 7861 and is not touched by this script.
-cd /d "%~dp0"
+cd /d "%~dp0.."
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start_actina.ps1" %*

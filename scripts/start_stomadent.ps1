@@ -24,7 +24,9 @@ param([switch]$auto)
 if ($auto) { Start-Sleep -Seconds 45 }
 
 $ErrorActionPreference = "Stop"
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Скрипты лежат в scripts\, а работают с корнем проекта: .venv,
+# data\logs и research\scripts\ — на уровень выше.
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $py   = Join-Path $root ".venv\Scripts\python.exe"
 $cfd  = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 $logs = Join-Path $root "data\logs"
