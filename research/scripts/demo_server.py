@@ -1040,6 +1040,13 @@ async def cbct_sign(case_id: str, body: dict = Body(...)):
                       f'{st["total"]}. Подпись — после решения по каждой.',
              "review": st}, status_code=409)
     rev = cbct.sign_case(c, by, str(body.get("note") or "").strip())
+    found = pat.find_by_case(case_id)
+    pat.log_activity(
+        "sign",
+        "Заключение подписано" + (f" · {pat.display_name(found['patient'])}"
+                                  if found else ""),
+        patient_id=(found or {}).get("patient", {}).get("id", ""),
+        case_id=case_id, doctor=by)
     return {"case_id": case_id, "review": rev}
 
 
@@ -2069,8 +2076,20 @@ def api_case_owner(case_id: str) -> dict:
     for st in others:
         st["view_url"] = _study_view_url(st)
         st["current"] = st["id"] == found["study"]["id"]
+    # ЖУРНАЛ. Эта ручка вызывается ровно один раз при открытии разбора и
+    # единственная знает и кейс, и пациента, — поэтому событие пишется
+    # здесь, а не на фронте: фронту пришлось бы верить на слово.
+    pat.log_activity("open",
+                     f"Разбор открыт · {pat.display_name(found['patient'])}",
+                     patient_id=found["patient"]["id"], case_id=case_id)
     return {"patient": found["patient"], "study": found["study"],
             "studies": others}
+
+
+@app.get("/api/activity")
+def api_activity(limit: int = 12) -> dict:
+    """Последние действия: что делали с картами и когда."""
+    return {"activity": pat.recent_activity(limit)}
 
 
 @app.get("/api/patients/{pid}/summary")

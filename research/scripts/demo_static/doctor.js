@@ -158,12 +158,11 @@
        живёт. Окно `openProfile` оставлено — им пользуются экраны, где
        уводить врача со снимка нельзя. */
     btn.onclick = () => { location.href = "/profile"; };
-    const out = document.createElement("button");
-    out.className = "out";
-    out.type = "button";
-    out.textContent = "Выйти";
-    out.onclick = () => { actinaAuth.end(); location.href = "/"; };
-    box.append(btn, out);
+    /* Кнопки «Выйти» в шапке больше нет: выход живёт в профиле, красной
+       кнопкой внизу, как в макете. Две точки выхода на экране — это две
+       вероятности выйти случайно между пациентами, а сеанс врача на
+       приёме прерывать нечем. */
+    box.append(btn);
   }
 
   window.actinaDoctor = { read, save, name, openProfile, mountWho };

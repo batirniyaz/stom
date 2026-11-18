@@ -98,6 +98,15 @@
   }
   .lang button.on { color: var(--accent); border-color: rgba(47,196,178,.45);
                     background: rgba(47,196,178,.12); }
+  .acts-list { display: flex; flex-direction: column; gap: 0; font-size: 13px; }
+  .act {
+    display: grid; grid-template-columns: 96px 1fr; gap: 12px;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+  }
+  .act:last-child { border-bottom: 0; }
+  .act time { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .act .what { min-width: 0; }
+  .acts-empty { color: var(--muted); font-size: 12.5px; }
   .out-row { margin-top: 16px; }
   .btn-out {
     font: inherit; font-size: 13px; padding: 9px 16px; border-radius: 10px;
@@ -214,13 +223,12 @@
       </div>
 
       <div class="card">
-        <h2>Что считает профиль</h2>
-        <div style="font-size:12.5px;color:var(--muted);line-height:1.6">
-          Числа выше собраны по вашим пациентам: сколько снимков ждут
-          разбора, сколько находок вы подтвердили и отклонили, сколько
-          заключений подписано. Журнала действий система не ведёт —
-          показывать «последние действия» ей неоткуда, и выдумывать их мы
-          не стали.
+        <h2>Последние действия</h2>
+        <div id="acts" class="acts-list">—</div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:12px">
+          Журнал пишется на сервере: открытие разбора и подпись заключения.
+          Записи не меняются и не удаляются — у медицинского инструмента
+          должно быть видно, что с картой делали и когда.
         </div>
       </div>
     </div>
@@ -331,6 +339,28 @@
     syncLang();
   });
   syncLang();
+
+  /* ---- журнал действий ---- */
+  (async () => {
+    const box = $("acts");
+    let rows = [];
+    try {
+      const r = await fetch("/api/activity?limit=10");
+      rows = (await r.json()).activity || [];
+    } catch (e) { /* ниже покажем, что пусто */ }
+    if (!rows.length) {
+      box.innerHTML = `<div class="acts-empty">Пока ничего: журнал
+        заполняется, когда открываете разбор и подписываете заключение.</div>`;
+      return;
+    }
+    box.innerHTML = rows.map(a => {
+      const d = new Date(a.at);
+      const when = isNaN(d) ? "" : d.toLocaleString("ru-RU",
+        { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      return `<div class="act"><time>${when}</time>
+        <div class="what">${String(a.text).replace(/[<>&]/g, "")}</div></div>`;
+    }).join("");
+  })();
 
   /* ---- счётчики работы: СЧИТАЮТСЯ, а не рисуются ---- */
   (async () => {

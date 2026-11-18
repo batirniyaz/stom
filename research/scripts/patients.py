@@ -108,6 +108,23 @@ CREATE TABLE IF NOT EXISTS appointments (
 );
 CREATE INDEX IF NOT EXISTS appt_patient ON appointments(patient_id, at);
 
+-- ЖУРНАЛ ДЕЙСТВИЙ. Кто и когда открыл разбор, отметил находку, подписал
+-- заключение. Нужен не для красоты в профиле: у медицинского инструмента
+-- должно быть видно, что с картой пациента делали и когда. Это же первое,
+-- что спросят при разборе спорного случая.
+--
+-- Пишем СОБЫТИЕ, а не состояние: запись не меняется и не удаляется.
+CREATE TABLE IF NOT EXISTS activity (
+    id          TEXT PRIMARY KEY,
+    at          TEXT NOT NULL,
+    kind        TEXT NOT NULL,          -- open | review | sign
+    text        TEXT NOT NULL,
+    patient_id  TEXT NOT NULL DEFAULT '',
+    case_id     TEXT NOT NULL DEFAULT '',
+    doctor      TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS activity_at ON activity(at);
+
 CREATE TABLE IF NOT EXISTS studies (
     id          TEXT PRIMARY KEY,
     patient_id  TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -367,6 +384,45 @@ def patient_appointments(patient_id: str) -> list[dict]:
         rows = con.execute("SELECT * FROM appointments WHERE patient_id = ?"
                            " ORDER BY at", (patient_id,)).fetchall()
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------- журнал
+
+def log_activity(kind: str, text: str, *, patient_id: str = "",
+                 case_id: str = "", doctor: str = "") -> None:
+    """Записать событие. Молча: журнал не должен ронять основное действие.
+
+    Если запись в журнал упадёт, врач не должен из-за этого потерять
+    открытый разбор или подпись — поэтому исключение здесь гасится.
+    """
+    try:
+        with connect() as con:
+            con.execute(
+                "INSERT INTO activity (id, at, kind, text, patient_id,"
+                " case_id, doctor) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ("e_" + secrets.token_hex(5), now(), kind, text[:200],
+                 patient_id or "", case_id or "", (doctor or "")[:80]))
+    except sqlite3.Error:
+        pass
+
+
+def recent_activity(limit: int = 12) -> list[dict]:
+    """Последние события. Повторы одного и того же разбора подряд
+    схлопываются: врач крутит снимок, обновляет страницу, и журнал из
+    двадцати одинаковых строк читать невозможно."""
+    with connect() as con:
+        rows = con.execute("SELECT * FROM activity ORDER BY at DESC LIMIT ?",
+                           (int(limit) * 4,)).fetchall()
+    out: list[dict] = []
+    for r in rows:
+        d = dict(r)
+        prev = out[-1] if out else None
+        if prev and prev["kind"] == d["kind"] and prev["text"] == d["text"]:
+            continue
+        out.append(d)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def set_archived(patient_id: str, archived: bool) -> bool:
