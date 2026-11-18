@@ -127,6 +127,21 @@
     font-style: italic; color: #c1cad6; font-size: 13px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .fchips { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 14px; }
+  .fchip {
+    font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+    cursor: pointer; display: inline-flex; gap: 7px; align-items: center;
+  }
+  .fchip b { font-weight: 600; font-size: 12px; padding: 0 6px;
+             border-radius: 999px; background: rgba(255,255,255,.07);
+             color: var(--text); }
+  .fchip:hover { border-color: var(--accent); color: var(--text); }
+  .fchip[aria-selected="true"] { background: rgba(47,196,178,.14);
+    border-color: var(--accent); color: var(--accent); }
+  .fchip[aria-selected="true"] b { background: rgba(47,196,178,.25);
+    color: var(--accent); }
+
   .prt { text-align: right; font-size: 12.5px; white-space: nowrap; }
   /* Состояние разбора — капителью: это служебная строка, и она не должна
      спорить с жалобой пациента за внимание. */
@@ -404,12 +419,25 @@
     <template v-if="view === 'list'">
       <div class="phead">
         <h1>{{ t("Пациенты") }}</h1>
-        <span class="phead-n" v-if="patients.length">{{ patients.length }}</span>
+        <span class="phead-n" v-if="shown.length">{{ shown.length }}</span>
         <span style="flex:1"></span>
         <button class="btn nowrap" @click="newOpen = !newOpen">+ {{ t("Новый пациент") }}</button>
       </div>
       <input class="field search" v-model="query" @input="searchDebounced"
              :placeholder="t('Поиск по фамилии или номеру карты')">
+
+      <!-- ФИЛЬТРЫ СПИСКА. На приёме врач ищет не «кого-нибудь», а один из
+           нескольких срезов: кого сегодня снимали, что осталось разобрать,
+           что уже подписано. Со счётчиком у каждого: ноль рядом с
+           «Подписано» — сам по себе ответ, и жать не нужно.
+           Фильтров ровно столько, сколько ЕСТЬ В ДАННЫХ: записи на приём и
+           архива у нас нет, и рисовать их пустыми было бы выдумкой. -->
+      <div class="fchips" role="tablist" aria-label="Фильтр пациентов">
+        <button v-for="f in FILTERS" :key="f.key" class="fchip" role="tab"
+                :aria-selected="filter === f.key" @click="setFilter(f.key)">
+          {{ t(f.label) }} <b>{{ counts[f.key] || 0 }}</b>
+        </button>
+      </div>
 
       <!-- Панель справа, а не форма в ленте: список под ней остаётся на
            месте, и видно, куда вернёшься. Встроенная карточка раздвигала
@@ -437,8 +465,8 @@
         </div>
       </aside>
 
-      <div class="plist" v-if="patients.length">
-        <button class="prow" v-for="p in patients" :key="p.id" @click="open(p.id)">
+      <div class="plist" v-if="shown.length">
+        <button class="prow" v-for="p in shown" :key="p.id" @click="open(p.id)">
           <span class="av" :style="avStyle(p)">{{ initials(p.display) }}</span>
           <span class="pnm">
             <span class="pnm-top">
@@ -449,7 +477,7 @@
           </span>
           <span class="page-col">{{ p.age ? p.age + " лет" : "—" }}</span>
           <span class="pwhen">
-            <b>{{ fmtDate((p.last && p.last.at) || p.last_study_at) }}</b>
+            <b>{{ dayWord((p.last && p.last.at) || p.last_study_at) }}</b>
             <!-- Короткий ярлык: полный («Панорамный снимок (ОПТГ)») не
                  влезает в колонку и наезжает на жалобу. -->
             <template v-if="p.last"> · {{ kindShort(p.last.kind) }}</template>
@@ -470,7 +498,9 @@
         </button>
       </div>
       <div class="empty" v-else-if="!loading">
-        {{ query ? 'По запросу никого не найдено' : 'Пациентов пока нет — заведите первого' }}
+        {{ query ? 'По запросу никого не найдено'
+           : filter !== 'all' ? 'В этом срезе никого нет'
+           : 'Пациентов пока нет — заведите первого' }}
       </div>
       <div class="empty" v-else>{{ t("Загрузка…") }}</div>
     </template>
@@ -868,7 +898,7 @@ createApp({
       patient: null, studies: [], registration: {}, summary: {},
       profile: null, noteDraft: "", noteState: "",
       plan: {}, planLoaded: false, composed: null, composing: false,
-      composeError: "", openedKeys: [],
+      composeError: "", openedKeys: [], filter: "all",
       upOpen: false, uploading: false, upError: "", upKind: "", files: [],
       upDone: 0,
       dragOver: false,
@@ -1210,6 +1240,85 @@ createApp({
     const REVIEW_READY = p => p.last && p.last.review && p.last.review.total
                               && p.last.review.reviewed >= p.last.review.total;
     function reviewDone(p) { return !!REVIEW_READY(p); }
+    /* СРЕЗЫ СПИСКА.
+     *
+     * Каждый считается ИЗ ДАННЫХ, которые у нас и правда есть: дата
+     * последнего исследования, его статус и отметки врача. Записи на
+     * приём и признака «архив» в базе нет, поэтому таких срезов тут нет —
+     * нарисовать их пустыми значило бы обещать то, чего не считаем.
+     */
+    const FILTERS = [
+      { key: "all",    label: "Все" },
+      { key: "today",  label: "Сегодня" },
+      { key: "yday",   label: "Вчера" },
+      { key: "wait",   label: "Ждут разбора" },
+      { key: "signed", label: "Подписано" },
+      { key: "busy",   label: "В обработке" },
+      { key: "none",   label: "Без снимков" },
+    ];
+
+    function dayStart(shift = 0) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - shift);
+      return d.getTime();
+    }
+
+    /* Дата словом. В списке на один экран три одинаковых «18.11.2026»
+       ничего не различают, а «сегодня» и «вчера» врач читает без
+       пересчёта. Дальше вчерашнего — обычная дата. */
+    function dayWord(iso) {
+      if (!iso) return "";
+      const t = new Date(iso).getTime();
+      if (isNaN(t)) return fmtDate(iso);
+      if (t >= dayStart(0)) return "сегодня";
+      if (t >= dayStart(1)) return "вчера";
+      return fmtDate(iso);
+    }
+
+    function inFilter(p, key) {
+      const l = p.last;
+      if (key === "all") return true;
+      if (key === "none") return !l;
+      if (!l) return false;
+      const t = new Date(l.at || p.last_study_at).getTime();
+      const r = l.review || {};
+      switch (key) {
+        case "today":  return t >= dayStart(0);
+        case "yday":   return t >= dayStart(1) && t < dayStart(0);
+        // «Ждут разбора» — снимок посчитан, а врач его ещё не прошёл.
+        // Снимок без находок сюда не идёт: разбирать нечего.
+        case "wait":   return l.status === "ready" && !!r.total
+                              && !r.signed && (r.reviewed || 0) < r.total;
+        case "signed": return !!r.signed;
+        // Всё, что ещё считается или упало: врач ждёт результата.
+        case "busy":   return ["queued", "processing", "uploaded", "error"]
+                              .includes(l.status);
+        default: return true;
+      }
+    }
+
+    const counts = computed(() => {
+      const out = {};
+      for (const f of FILTERS) {
+        out[f.key] = state.patients.filter(p => inFilter(p, f.key)).length;
+      }
+      return out;
+    });
+
+    const shown = computed(() =>
+      state.patients.filter(p => inFilter(p, state.filter)));
+
+    /* Срез — в адресе: врач присылает коллеге ссылку «вот что осталось
+       разобрать», а не объясняет, какую кнопку нажать. Тот же принцип,
+       что у вкладок вьюера и разделов карточки. */
+    function setFilter(key) {
+      state.filter = key;
+      const u = new URL(location.href);
+      key === "all" ? u.searchParams.delete("f") : u.searchParams.set("f", key);
+      history.replaceState(null, "", u);
+    }
+
     function rowStatus(p) {
       const l = p.last;
       if (!l) return t("Снимков нет");
@@ -1276,7 +1385,12 @@ createApp({
     }
 
     onMounted(() => {
-      state.query = new URLSearchParams(location.search).get("q") || "";
+      const qp = new URLSearchParams(location.search);
+      state.query = qp.get("q") || "";
+      // Срез из адреса: ссылка «вот что осталось разобрать» должна
+      // открываться тем же экраном, который видел отправитель.
+      const f = qp.get("f");
+      if (FILTERS.some(x => x.key === f)) state.filter = f;
       draw();
       addEventListener("popstate", draw);
     });
@@ -1396,6 +1510,7 @@ createApp({
 
     return {
       ...toRefs(state), coverage, subtitle, chartRows, hasTooth, toothTitle,
+      FILTERS, counts, shown, setFilter, dayWord,
       planStages, composePlan, t, lang,
       planCount, kindsLine, findingGroups, isOpen, toggle,
       go, open, jump, createPatient, searchDebounced, upload, onPick, onDrop,
