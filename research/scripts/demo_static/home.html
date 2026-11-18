@@ -53,9 +53,21 @@
   }
   .hcopy .lead { font-size: clamp(16px, 1.6vw, 20px); color: #c1cad6; margin: 0 0 26px; }
 
+  .hero-modes { display: flex; gap: 4px; margin: -14px 0 10px; }
+  .hero-modes[hidden] { display: none; }
+  .hero-modes button {
+    font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: none; color: var(--muted);
+    cursor: pointer;
+  }
+  .hero-modes button:hover { color: var(--text); }
+  .hero-modes button.on { color: var(--accent);
+    border-color: rgba(47,196,178,.45); background: rgba(47,196,178,.12); }
+  @media (max-width: 760px) { .hero-modes { display: none; } }
+
   .hero-legend {
     display: flex; flex-wrap: wrap; gap: 7px 14px;
-    margin: -16px 0 24px; font-size: 12.5px; color: var(--muted);
+    margin: 0 0 24px; font-size: 12.5px; color: var(--muted);
   }
   .hero-legend[hidden] { display: none; }
   .hero-legend i { width: 9px; height: 9px; border-radius: 50%;
@@ -172,6 +184,15 @@
       <div id="f-acc">Точность распознавания зубов измерена на независимой выборке</div>
       <div>Каждая находка несёт основание: что измерено, сколько и при каком пороге</div>
     </div>
+    <!-- Два взгляда на один снимок. «Находки» отвечают на вопрос, что
+         система нашла; «тип зуба» — на вопрос, что она вообще различает.
+         Второе важно показать отдельно: распознать тридцать зубов и
+         назвать каждый по номеру — это и есть основа, на которой стоят
+         все измерения, и на раскраске находок её не видно. -->
+    <div class="hero-modes" id="hero-modes" hidden>
+      <button data-mode="find" class="on">Находки</button>
+      <button data-mode="type">Тип зуба</button>
+    </div>
     <!-- Легенда: что означают цвета зубов на модели. Без неё раскраска —
          украшение; с ней на первом экране видно, ЧТО именно нашли. -->
     <div class="hero-legend" id="hero-legend" hidden></div>
@@ -215,6 +236,7 @@
 <!-- Цвета по типу находки — тот же справочник, что красит зубную карту в
      разборе. Свои цвета на заставке разошлись бы с ней при первой правке. -->
 <script src="/finding-marks.js"></script>
+<script src="/tooth-types.js"></script>
 <script>
 /* ---- вход ---- */
 const $h = id => document.getElementById(id);
@@ -436,6 +458,7 @@ async function hero(caseId) {
      заставку только засоряет: разбирают их во вьюере. */
   const SHOW = ["mandible", "maxilla", "nerve"];
   const usedMarks = new Set();      // что показывать в легенде
+  const teethMeshes = [];           // зубы: по ним переключается раскраска
   const NERVE = 0xf08aa6;          // тот же розовый, что в макете
   root.traverse(o => {
     if (!o.isMesh) return;
@@ -473,6 +496,7 @@ async function hero(caseId) {
     const mark = tooth && window.findingMarks
       ? findingMarks.markOf(codes[fdi]) : null;
     if (mark) usedMarks.add(mark.label);
+    if (tooth) teethMeshes.push({ mesh: o, fdi, mark });
     o.material = tooth
       ? new THREE.MeshStandardMaterial({
           color: mark ? new THREE.Color(mark.color) : 0xf6f3ee,
@@ -621,13 +645,47 @@ async function hero(caseId) {
   /* Легенда строится по ТОМУ, ЧТО РЕАЛЬНО ПОКРАШЕНО на этой модели.
      Полный список типов находок на заставке означал бы, что мы их все
      здесь и нашли, — а это другой снимок и другой пациент. */
-  if (window.findingMarks && usedMarks.size) {
+  /* ДВА РЕЖИМА РАСКРАСКИ.
+
+     «Находки» — что система нашла на этом снимке. «Тип зуба» — что она
+     вообще различает: тридцать зубов, у каждого свой номер и своя роль в
+     ряду. Второе на раскраске находок не видно, а именно на нём стоят все
+     измерения: расстояние считается ДО зуба 46, а не «до какого-то». */
+  const ENAMEL = new THREE.Color(0xf6f3ee);
+  function paintTeeth(mode) {
     const box = $("hero-legend");
-    box.innerHTML = findingMarks.legend()
-      .filter(m => usedMarks.has(m.label))
+    for (const t of teethMeshes) {
+      let color = ENAMEL, lit = false;
+      if (mode === "find" && t.mark) { color = new THREE.Color(t.mark.color); lit = true; }
+      if (mode === "type" && window.toothTypes) {
+        const ty = toothTypes.typeOf(t.fdi);
+        if (ty) { color = new THREE.Color(ty.color); lit = true; }
+      }
+      t.mesh.material.color.copy(color);
+      t.mesh.material.roughness = lit ? 0.42 : 0.38;
+    }
+    // Легенда строится по тому, что РЕАЛЬНО покрашено: полный список
+    // типов находок означал бы, что мы их все здесь и нашли.
+    const items = mode === "type" && window.toothTypes
+      ? toothTypes.TYPES.map(x => ({ color: x.color, label: x.label }))
+      : (window.findingMarks ? findingMarks.legend()
+          .filter(m => usedMarks.has(m.label)) : []);
+    box.innerHTML = items
       .map(m => `<span><i style="background:${m.color}"></i>${m.label}</span>`)
       .join("");
-    box.hidden = false;
+    box.hidden = !items.length;
+  }
+
+  if (teethMeshes.length) {
+    const modes = $("hero-modes");
+    modes.hidden = false;
+    modes.addEventListener("click", ev => {
+      const b = ev.target.closest("button[data-mode]");
+      if (!b) return;
+      modes.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      paintTeeth(b.dataset.mode);
+    });
+    paintTeeth("find");
   }
 
   $("hload").hidden = true;

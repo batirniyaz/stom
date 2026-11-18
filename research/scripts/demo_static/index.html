@@ -1283,6 +1283,18 @@
     animation: scslide .25s both;
   }
   .scside[hidden] { display: none; }
+  .tcolor { padding: 9px 13px 2px; }
+  .tcolor-h { font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+  .tcolor-seg { display: flex; gap: 4px; }
+  .tcolor-seg button {
+    flex: 1 1 0; font: inherit; font-size: 11.5px; padding: 5px 0;
+    border-radius: 7px; border: 1px solid var(--line); background: none;
+    color: var(--muted); cursor: pointer;
+  }
+  .tcolor-seg button:hover { color: var(--text); }
+  .tcolor-seg button.on { color: var(--accent);
+    border-color: rgba(47,196,178,.45); background: rgba(47,196,178,.12); }
+
   .views { display: flex; gap: 5px; padding: 9px 13px;
            border-bottom: 1px solid var(--line); }
   .views button {
@@ -1370,6 +1382,7 @@
 <script src="/doctor.js"></script>
 <script src="/patient-bar.js"></script>
 <script src="/finding-marks.js"></script>
+<script src="/tooth-types.js"></script>
 
 <!-- Шапка по макету: знак, путь к пациентам, врач. Вкладок модальностей
      («2D ОПТГ», «3D скан») здесь больше нет — в показе один трек, КЛКТ, и
@@ -4332,7 +4345,10 @@ const TOOTH_ENAMEL = "#efe7d8";
 // перекрывает зубной ряд и врачу на первом экране не нужна. Включается
 // галочкой, как и всё остальное.
 const HIDDEN_AT_START = new Set(["pharynx"]);
-let quadrantColors = false;
+/* Режим раскраски зубов: enamel | find | type | quad. Был булев
+   «цвет по квадрантам», но вопросов к цвету оказалось четыре, а не два
+   (см. buildStructPanel). */
+let toothColorMode = "enamel";
 const TRANSLUCENT = new Set(["mandible", "maxilla", "sinus", "pharynx"]);
 
 let renderer = null, scene = null, camera = null, controls = null;
@@ -4873,7 +4889,7 @@ async function loadMesh(caseId) {
         o.userData.quadColor = "#" + (QUAD_COLORS[(fdi / 10) | 0] || 0xf5f0e6)
           .toString(16).padStart(6, "0");
         o.userData.enamelColor = TOOTH_ENAMEL;
-        color = quadrantColors ? o.userData.quadColor : TOOTH_ENAMEL;
+        color = TOOTH_ENAMEL;      // режим применится ниже, одним проходом
       }
       const translucent = TRANSLUCENT.has(key);
       // зубы тоже делаем прозрачно-способными: рентгенолог просил видеть
@@ -4957,6 +4973,7 @@ async function loadMesh(caseId) {
     });
 
     scene.add(meshRoot);
+    applyToothColors();            // режим раскраски пережил смену кейса
     applyToothGloss(+$c("teeth-gloss-slider").value);   // ползунок пережил смену кейса
     // Пульпа должна встать в тон зубам сразу, а не после первого движения
     // ползунка: кейс мог открыться с уже приглушёнными зубами.
@@ -5162,19 +5179,57 @@ function buildStructPanel() {
     });
     box.appendChild(row);
   }
+  /* ЧЕМ КРАСИТЬ ЗУБЫ — четыре ответа на четыре разных вопроса.
+
+     «Эмаль» — как зуб выглядит; с этим врач показывает пациенту.
+     «Находки» — что нашли и какого типа, те же цвета, что на заставке и
+     на зубной карте.
+     «Тип» — что система вообще различает: резец, клык, премоляр, моляр.
+     «Квадранты» — проверка нумерации: перепутанную сторону видно сразу,
+     потому что половина ряда окрашивается чужим цветом.
+
+     Переключателем, а не четырьмя галочками: режимы исключают друг друга,
+     и две включённые галочки означали бы цвет, которого нет. */
   if (groupMeshes.teeth) {
-    const row = document.createElement("label");
-    row.className = "struct-row";
-    row.innerHTML = `<input type="checkbox"${quadrantColors ? " checked" : ""}>
-      <span class="struct-dot" style="background:#93c5fd"></span>Цвет по квадрантам`;
-    row.querySelector("input").addEventListener("change", e => {
-      quadrantColors = e.target.checked;
-      (groupMeshes.teeth || []).forEach(m => {
-        const c = quadrantColors ? m.userData.quadColor : m.userData.enamelColor;
-        if (c) m.material.color.set(c);
-      });
+    const wrap = document.createElement("div");
+    wrap.className = "tcolor";
+    wrap.innerHTML = `<div class="tcolor-h">Цвет зубов</div>
+      <div class="tcolor-seg">
+        ${[["enamel", "Эмаль"], ["find", "Находки"],
+           ["type", "Тип"], ["quad", "Квадранты"]]
+          .map(([k, t]) => `<button data-c="${k}"${
+            toothColorMode === k ? ' class="on"' : ""}>${t}</button>`).join("")}
+      </div>`;
+    wrap.addEventListener("click", ev => {
+      const b = ev.target.closest("button[data-c]");
+      if (!b) return;
+      wrap.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      toothColorMode = b.dataset.c;
+      applyToothColors();
     });
-    box.appendChild(row);
+    box.appendChild(wrap);
+  }
+}
+
+/* Перекрасить зубы по выбранному режиму. Цвета берутся из тех же
+   справочников, что на заставке и в легенде зубной карты: своя копия
+   развела бы один и тот же тип находки по разным цветам на разных
+   экранах. */
+function applyToothColors() {
+  const codes = (curInfo && curInfo.teeth_codes) || {};
+  for (const m of (groupMeshes.teeth || [])) {
+    const fdi = parseInt((m.name || "").split("_")[1], 10);
+    let c = m.userData.enamelColor || TOOTH_ENAMEL;
+    if (toothColorMode === "quad" && m.userData.quadColor) {
+      c = m.userData.quadColor;
+    } else if (toothColorMode === "find" && window.findingMarks) {
+      const mark = findingMarks.markOf(codes[String(fdi)]);
+      if (mark) c = mark.color;
+    } else if (toothColorMode === "type" && window.toothTypes) {
+      const ty = toothTypes.typeOf(fdi);
+      if (ty) c = ty.color;
+    }
+    m.material.color.set(c);
   }
 }
 
@@ -5368,6 +5423,8 @@ $c("scene-reset").onclick = () => {
   $c("bone-wire").dispatchEvent(new Event("change"));
   $c("tooth-labels-on").checked = false;
   $c("tooth-labels-on").dispatchEvent(new Event("change"));
+  toothColorMode = "enamel";
+  applyToothColors();
   buildStructPanel();                 // видимость групп — как при открытии
   dimBone(false);
   viewTo("front");
