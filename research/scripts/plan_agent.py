@@ -52,7 +52,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # кириллица. Меняется переменной окружения, чтобы не править код.
 PROVIDER = os.environ.get("STOMADENT_LLM", "gemini")
 # СПИСОК моделей, а не одна: на бесплатном тарифе они то снимаются, то
-# отвечают 503 «high demand». Проверено 07.09.2026 на ключе клиники:
+# отвечают 503 «high demand». Проверено на ключе клиники:
 #   gemini-2.0-flash — снята («no longer available»)
 #   gemini-3.6-flash, gemini-3.8-flash — 503
 #   gemini-3.5-flash, gemini-flash-lite-latest, gemini-2.5-flash-lite — отвечают
