@@ -3308,6 +3308,8 @@ async function openToothCard(fdi) {
 let camFly = null;
 let sceneCenter = null;     // центр челюсти: от него считается «наружу»
 let homeCam = null;         // общий вид, к которому возвращает сброс
+let homeZoom = 1;           // и его масштаб: в параллельной проекции
+                            // приближение живёт в zoom, а не в расстоянии
 
 /* ================= один зуб отдельно =================
 
@@ -3331,6 +3333,16 @@ function isolateTooth(fdi) {
     visBeforeIsolate = null;
     isolatedTooth = null;
     syncIsolateUi();
+    /* Возвращаем и КАДР, а не только видимость. В изоляции камера стоит
+       вплотную к одному зубу; показать после выхода весь ряд с той же
+       крупностью — значит вывалить врача в упор на чужие коронки. */
+    if (homeCam && camera && controls) {
+      camFly = { t: 0, n: 55, p0: camera.position.clone(),
+                 pm: camera.position.clone().lerp(homeCam, 0.5),
+                 p1: homeCam.clone(), z0: camera.zoom, z1: homeZoom,
+                 c0: controls.target.clone(),
+                 c1: (sceneCenter || controls.target).clone() };
+    }
     return;
   }
   const keep = meshRoot.getObjectByName(`tooth_${fdi}`);
@@ -3346,7 +3358,12 @@ function isolateTooth(fdi) {
   isolatedTooth = fdi;
   syncIsolateUi();
   const box = new THREE.Box3().setFromObject(keep);
-  flyToBox(box, Math.max(box.getSize(new THREE.Vector3()).length(), 6) * 2.6);
+  /* Крупнее, чем при обычном наведении (множитель 4.2): изоляцию включают,
+     чтобы показать пациенту ОДИН зуб, и он должен занимать кадр. Прежний
+     множитель 2.6 подбирался под широкий объектив, который сам раздувал
+     ближнее; в честном масштабе зуб при нём занимал меньше половины
+     высоты кадра. Замер: 1.7 даёт около двух третей. */
+  flyToBox(box, Math.max(box.getSize(new THREE.Vector3()).length(), 6) * 1.7);
 }
 
 function syncIsolateUi() {
@@ -3377,7 +3394,14 @@ function flyToBox(box, dist) {
   const k = Math.max(35, p0.distanceTo(p1) * 0.55);
   const pm = mid.add(out.multiplyScalar(k)).add(new THREE.Vector3(0, k * 0.45, 0));
 
-  camFly = { t: 0, n: 85, p0, pm, p1,
+  /* В параллельной проекции подлёт НЕ приближает: расстояние на крупность
+     не влияет вовсе. Поэтому вместе с положением тянем масштаб, и целевую
+     крупность считаем из того же `dist`, которым раньше задавалось
+     приближение: half = dist · tg(45°/2). Так обе точки входа (карточка
+     зуба и изоляция) сохраняют прежнюю крупность без новых чисел. */
+  const z1 = Math.min(Math.max(viewHalf / Math.max(dist * 0.414, 1), 0.6), 30);
+
+  camFly = { t: 0, n: 85, p0, pm, p1, z0: camera.zoom, z1,
              c0: controls.target.clone(), c1: c };
 }
 
@@ -3394,6 +3418,10 @@ function stepCamFly() {
     u * u * camFly.p0.y + 2 * u * e * camFly.pm.y + e * e * camFly.p1.y,
     u * u * camFly.p0.z + 2 * u * e * camFly.pm.z + e * e * camFly.p1.z);
   controls.target.lerpVectors(camFly.c0, camFly.c1, e);
+  if (camFly.z1) {
+    camera.zoom = camFly.z0 + (camFly.z1 - camFly.z0) * e;
+    camera.updateProjectionMatrix();
+  }
   if (k >= 1) camFly = null;
 }
 
@@ -3577,6 +3605,9 @@ let quadrantColors = false;
 const TRANSLUCENT = new Set(["mandible", "maxilla", "sinus", "pharynx"]);
 
 let renderer = null, scene = null, camera = null, controls = null;
+/* Половина высоты кадра в миллиметрах. У ортографической камеры масштаб
+   задаёт ИМЕННО кадр, а не расстояние — отсюда отдельная переменная. */
+let viewHalf = 60;
 let meshRoot = null;
 const groupMeshes = {};  // key -> [Mesh]
 const groupMats = {};    // key -> [Material]
@@ -3591,7 +3622,32 @@ function initGL() {
   renderer.toneMappingExposure = 1.15;
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070b);
-  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
+  /* Камера ОРТОГРАФИЧЕСКАЯ, а не перспективная.
+
+     Жалоба врача на 3D: «картина спереди сжимается в одну точку, и чем
+     дальше от неё, тем шире становится кость» — то есть геометрия
+     челюсти выглядит сломанной. Данные при этом верны: расстояние от
+     каждого зуба до кости по мешу даёт медиану 2.0 мм при максимуме 3.1,
+     дальше 6 мм ни одного зуба.
+
+     Виноват объектив. Искажение зависит от того, во сколько раз дальний
+     край модели дальше ближнего, а камера здесь стояла фактически внутри
+     габарита черепа: расстояние считается от ЗУБОВ, а череп вдвое
+     больше. Замер (`window.__viewDbg` в конце frameOnTeeth):
+
+         было, угол 45°          раздутие 2.38
+         длинный объектив 18°    раздутие 1.34
+         ортографическая         раздутие 1.00
+
+     У ортографической камеры раздутия нет по определению: все части
+     модели в одном масштабе независимо от удалённости. Для анатомии это
+     и вернее — так рисуют рентген и технические виды, и врач сравнивает
+     нашу картинку именно с ними.
+
+     Near отрицательный намеренно: у параллельной проекции отсечение не
+     зависит от зума, и при близкой орбите положительный near резал бы
+     ближнюю половину черепа. */
+  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4000, 6000);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
@@ -3637,13 +3693,28 @@ function initGL() {
   initPicking();
 }
 
+/** Пересчитать кадр ортографической камеры.
+
+    `half` — половина высоты кадра в мм; без неё берётся прежняя (вызов
+    при изменении размера окна). Ширина следует за пропорциями холста,
+    поэтому при растягивании панели модель не сплющивается. */
+function orthoFrame(half) {
+  if (half) viewHalf = half;
+  const w = $c("gl-wrap").clientWidth || 1, h = $c("gl-wrap").clientHeight || 1;
+  const a = w / h;
+  camera.left = -viewHalf * a;
+  camera.right = viewHalf * a;
+  camera.top = viewHalf;
+  camera.bottom = -viewHalf;
+  camera.updateProjectionMatrix();
+}
+
 function resizeGL() {
   if (!renderer) return;
   const w = $c("gl-wrap").clientWidth, h = $c("gl-wrap").clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  orthoFrame();
 }
 
 function groupKeyOf(name) {
@@ -4080,7 +4151,24 @@ async function loadMesh(caseId) {
             transparent: tunable,
             opacity: translucent ? ($c("opacity-slider").value / 100) : 1.0,
             depthWrite: !translucent,
-            side: translucent ? THREE.DoubleSide : THREE.FrontSide,
+            /* ПОЛУПРОЗРАЧНАЯ КОСТЬ — ТОЛЬКО ДАЛЬНЯЯ СТЕНКА (`BackSide`).
+
+               Оболочка челюсти это десятки налегающих поверхностей, и при
+               `DoubleSide` каждая умножает затемнение: зубы тонут в молочной
+               пелене, а врач смотрит на них, а не на кость. Аддитивное
+               смешивание проверено и врёт иначе — высвечивает толстые ветви
+               и полностью съедает ТОНКУЮ альвеолярную кость вокруг корней,
+               отчего зубы выглядят висящими в воздухе (в данных они сидят в
+               кости: медиана 2.0 мм, максимум 3.1).
+
+               Дальняя стенка зубов не закрывает вовсе и при этом даёт кости
+               силуэт и глубину — видно, что зуб стоит В челюсти. То же
+               решение, что на заставке (`home.html`).
+
+               При 100% ползунка сторона возвращается в `FrontSide` —
+               непрозрачная кость с дальней стенкой выглядела бы вывернутой
+               наизнанку; переключает обработчик ползунка. */
+            side: translucent ? THREE.BackSide : THREE.FrontSide,
           });
       if (key === "nerve") mat.emissive = new THREE.Color(0x7f1d1d);
       o.material = mat;
@@ -4141,9 +4229,41 @@ function frameOnTeeth() {
     .addScaledVector(fwd, size * 0.95)
     .addScaledVector(new THREE.Vector3(0, 1, 0), size * 0.28);
   homeCam = camera.position.clone();
-  camera.near = size / 100;
-  camera.far = size * 20;
-  camera.updateProjectionMatrix();
+  /* Высоту кадра берём ту же, какую давал прежний объектив в плоскости
+     зубов: half = расстояние · tg(45°/2) = 0.414 · 0.95 · габарит. Так
+     привычная компоновка сохраняется, а раздутие уходит — менять заодно
+     и крупность значило бы править две вещи одной правкой и не знать,
+     которая подействовала. */
+  camera.zoom = homeZoom = 1;
+  camera.near = -size * 4;        // параллельной проекции отрицательный near
+  camera.far = size * 8;          // нужен: иначе отсекается ближняя половина
+  orthoFrame(size * 0.39);
+
+  /* Отладочный замер перспективы — тот же, что на заставке. «Ближнее
+     раздувается» зависит не от угла обзора самого по себе, а от того, во
+     сколько раз дальний край модели дальше ближнего: при 1.8 кость у носа
+     вдвое крупнее такой же кости у затылка, при 1.0 разницы нет вовсе.
+     Нужен, чтобы о деформации говорить числом, а не впечатлением —
+     интерфейс без расширения браузера иначе не проверить. */
+  {
+    const full = new THREE.Box3().setFromObject(meshRoot);
+    const fs = full.getSize(new THREE.Vector3());
+    const depth = Math.max(fs.x, fs.y, fs.z);
+    const dist = camera.position.distanceTo(center);
+    window.__viewDbg = {
+      камера: camera.isOrthographicCamera ? "ортографическая" : camera.fov,
+      расстояние: Math.round(dist),
+      габарит_модели: Math.round(depth),
+      габарит_зубов: Math.round(size),
+      раздутие: camera.isOrthographicCamera ? 1
+        : +((dist + depth / 2) / Math.max(1, dist - depth / 2)).toFixed(2),
+    };
+    // Масштаб читается на момент опроса, а не на момент кадрирования:
+    // пролёт камеры меняет именно его, и проверить пролёт снаружи больше
+    // нечем — кликать headless-браузер не умеет.
+    Object.defineProperty(window.__viewDbg, "масштаб",
+      { get: () => +camera.zoom.toFixed(2) });
+  }
 }
 
 
@@ -4266,7 +4386,13 @@ $c("opacity-slider").addEventListener("input", () => {
   const v = $c("opacity-slider").value;
   $c("opacity-out").textContent = v + "%";
   for (const key of TRANSLUCENT) {
-    (groupMats[key] || []).forEach(m => { m.opacity = v / 100; });
+    (groupMats[key] || []).forEach(m => {
+      m.opacity = v / 100;
+      // Полупрозрачная кость — дальней стенкой (см. создание материала),
+      // непрозрачная — обычной передней, иначе она вывернется наизнанку.
+      m.side = v >= 100 ? THREE.FrontSide : THREE.BackSide;
+      m.depthWrite = v >= 100;
+    });
   }
 });
 
