@@ -498,6 +498,18 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 @media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
 @page{size:A4;margin:16mm 15mm}
 @media print{html,body{height:auto!important;overflow:visible!important;background:#fff!important}body>*:not(.modal){display:none!important}.modal{position:static!important;display:block!important;background:none!important;padding:0!important;animation:none!important}.modal[hidden]{display:none!important}.mbox{border:0!important;border-radius:0!important;max-height:none!important;max-width:none!important;overflow:visible!important;padding:0!important;color:#000!important;background:#fff!important;animation:none!important;box-shadow:none!important}.mbox>h2,.mbox .btns,.mtabs{display:none!important}.doc{font-size:12pt;color:#000}.doc .m,.doc .foot{color:#444}.doc .foot{border-top-color:#999}.doc li,.doc p{break-inside:avoid}.sheet{padding:0!important;border-radius:0!important;margin:0!important}}
+
+/* список пациентов: одинаковая высота строк, свои колонки, группы по дням */
+.prow.prw{grid-template-columns:44px minmax(190px,1.1fr) 130px minmax(0,1.6fr) 150px minmax(170px,auto);gap:16px;min-height:66px;padding:10px 16px}
+.prw .nm span{display:block;font-size:12px}
+.prw .lst{font-size:13px;white-space:nowrap}
+.prw .ac .apt{margin:0;display:inline-block}
+.prw .ac .apt b{font-weight:600}
+.pgh{display:flex;align-items:center;gap:8px;margin:16px 2px 2px;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pgh:first-child{margin-top:2px}
+.pgh b{font-size:11px;padding:0 7px;border-radius:999px;background:rgba(255,255,255,.07);color:var(--text);letter-spacing:0}
+.pgh:after{content:"";flex:1;height:1px;background:var(--line)}
+@media (max-width:900px){.prow.prw{grid-template-columns:44px 1fr auto;grid-template-areas:"z a e" "b b b" "c c c" "d d d";min-height:0}.prw>*:nth-child(1){grid-area:z}.prw>*:nth-child(2){grid-area:a}.prw>*:nth-child(6){grid-area:e}.prw>*:nth-child(3){grid-area:b}.prw>*:nth-child(4){grid-area:c}.prw>*:nth-child(5){grid-area:d}.prw .ac .muted{display:none}}
 </style>
 </head>
 <body>
@@ -832,18 +844,33 @@ function pcat(p){var v=p.visits[0],s=v?pstatus(p):null,c={};
   if(v&&v.st!=='ready'&&v.st!=='proc')c.arch=1;
   return c}
 function plast(p){var v=p.visits[0];return v?pd(v.d):p.appt?pd(p.appt.d):0}
+function pgroup(p){var v=p.visits[0],a=p.appt;
+  if(a&&a.d===DTODAY||v&&v.d===DTODAY)return 0;
+  if(a)return 1;
+  if(v&&v.d===DYEST)return 2;
+  return 3}
+var PG=['Сегодня','Записаны на ближайшие дни','Вчера','Раньше'];
+function atime(p){return p.appt?pd(p.appt.d)+parseInt(p.appt.t)*36e5+parseInt(p.appt.t.slice(3))*6e4:0}
+function prow(p,n){
+  var v=p.visits[0]||{},s=p.visits[0]?pstatus(p):{t:p.appt&&p.appt.isNew?'Новый пациент':'Нет снимков',dots:''},age=new Date().getFullYear()-p.born;
+  var ap=p.appt?'<span class="apt'+(p.appt.d===DTODAY?' now':'')+(p.appt.isNew?' new':'')+'"><b>'+(p.appt.isNew?'Новый · ':'')+aptWhen(p.appt)+' '+p.appt.t+'</b></span>':'<span class="muted">—</span>';
+  var last=v.d?'<span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d===DTODAY?'сегодня':v.d===DYEST?'вчера':v.d)+'</span> · '+v.type:'<span class="muted">снимков нет</span>';
+  var b=el('button','prow prw',avatar(p.id,p.name,40)+'<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+' · '+age+' лет</span></div><div class="lst">'+last+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):p.appt?esc(p.appt.why):'')+'</div><div class="ac">'+ap+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
+  b.type='button';b.style.setProperty('--i',Math.min(n,12));b.addEventListener('click',function(){go('#/patient/'+p.id)});return b}
 function drawPatients(){
   var q=$('#q').value.trim().toLowerCase().replace(/[\s\-+()]/g,''),L=$('#plist');L.innerHTML='';var P=allP(),n=0,cnt={};
   P.forEach(function(p){p._c=pcat(p);Object.keys(p._c).forEach(function(k){cnt[k]=(cnt[k]||0)+1})});
   $('#pf').innerHTML=PFS.map(function(f){return '<button type="button" class="fchip" role="tab" data-f="'+f[0]+'" aria-selected="'+(PF===f[0])+'">'+f[1]+' <b>'+(cnt[f[0]]||0)+'</b></button>'}).join('');
   $$('.fchip',$('#pf')).forEach(function(b){b.addEventListener('click',function(){PF=b.dataset.f;drawPatients()})});
   var R=P.filter(function(p){return p._c[PF]&&(!q||(p.name+p.id+(p.phone||'')).toLowerCase().replace(/[\s\-+()]/g,'').indexOf(q)>=0)});
-  R.sort(PF==='appt'?function(a,b){return (pd(a.appt.d)+parseInt(a.appt.t)*36e5)-(pd(b.appt.d)+parseInt(b.appt.t)*36e5)}:function(a,b){return plast(b)-plast(a)});
+  var grouped=PF==='all'&&!q;
+  R.sort(function(a,b){if(grouped){var d=pgroup(a)-pgroup(b);if(d)return d}
+    if(PF==='appt'||(grouped&&pgroup(a)<2&&(a.appt||b.appt)))return (atime(a)||9e15)-(atime(b)||9e15);
+    return plast(b)-plast(a)});
+  var gi=-1;
   R.forEach(function(p){n++;
-    var v=p.visits[0]||{},s=p.visits[0]?pstatus(p):{t:p.appt&&p.appt.isNew?'Новый пациент':'Нет снимков',dots:''},age=new Date().getFullYear()-p.born;
-    var ap=p.appt?'<br><span class="apt'+(p.appt.d===DTODAY?' now':'')+(p.appt.isNew?' new':'')+'">'+(p.appt.isNew?'Новый · ':'')+'Запись: '+aptWhen(p.appt)+' '+p.appt.t+'</span>':'';
-    var b=el('button','prow',avatar(p.id,p.name,40)+'<div class="nm"><b>'+esc(p.name)+'</b><span>'+p.id+'</span>'+ap+'</div><div class="muted">'+age+' лет</div><div>'+(v.d?'<span class="muted" style="font-family:var(--mono);font-size:13px">'+(v.d===DTODAY?'сегодня':v.d===DYEST?'вчера':v.d)+'</span> · '+v.type:'<span class="muted">снимков нет</span>')+'</div><div class="cmp">'+(v.cmp?esc(v.cmp):p.appt?esc(p.appt.why):'')+'</div><div class="rt"><div>'+(s.proc?'<i class="spin"></i>':'')+s.dots+'</div><span class="st">'+s.t+'</span></div>');
-    b.type='button';b.style.setProperty('--i',Math.min(n,12));b.addEventListener('click',function(){go('#/patient/'+p.id)});L.appendChild(b)});
+    if(grouped){var g=pgroup(p);if(g!==gi){gi=g;var c=R.filter(function(x){return pgroup(x)===g}).length;L.appendChild(el('div','pgh',PG[g]+' <b>'+c+'</b>'))}}
+    L.appendChild(prow(p,n))});
   if(!n)L.innerHTML='<div class="empty">'+(P.length?'Никого не нашли по запросу.':'Пациентов пока нет.')+'<br><br><button class="btn pri" id="e1">Загрузить КЛКТ</button> <button class="btn" id="e2">Открыть демо-кейс</button></div>';
   if($('#e1'))$('#e1').addEventListener('click',function(){openDrawer(null)});
   if($('#e2'))$('#e2').addEventListener('click',function(){$('#hDemo').click()});
