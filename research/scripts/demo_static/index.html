@@ -807,6 +807,10 @@
   .find-rev .rv-no:hover, .find-rev .rv-no.on {
     color: #fff; background: var(--lv-k); border-color: var(--lv-k);
   }
+  .find-title { font-weight: 600; font-size: 13.5px; line-height: 1.45; }
+  .find-text { font-size: 13px; color: var(--muted); line-height: 1.5;
+               margin-top: 3px; }
+  .find-why .find-conf { display: inline-block; margin-bottom: 6px; }
   .find-item.rejected { opacity: .45; }
   .find-item.rejected > div > div:first-child { text-decoration: line-through; }
   .find-item.confirmed { box-shadow: inset 2px 0 0 var(--ok); }
@@ -1722,8 +1726,9 @@
             </div>
             <div class="chat-note">Actis отвечает по находкам этого снимка и
               плану. Чего нет в данных — скажет, что не знает. Диагноз ставит
-              врач. Голосовой ввод распознаёт браузер, то есть звук уходит в
-              облако Google: имя пациента диктовать не нужно.</div>
+              врач. Голосовой ввод: звук уходит на расшифровку через наш
+              сервер, в запрос не попадает ничего, кроме самой записи — ни
+              находок, ни ФИО. Имя пациента диктовать всё равно не нужно.</div>
           </div>
 
           <div class="cbct-pane" id="pane-tooth" hidden>
@@ -2662,42 +2667,141 @@ $c("chat-q").addEventListener("input", syncSend);
 syncSend();
 
 let stopMic = () => {};
+/* ГОЛОСОВОЙ ВВОД — ЧЕРЕЗ НАШ СЕРВЕР, А НЕ ЧЕРЕЗ БРАУЗЕР.
+
+   Было: `SpeechRecognition`. Он работает, но у него две беды. Во-первых,
+   он есть только в Chrome — в Firefox и Safari кнопка микрофона просто
+   исчезала, то есть функции не было у половины. Во-вторых, звук он всё
+   равно отправляет в облако, но МИМО НАС: мы не знаем, что ушло, не можем
+   это записать и не можем сменить провайдера.
+
+   Стало: пишем звук сами и отправляем на `/api/stt`.
+
+   ПОЧЕМУ WAV, А НЕ `MediaRecorder`. Chrome пишет `audio/webm`, а этого
+   типа нет в списке поддерживаемых расшифровщиком (wav, mp3, aiff, aac,
+   ogg, flac). Конвертировать на сервере значило бы требовать ffmpeg на
+   машине клиники. Вместо этого берём сырой PCM через Web Audio и сами
+   складываем WAV — двадцать строк и ноль зависимостей.
+
+   РАСШИФРОВКА ИДЁТ ПО ХОДУ РЕЧИ: раз в три секунды отправляем всё
+   записанное и заменяем текст в поле. Отправляем именно ВСЁ, а не
+   последний кусок: расшифровка куска, вырванного из середины фразы, хуже
+   целой записи, а запись вопроса — это десятки килобайт.
+
+   ОТПРАВЛЯЕТ ВОПРОС ВРАЧ, а не микрофон: он диктует, читает, правит и
+   только потом жмёт «Спросить». */
 (function initMic() {
   const btn = $c("chat-mic");
   if (!btn) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { btn.hidden = true; return; }
-  let rec = null, on = false;
-  stopMic = () => { if (on && rec) rec.stop(); };
-  btn.onclick = () => {
-    if (on && rec) { rec.stop(); return; }
-    rec = new SR();
-    rec.lang = "ru-RU";
-    rec.interimResults = true;     // текст появляется по ходу речи
-    /* Слушаем, пока не остановят. Врач диктует вопрос с паузой («а что
-       с… двадцать шестым?»), и на `continuous: false` распознавание
-       обрывалось на первой же паузе — приходилось дожимать руками. */
-    rec.continuous = true;
-    const base = $c("chat-q").value;
-    rec.onstart = () => { on = true; btn.classList.add("rec"); };
-    rec.onresult = ev => {
-      let t = "";
-      for (let i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
-      $c("chat-q").value = (base ? base + " " : "") + t;
-      syncSend();
-    };
-    rec.onend = () => {
-      on = false; btn.classList.remove("rec");
-      syncSend();
-      if ($c("chat-q").value.trim() !== base.trim()) $c("chat-q").focus();
-    };
-    rec.onerror = ev => {
-      on = false; btn.classList.remove("rec");
-      if (ev.error === "not-allowed") {
-        $c("chat-q").placeholder = "Браузер не дал доступ к микрофону";
+  const md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia || !(window.AudioContext || window.webkitAudioContext)) {
+    btn.hidden = true;                  // неработающая кнопка хуже отсутствующей
+    return;
+  }
+
+  let ctx = null, node = null, stream = null, src = null;
+  let parts = [], total = 0, on = false, timer = null, base = "", busy = false;
+
+  /** Склеить накопленные куски и упаковать в WAV 16 бит моно. */
+  function wavBlob(rate) {
+    const pcm = new Float32Array(total);
+    let at = 0;
+    for (const p of parts) { pcm.set(p, at); at += p.length; }
+    const buf = new ArrayBuffer(44 + pcm.length * 2);
+    const v = new DataView(buf);
+    const str = (off, t) => { for (let i = 0; i < t.length; i++) v.setUint8(off + i, t.charCodeAt(i)); };
+    str(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); str(8, "WAVE");
+    str(12, "fmt "); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true);           // PCM
+    v.setUint16(22, 1, true);           // моно
+    v.setUint32(24, rate, true);
+    v.setUint32(28, rate * 2, true);
+    v.setUint16(32, 2, true);
+    v.setUint16(34, 16, true);
+    str(36, "data"); v.setUint32(40, pcm.length * 2, true);
+    for (let i = 0; i < pcm.length; i++) {
+      const x = Math.max(-1, Math.min(1, pcm[i]));
+      v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true);
+    }
+    return new Blob([buf], { type: "audio/wav" });
+  }
+
+  function b64(blob) {
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(String(fr.result).split(",")[1] || "");
+      fr.onerror = rej;
+      fr.readAsDataURL(blob);
+    });
+  }
+
+  async function flush() {
+    // Пока предыдущая расшифровка в пути, новую не шлём: ответы могли бы
+    // прийти не в том порядке и затереть более полный текст коротким.
+    if (busy || !total || !ctx) return;
+    busy = true;
+    try {
+      const audio = await b64(wavBlob(ctx.sampleRate));
+      const r = await fetch("/api/stt", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio, mime: "audio/wav" }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        $c("chat-q").placeholder = d.error || "расшифровка недоступна";
+        stop();
+        return;
       }
+      if (typeof d.text === "string") {
+        $c("chat-q").value = (base ? base + " " : "") + d.text;
+        syncSend();
+      }
+    } catch (e) {
+      $c("chat-q").placeholder = "расшифровка недоступна: " + (e.message || e);
+      stop();
+    } finally { busy = false; }
+  }
+
+  function stop() {
+    if (!on) return;
+    on = false;
+    clearInterval(timer);
+    btn.classList.remove("rec");
+    try { node && node.disconnect(); src && src.disconnect(); } catch (e) {}
+    try { stream && stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    // Последняя расшифровка уже после остановки: в ней есть хвост фразы,
+    // который не попал ни в один из промежуточных прогонов.
+    flush().finally(() => { try { ctx && ctx.close(); } catch (e) {} ctx = null; });
+  }
+  stopMic = stop;
+
+  btn.onclick = async () => {
+    if (on) { stop(); return; }
+    base = $c("chat-q").value.trim();
+    parts = []; total = 0;
+    try {
+      stream = await md.getUserMedia({ audio: true });
+    } catch (e) {
+      $c("chat-q").placeholder = "браузер не дал доступ к микрофону";
+      return;
+    }
+    // 16 кГц: речи этого хватает с запасом, а запись втрое легче, чем на
+    // 48 кГц — её отправляют каждые три секунды.
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC({ sampleRate: 16000 });
+    src = ctx.createMediaStreamSource(stream);
+    node = ctx.createScriptProcessor(4096, 1, 1);
+    node.onaudioprocess = ev => {
+      if (!on) return;
+      const buf = ev.inputBuffer.getChannelData(0);
+      parts.push(new Float32Array(buf));
+      total += buf.length;
     };
-    rec.start();
+    src.connect(node);
+    node.connect(ctx.destination);
+    on = true;
+    btn.classList.add("rec");
+    timer = setInterval(flush, 3000);
   };
 })();
 
@@ -3372,8 +3476,14 @@ async function loadFindings(caseId) {
 
 /** Числа, из которых находка получилась: значение, порог, оговорка.
     Раскрывается по клику — в ленте на 40 находок это иначе не читается. */
-function basisHtml(f, open) {
-  if (!Array.isArray(f.basis) || !f.basis.length) return "";
+/* Основание находки + оговорка о надёжности — ВНУТРИ раскрывающегося
+   блока. Снаружи оставалась плашка «надёжность: средняя», и в ленте из
+   сорока находок получался частокол из плашек, в котором тонет само
+   содержание. Врачу, который дошёл до «на чём основано», надёжность нужна
+   там же — рядом с числами, к которым она относится. */
+function basisHtml(f, open, trust) {
+  if (!Array.isArray(f.basis) || !f.basis.length) return trust ? `<details
+      class="find-why"><summary>надёжность измерения</summary>${trust}</details>` : "";
   const rows = f.basis.map(b => `<div class="basis-row">
       <span class="basis-label">${b.label}</span>
       <span class="basis-val">${b.value === null || b.value === undefined
@@ -3382,7 +3492,7 @@ function basisHtml(f, open) {
       ${b.note ? `<span class="basis-note">${b.note}</span>` : ""}
     </div>`).join("");
   return `<details class="find-why"${open ? " open" : ""}>
-      <summary>на чём основано</summary>${rows}</details>`;
+      <summary>на чём основано</summary>${trust || ""}${rows}</details>`;
 }
 
 /* ================= зубная карта =================
@@ -3541,15 +3651,23 @@ function renderFindings(data) {
           ? `<span class="find-teeth">${f.teeth.map(t =>
               `<span class="find-tooth" data-tooth="${t}">${t}</span>`).join("")}</span>`
           : `<span class="find-tooth" style="background:none;color:#64748b">—</span>`;
+      /* НАЗВАНИЕ ОТДЕЛЬНО ОТ ОПИСАНИЯ.
+         Строка «Уровень кости выше нормы: 13 дистально 7.1 мм (33% корня),
+         13 мезиально 6.6 мм…» читается плохо: глаз ищет, о чём находка, и
+         натыкается на миллиметры. Делит сервер (`_split_title`), здесь
+         только показываем; если названия нет — печатаем текст как есть. */
+      const title = f.title || "";
+      const detail = f.detail || f.text || "";
       html += `<div class="find-item ${cls} ${rv}${f.tooth ? " clickable" : ""}"
                     ${f.tooth ? `data-tooth="${f.tooth}"` : ""}>
         ${badge}
-        <div><div>${level}${f.text}</div>
+        <div>${title ? `<div class="find-title">${level}${title}</div>
+               <div class="find-text">${detail}</div>`
+                     : `<div>${level}${detail}</div>`}
         ${f.action ? `<div class="find-action">→ ${f.action}</div>` : ""}
-        ${trust ? `<div class="find-meta">${trust}</div>` : ""}
         ${f.text_by_doctor && f.text_ai
             ? `<div class="find-meta">формулировка ИИ: ${f.text_ai}</div>` : ""}
-        ${basisHtml(f, false)}
+        ${basisHtml(f, false, trust)}
         ${f.comment ? `<div class="find-note">врач: ${f.comment}</div>` : ""}
         <div class="rev-slot"></div></div>
         <div class="find-rev" data-key="${f.key || ""}">

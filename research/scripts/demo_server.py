@@ -778,6 +778,37 @@ def cbct_info(case_id: str):
     return out
 
 
+def _split_title(text: str) -> tuple[str, str]:
+    """Разделить текст находки на короткое НАЗВАНИЕ и описание.
+
+    Находки у нас пишутся одной строкой, где первая часть — уже готовое
+    название («Уровень кости выше нормы: …», «Зуб 18 отсутствует; …»), а
+    дальше идут числа. В ленте это читается хуже, чем надо: глаз ищет, о
+    чём находка, и натыкается на миллиметры.
+
+    Поэтому делим по первому «:» или «;» в начале строки. Отдельного поля
+    в данных не заводим и `text` не трогаем: он уходит в PDF и в контекст
+    модели, и там нужен целиком. Деление чисто для показа, поэтому и
+    считается при выдаче, а не кладётся в кэш находок — иначе пришлось бы
+    поднимать FINDINGS_VERSION ради вёрстки.
+
+    Если разделителя в начале нет, названия нет вовсе: лучше показать
+    текст как есть, чем резать его по случайному месту.
+    """
+    t = (text or "").strip()
+    best = None
+    for sep in (": ", "; "):
+        i = t.find(sep)
+        # 70 символов — предел, за которым это уже не название, а фраза с
+        # двоеточием в середине.
+        if 0 < i <= 70 and (best is None or i < best[0]):
+            best = (i, sep)
+    if not best:
+        return "", t
+    i, sep = best
+    return t[:i].strip(), t[i + len(sep):].strip()
+
+
 @app.get("/api/cbct/findings/{case_id}")
 async def cbct_findings(case_id: str):
     """Слой находок: список фактов на зуб с черновой маршрутизацией."""
@@ -800,7 +831,13 @@ async def cbct_findings(case_id: str):
     # Отметки врача накладываем на выдаче, а не при подсчёте: находки
     # кэшируются в meta.json, и решение врача не должно в этот кэш попадать.
     # В ленте показываем и отклонённое — врач должен видеть, что отсмотрел.
-    return cbct.apply_review(res, cbct.review_for(c), drop_rejected=False)
+    out = cbct.apply_review(res, cbct.review_for(c), drop_rejected=False)
+    # Название и описание — для ленты. `text` остаётся целым: он уходит в
+    # PDF и в контекст модели.
+    for key in ("findings", "quality"):
+        for f in (out.get(key) or []):
+            f["title"], f["detail"] = _split_title(f.get("text") or "")
+    return out
 
 
 def _cached_findings(c: dict) -> dict | None:
@@ -898,6 +935,38 @@ async def cbct_chat(case_id: str, body: dict = Body(...)):
         # Нет ключа, провайдер не ответил, обезличивание не прошло — всё это
         # причины, которые должен видеть разработчик, а не «500».
         return JSONResponse({"error": str(exc)}, status_code=503)
+
+
+class SpeechIn(BaseModel):
+    # Звук приходит base64 в JSON, а не multipart: запись короткая, а один
+    # формат запроса на весь фронт проще, чем два.
+    audio: str
+    mime: str = "audio/wav"
+
+
+@app.post("/api/stt")
+async def api_stt(body: SpeechIn) -> dict:
+    """Расшифровать речь врача.
+
+    Отдельная ручка, а не часть чата: расшифровка нужна и там, где вопрос
+    ещё не отправлен, — врач диктует, читает, правит и только потом жмёт
+    «Спросить». Решение, что отправлять, остаётся за человеком.
+    """
+    import base64 as _b64
+    import speech
+    try:
+        raw = _b64.b64decode(body.audio or "", validate=True)
+    except Exception:                                      # noqa: BLE001
+        return JSONResponse({"error": "звук пришёл испорченным"},
+                            status_code=400)
+    from fastapi.concurrency import run_in_threadpool
+    try:
+        text, model = await run_in_threadpool(speech.transcribe, raw, body.mime)
+    except RuntimeError as exc:
+        # Нет ключа или провайдер не ответил — это причина для разработчика,
+        # а не «500» в лицо врачу.
+        return JSONResponse({"error": str(exc)}, status_code=503)
+    return {"text": text, "provider": model}
 
 
 @app.post("/api/cbct/summary/{case_id}")
