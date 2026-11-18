@@ -20,7 +20,12 @@
      многоточием, а не переносит строку. */
   .prow {
     display: grid; gap: 14px; align-items: center;
-    grid-template-columns: 44px minmax(190px, 240px) 62px 155px minmax(0, 1fr) auto;
+    /* Возраст ушёл под имя, а освободившееся место занял столбец записи
+       на приём: на что человек записан — это то, ради чего список и
+       открывают утром. */
+    grid-template-columns: 44px minmax(190px, 230px) 130px minmax(0, 1fr)
+                           150px minmax(165px, auto);
+    min-height: 66px;
     background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--r); padding: 11px 15px; text-align: left; width: 100%;
     color: inherit; transition: border-color .18s, background .18s, transform .18s;
@@ -119,6 +124,34 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .pcard-no { font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+  .pnm .psub { display: block; font-size: 12px; color: var(--muted);
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Запись на приём. Сегодняшняя выделена цветом акцента, будущая —
+     спокойным синим, у нового пациента — янтарная с пометкой: его ещё ни
+     разу не снимали, и к приёму готовятся иначе. */
+  .apt { display: inline-block; font-size: 12px; padding: 3px 9px;
+         border-radius: 999px; border: 1px solid var(--line);
+         color: var(--muted); white-space: nowrap; }
+  .apt b { font-weight: 600; }
+  .apt.soon { color: var(--accent); border-color: rgba(47,196,178,.45);
+              background: rgba(47,196,178,.12); }
+  .apt.later { color: #9db7ff; border-color: rgba(157,183,255,.35);
+               background: rgba(157,183,255,.10); }
+  .apt.new { color: var(--lv-v); border-color: rgba(214,163,39,.45);
+             background: rgba(214,163,39,.12); }
+  .apt-none { color: var(--dim); }
+  .pac { min-width: 0; }
+  @media (max-width: 1100px) { .pac { display: none; } }
+  /* Заголовок группы дня. Та же черта, что у разделов карточки: видно,
+     что ниже есть ещё, и ничего не спрятано. */
+  .pgh { display: flex; align-items: center; gap: 9px;
+         margin: 18px 2px 7px; font-size: 11.5px; font-weight: 600;
+         letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .pgh:first-child { margin-top: 2px; }
+  .pgh b { font-size: 11px; padding: 0 7px; border-radius: 999px;
+           background: rgba(255,255,255,.07); color: var(--text);
+           letter-spacing: 0; }
+  .pgh::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
   .page-col { font-size: 13px; color: var(--muted); white-space: nowrap; }
   .pwhen { font-size: 13px; color: var(--muted); white-space: nowrap; }
   .pwhen b { font-family: var(--mono); font-weight: 500; color: var(--text); }
@@ -424,7 +457,7 @@
         <button class="btn nowrap" @click="newOpen = !newOpen">+ {{ t("Новый пациент") }}</button>
       </div>
       <input class="field search" v-model="query" @input="searchDebounced"
-             :placeholder="t('Поиск по фамилии или номеру карты')">
+             :placeholder="t('Поиск по фамилии, номеру карты или телефону')">
 
       <!-- ФИЛЬТРЫ СПИСКА. На приёме врач ищет не «кого-нибудь», а один из
            нескольких срезов: кого сегодня снимали, что осталось разобрать,
@@ -466,16 +499,23 @@
       </aside>
 
       <div class="plist" v-if="shown.length">
-        <button class="prow" v-for="p in shown" :key="p.id" @click="open(p.id)">
+        <!-- ГРУППЫ ПО ДНЯМ. Утром врач смотрит не весь список, а «кто
+             сегодня» и «кто записан дальше»; всё остальное — история.
+             Группировка отключается, когда выбран конкретный срез: там
+             заголовок дня уже ничего не добавляет. -->
+        <template v-for="g in groups" :key="g.key">
+          <div class="pgh" v-if="g.rows.length && grouped">
+            {{ t(g.label) }} <b>{{ g.rows.length }}</b></div>
+        <button class="prow" v-for="p in g.rows" :key="p.id" @click="open(p.id)">
           <span class="av" :style="avStyle(p)">{{ initials(p.display) }}</span>
           <span class="pnm">
             <span class="pnm-top">
               <span class="pname">{{ p.display }}</span>
               <span class="badge-ex" v-if="p.is_example">пример</span>
             </span>
-            <span class="pcard-no" v-if="p.card_no">{{ p.card_no }}</span>
+            <span class="psub">{{ [p.card_no, p.age ? p.age + ' лет' : '']
+              .filter(Boolean).join(' · ') }}</span>
           </span>
-          <span class="page-col">{{ p.age ? p.age + " лет" : "—" }}</span>
           <span class="pwhen">
             <b>{{ dayWord((p.last && p.last.at) || p.last_study_at) }}</b>
             <!-- Короткий ярлык: полный («Панорамный снимок (ОПТГ)») не
@@ -484,6 +524,12 @@
           </span>
           <span class="pcmp" :title="(p.last && p.last.complaints) || ''"
             >{{ (p.last && p.last.complaints) || "" }}</span>
+          <span class="pac">
+            <span v-if="p.appt" class="apt" :class="apptClass(p)"
+                  :title="p.appt.reason || 'Запись на приём'">
+              <b>{{ apptWord(p) }}</b></span>
+            <span v-else class="apt-none">—</span>
+          </span>
           <span class="prt">
             <span v-if="p.last && p.last.levels">
               <!-- Числа со СЛОВОМ, как в макете: три голых числа подряд
@@ -496,6 +542,7 @@
             <span class="st2" :class="{ done: reviewDone(p) }">{{ rowStatus(p) }}</span>
           </span>
         </button>
+        </template>
       </div>
       <div class="empty" v-else-if="!loading">
         {{ query ? 'По запросу никого не найдено'
@@ -1249,12 +1296,16 @@ createApp({
      */
     const FILTERS = [
       { key: "all",    label: "Все" },
+      { key: "appt",   label: "Записаны" },
       { key: "today",  label: "Сегодня" },
       { key: "yday",   label: "Вчера" },
       { key: "wait",   label: "Ждут разбора" },
       { key: "signed", label: "Подписано" },
       { key: "busy",   label: "В обработке" },
-      { key: "none",   label: "Без снимков" },
+      // «Новые» — записанные, но ещё ни разу не снятые. Для приёма это
+      // отдельное состояние: к такому пациенту готовятся иначе.
+      { key: "new",    label: "Новые" },
+      { key: "arch",   label: "Архив" },
     ];
 
     function dayStart(shift = 0) {
@@ -1278,7 +1329,13 @@ createApp({
 
     function inFilter(p, key) {
       const l = p.last;
+      // Архив не показывается нигде, кроме своего среза: карта не удалена,
+      // но и первый экран не занимает.
+      if (p.archived) return key === "arch";
+      if (key === "arch") return false;
       if (key === "all") return true;
+      if (key === "appt") return !!p.appt;
+      if (key === "new") return !l && !!p.appt;
       if (key === "none") return !l;
       if (!l) return false;
       const t = new Date(l.at || p.last_study_at).getTime();
@@ -1308,6 +1365,64 @@ createApp({
 
     const shown = computed(() =>
       state.patients.filter(p => inFilter(p, state.filter)));
+
+    /* ГРУППЫ ПО ДНЯМ.
+     *
+     * Порядок групп — порядок рабочего дня: сначала кто сегодня (снимался
+     * или записан), потом кто записан дальше, потом вчерашние и остальное.
+     * Внутри «сегодня» и «ближайших» сортируем по ВРЕМЕНИ ЗАПИСИ, в
+     * остальных — по свежести снимка: в первом случае врач читает список
+     * как расписание, во втором как историю.
+     */
+    const GROUPS = [
+      { key: "today", label: "Сегодня" },
+      { key: "soon",  label: "Записаны на ближайшие дни" },
+      { key: "yday",  label: "Вчера" },
+      { key: "older", label: "Раньше" },
+    ];
+
+    function groupOf(p) {
+      const a = p.appt ? new Date(p.appt.at).getTime() : 0;
+      const l = p.last ? new Date(p.last.at || p.last_study_at).getTime() : 0;
+      if ((a && a >= dayStart(0) && a < dayStart(-1)) ||
+          (l && l >= dayStart(0))) return "today";
+      if (a) return "soon";
+      if (l && l >= dayStart(1)) return "yday";
+      return "older";
+    }
+
+    // Группировка нужна в общем списке; в конкретном срезе заголовок дня
+    // уже ничего не добавляет, а место занимает.
+    const grouped = computed(() => ["all", "appt"].includes(state.filter));
+
+    const groups = computed(() => {
+      const rows = shown.value;
+      if (!grouped.value) return [{ key: "all", label: "", rows }];
+      const by = { today: [], soon: [], yday: [], older: [] };
+      for (const p of rows) by[groupOf(p)].push(p);
+      const at = p => p.appt ? new Date(p.appt.at).getTime() : Infinity;
+      by.today.sort((a, b) => at(a) - at(b));
+      by.soon.sort((a, b) => at(a) - at(b));
+      return GROUPS.map(g => ({ ...g, rows: by[g.key] }));
+    });
+
+    /* Запись словом. «21.11 12:00» требует сверки с календарём, а
+       «сегодня 16:30» читается сразу — и ровно это врачу и нужно. */
+    function apptWord(p) {
+      const d = new Date(p.appt.at);
+      const t = d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+      const ms = d.getTime();
+      const pre = !p.last ? "Новый · " : "";
+      if (ms < dayStart(-1)) return pre + "сегодня " + t;
+      if (ms < dayStart(-2)) return pre + "завтра " + t;
+      return pre + d.toLocaleDateString("ru-RU",
+        { day: "2-digit", month: "2-digit" }) + " " + t;
+    }
+
+    function apptClass(p) {
+      if (!p.last) return "new";                    // ещё не снимался
+      return new Date(p.appt.at).getTime() < dayStart(-1) ? "soon" : "later";
+    }
 
     /* Срез — в адресе: врач присылает коллеге ссылку «вот что осталось
        разобрать», а не объясняет, какую кнопку нажать. Тот же принцип,
@@ -1510,7 +1625,8 @@ createApp({
 
     return {
       ...toRefs(state), coverage, subtitle, chartRows, hasTooth, toothTitle,
-      FILTERS, counts, shown, setFilter, dayWord,
+      FILTERS, counts, shown, groups, grouped, setFilter, dayWord,
+      apptWord, apptClass,
       planStages, composePlan, t, lang,
       planCount, kindsLine, findingGroups, isOpen, toggle,
       go, open, jump, createPatient, searchDebounced, upload, onPick, onDrop,

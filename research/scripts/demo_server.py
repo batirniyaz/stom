@@ -1327,6 +1327,14 @@ class PatientIn(BaseModel):
     sex: str | None = None
     card_no: str = ""
     note: str = ""
+    # Телефон в базе, а не в анкете: по нему ищут. Регистратура знает номер
+    # и не знает номера карты.
+    phone: str = ""
+    # Сразу записать на приём при заведении карты: пациента заводят в тот
+    # момент, когда он звонит и просит записать, — разносить это на два
+    # действия значит потерять половину записей.
+    appt_at: str = ""
+    appt_reason: str = ""
 
 
 def _last_study_brief(st: dict) -> dict:
@@ -1369,15 +1377,61 @@ def _last_study_brief(st: dict) -> dict:
 
 
 @app.get("/api/patients")
-def api_patients(q: str = Query("", description="поиск по фамилии или карте"),
+def api_patients(q: str = Query("", description="поиск по фамилии, карте или телефону"),
                  limit: int = 200) -> dict:
     rows = pat.list_patients(q, limit)
-    last = pat.last_studies([r["id"] for r in rows])
+    ids = [r["id"] for r in rows]
+    last = pat.last_studies(ids)
+    # Ближайшая запись на приём — тем же пакетным запросом, что и последнее
+    # исследование: список строится из двух запросов, а не из двухсот.
+    appts = pat.next_appointments(ids)
     for r in rows:
         st = last.get(r["id"])
         if st:
             r["last"] = _last_study_brief(st)
+        a = appts.get(r["id"])
+        if a:
+            r["appt"] = {"id": a["id"], "at": a["at"], "reason": a["reason"]}
     return {"patients": rows}
+
+
+class AppointmentIn(BaseModel):
+    at: str
+    reason: str = ""
+
+
+@app.post("/api/patients/{pid}/appointments")
+def api_appointment_add(pid: str, body: AppointmentIn) -> dict:
+    """Записать пациента на приём."""
+    try:
+        rec = pat.add_appointment(pid, body.at, body.reason)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return {"appointment": rec}
+
+
+@app.delete("/api/appointments/{aid}")
+def api_appointment_delete(aid: str) -> dict:
+    if not pat.delete_appointment(aid):
+        return JSONResponse({"error": "Запись не найдена"}, status_code=404)
+    return {"ok": True}
+
+
+@app.get("/api/patients/{pid}/appointments")
+def api_appointments(pid: str) -> dict:
+    return {"appointments": pat.patient_appointments(pid)}
+
+
+class ArchiveIn(BaseModel):
+    archived: bool = True
+
+
+@app.post("/api/patients/{pid}/archive")
+def api_patient_archive(pid: str, body: ArchiveIn) -> dict:
+    """Убрать карту из списка или вернуть обратно. Не удаление."""
+    if not pat.set_archived(pid, body.archived):
+        return JSONResponse({"error": "Пациент не найден"}, status_code=404)
+    return {"patient": pat.get_patient(pid)}
 
 
 @app.post("/api/patients")
@@ -1387,6 +1441,10 @@ def api_patient_create(body: PatientIn) -> dict:
             body.last_name, body.first_name, middle_name=body.middle_name,
             birth_year=body.birth_year, sex=body.sex, card_no=body.card_no,
             note=body.note)
+        if body.phone.strip():
+            pat.update_patient(pid, phone=body.phone.strip())
+        if body.appt_at.strip():
+            pat.add_appointment(pid, body.appt_at.strip(), body.appt_reason)
     except ValueError as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
     return {"id": pid, "patient": pat.get_patient(pid)}
@@ -2368,6 +2426,11 @@ def main() -> None:
     seeded = pat.seed_demo_patients()
     if seeded:
         print(f"заведён список-пример: {seeded} карточек")
+    # Телефоны и записи на приём у карточек-примеров. Отдельно: эти поля
+    # появились позже, и у уже заведённых примеров их не было бы.
+    extras = pat.seed_demo_extras()
+    if extras:
+        print(f"примеры дополнены: {extras} полей и записей")
     print(f"Пациенты: {len(pat.list_patients(limit=10000))} "
           f"(хранилище {pat.DATA_DIR})")
 

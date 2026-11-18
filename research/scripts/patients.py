@@ -91,6 +91,23 @@ CREATE TABLE IF NOT EXISTS patients (
 );
 CREATE INDEX IF NOT EXISTS patients_name ON patients(last_name, first_name);
 
+-- ЗАПИСЬ НА ПРИЁМ. Отдельной таблицей, а не колонкой «следующий визит» у
+-- пациента: записей у человека бывает несколько (лечение идёт этапами), и
+-- колонка потеряла бы всё, кроме последней. Список показывает БЛИЖАЙШУЮ
+-- будущую — прошедшие остаются историей.
+--
+-- Время храним строкой ISO с часовым поясом, как и всё остальное в базе:
+-- сравнение строк ISO совпадает со сравнением времён, пока пояс один, а
+-- клиника одна. Этого достаточно, и это не требует отдельного типа.
+CREATE TABLE IF NOT EXISTS appointments (
+    id          TEXT PRIMARY KEY,
+    patient_id  TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    at          TEXT NOT NULL,
+    reason      TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS appt_patient ON appointments(patient_id, at);
+
 CREATE TABLE IF NOT EXISTS studies (
     id          TEXT PRIMARY KEY,
     patient_id  TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -189,6 +206,21 @@ def connect() -> sqlite3.Connection:
             con.execute(f"ALTER TABLE studies ADD COLUMN {col}")
         except sqlite3.OperationalError:
             pass
+    # Телефон и архив у пациента — тем же способом: база уже существует на
+    # машине клиники, и пересоздавать её ради двух колонок нельзя.
+    #
+    # ТЕЛЕФОН в базе, а не в анкете: по нему ищут. Регистратура знает номер
+    # и не знает номера карты — «позвонила Гулнара, у неё болит» это поиск
+    # по телефону, а не по фамилии, которых в списке три одинаковых.
+    for col in ("phone TEXT NOT NULL DEFAULT ''",
+                # Архив — не удаление. Пациент, который не ходит третий год,
+                # не должен занимать первый экран, но и терять его карту
+                # нельзя: он вернётся, и история понадобится.
+                "archived INTEGER NOT NULL DEFAULT 0"):
+        try:
+            con.execute(f"ALTER TABLE patients ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
     return con
 
 
@@ -221,7 +253,7 @@ def create_patient(last_name: str, first_name: str = "", *, middle_name: str = "
 
 def update_patient(pid: str, **fields) -> bool:
     allowed = {"last_name", "first_name", "middle_name", "birth_year",
-               "birth_date", "sex", "card_no", "note"}
+               "birth_date", "sex", "card_no", "note", "phone"}
     sets = {k: v for k, v in fields.items() if k in allowed}
     if not sets:
         return False
@@ -253,9 +285,15 @@ def list_patients(query: str = "", limit: int = 200) -> list[dict]:
     args: list = []
     q = (query or "").strip()
     if q:
+        # Телефон ищем по ЦИФРАМ: врач набирает «61 222 14 07», а в базе
+        # «+998 61 222 14 07» — поиск по строке не нашёл бы ничего.
+        digits = re.sub(r"\D", "", q)
         sql += (" WHERE p.last_name LIKE ? OR p.first_name LIKE ?"
                 " OR p.card_no LIKE ?")
         args += [f"%{q}%"] * 3
+        if len(digits) >= 3:
+            sql += " OR REPLACE(REPLACE(REPLACE(p.phone,' ',''),'-',''),'+','') LIKE ?"
+            args.append(f"%{digits}%")
     sql += " ORDER BY COALESCE(last_study_at, p.created_at) DESC LIMIT ?"
     args.append(int(limit))
     with connect() as con:
@@ -263,9 +301,89 @@ def list_patients(query: str = "", limit: int = 200) -> list[dict]:
     return [_patient_row(r) for r in rows]
 
 
+# ------------------------------------------------------------- записи на приём
+
+def add_appointment(patient_id: str, at: str, reason: str = "") -> dict:
+    """Записать пациента на приём.
+
+    `at` — время ISO с поясом. Проверяем, что строка разбирается: битая
+    запись не упадёт здесь, а тихо не покажется в списке, и врач решит, что
+    запись потерялась.
+    """
+    if get_patient(patient_id) is None:
+        raise ValueError("пациента нет")
+    try:
+        datetime.fromisoformat(str(at))
+    except (TypeError, ValueError):
+        raise ValueError("время записи должно быть в формате ISO")
+    rec = {"id": "a_" + secrets.token_hex(5), "patient_id": patient_id,
+           "at": str(at), "reason": (reason or "").strip()[:200],
+           "created_at": now()}
+    with connect() as con:
+        con.execute("INSERT INTO appointments (id, patient_id, at, reason,"
+                    " created_at) VALUES (:id, :patient_id, :at, :reason,"
+                    " :created_at)", rec)
+    return rec
+
+
+def delete_appointment(appt_id: str) -> bool:
+    with connect() as con:
+        cur = con.execute("DELETE FROM appointments WHERE id = ?", (appt_id,))
+    return cur.rowcount > 0
+
+
+def next_appointments(patient_ids: list[str]) -> dict[str, dict]:
+    """Ближайшая БУДУЩАЯ запись каждого пациента — одним запросом.
+
+    Тот же приём, что в `last_studies`: запрос на пациента в цикле на двух
+    сотнях карточек дал бы двести обращений ради одной страницы.
+
+    Прошедшие записи не возвращаем: в списке нужна та, к которой готовятся,
+    а история визитов и так видна по исследованиям.
+    """
+    ids = [i for i in (patient_ids or []) if i]
+    if not ids:
+        return {}
+    marks = ",".join("?" * len(ids))
+    cutoff = now()
+    sql = (f"SELECT a.* FROM appointments a"
+           f" JOIN (SELECT patient_id, MIN(at) AS m FROM appointments"
+           f"       WHERE patient_id IN ({marks}) AND at >= ?"
+           f"       GROUP BY patient_id) t"
+           f"   ON t.patient_id = a.patient_id AND t.m = a.at")
+    with connect() as con:
+        rows = con.execute(sql, ids + [cutoff]).fetchall()
+    out: dict[str, dict] = {}
+    for r in rows:
+        d = dict(r)
+        prev = out.get(d["patient_id"])
+        if prev is None or d["id"] < prev["id"]:
+            out[d["patient_id"]] = d
+    return out
+
+
+def patient_appointments(patient_id: str) -> list[dict]:
+    with connect() as con:
+        rows = con.execute("SELECT * FROM appointments WHERE patient_id = ?"
+                           " ORDER BY at", (patient_id,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def set_archived(patient_id: str, archived: bool) -> bool:
+    """Убрать карту из списка или вернуть обратно. Не удаление: пациент,
+    который не ходит третий год, не должен занимать первый экран, но его
+    история нужна, когда он вернётся."""
+    with connect() as con:
+        cur = con.execute("UPDATE patients SET archived = ?, updated_at = ?"
+                          " WHERE id = ?",
+                          (1 if archived else 0, now(), patient_id))
+    return cur.rowcount > 0
+
+
 def _patient_row(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["is_example"] = bool(d.get("is_example"))
+    d["archived"] = bool(d.get("archived"))
     d["kinds"] = [k for k in (d.get("kinds") or "").split(",") if k]
     d["age"] = age_of(d)
     d["display"] = display_name(d)
@@ -740,6 +858,75 @@ def demo_profile(p: dict) -> dict | None:
     if not p or not p.get("is_example"):
         return None
     return DEMO_PROFILES.get(p.get("card_no") or "")
+
+
+def seed_demo_extras() -> int:
+    """Телефоны и записи на приём у карточек-ПРИМЕРОВ.
+
+    Отдельно от `seed_demo_patients`, потому что та срабатывает один раз на
+    пустой базе, а эти поля появились позже — иначе у уже заведённых
+    примеров список остался бы без колонки записи.
+
+    ГАРАНТИЯ БЕЗОПАСНОСТИ ДРУГАЯ, чем у seed_demo_patients: там проверялось
+    «в базе нет настоящих пациентов», здесь мы просто НЕ ТРОГАЕМ никого,
+    кроме `is_example = 1`. Это надёжнее: у клиники к тому моменту уже
+    появились свои карточки, и прежняя проверка заблокировала бы заполнение
+    примеров навсегда.
+
+    Время записи считается ОТ СЕГОДНЯШНЕГО ДНЯ и переносится на завтра,
+    если час уже прошёл: показ идёт и утром, и вечером, а «запись на
+    11:00», которая была три часа назад, в списке не покажется вовсе —
+    ближайшей считается только будущая.
+    """
+    now_t = datetime.now().astimezone()
+
+    def when(day_shift: int, hour: int, minute: int = 0) -> str:
+        t = now_t.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        t += timedelta(days=day_shift)
+        if t <= now_t:                      # час уже прошёл — на завтра
+            t += timedelta(days=1)
+        return t.isoformat(timespec="seconds")
+
+    # карта -> (телефон, сдвиг дня, час, минута, повод)
+    EXTRAS = {
+        "NK-2041": ("+998 61 222 14 07", 1, 14, 0, "контроль после разбора КЛКТ"),
+        "NK-2042": ("+998 61 224 51 30", 0, 16, 30, "консультация по имплантации"),
+        "NK-2043": ("+998 61 229 03 18", 2, 10, 30, "боль в верхней челюсти справа"),
+        "NK-2044": ("+998 61 227 76 92", 5, 16, 0, "консультация ортодонта"),
+        "NK-2045": ("+998 61 221 48 05", None, 0, 0, ""),
+    }
+
+    n = 0
+    with connect() as con:
+        rows = con.execute("SELECT id, card_no, phone FROM patients"
+                           " WHERE is_example = 1").fetchall()
+    for r in rows:
+        extra = EXTRAS.get(r["card_no"])
+        if not extra:
+            continue
+        phone, shift, hour, minute, reason = extra
+        if phone and not (r["phone"] or ""):
+            update_patient(r["id"], phone=phone)
+            n += 1
+        if shift is None:
+            continue
+        # Повторный запуск не плодит записи: если будущая уже есть, хватит.
+        if next_appointments([r["id"]]).get(r["id"]):
+            continue
+        add_appointment(r["id"], when(shift, hour, minute), reason)
+        n += 1
+
+    # Пациент БЕЗ СНИМКОВ: он и есть срез «новые» — записан, но ещё не
+    # снимался. Без такой карточки фильтр «Новые» на показе всегда пуст, а
+    # пустой фильтр читается как поломка.
+    if rows and not any(r["card_no"] == "NK-2046" for r in rows):
+        pid = create_patient("Курбанова", "Шахноза", birth_year=1991, sex="Ж",
+                             card_no="NK-2046", is_example=True,
+                             note="пример для демонстрации, не пациент клиники")
+        update_patient(pid, phone="+998 61 223 90 44")
+        add_appointment(pid, when(0, 11, 0), "первичный приём, направлена на КЛКТ")
+        n += 1
+    return n
 
 
 def seed_demo_patients() -> int:
