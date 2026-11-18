@@ -171,12 +171,20 @@
   @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
 
   .study {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px;
     align-items: center; padding: 11px 13px; border-radius: 10px;
     border: 1px solid var(--line); background: var(--panel-2);
     margin-bottom: 7px; width: 100%; text-align: left; color: inherit;
   }
   .study:hover { border-color: rgba(53,201,224,.4); }
+  /* «Открыть разбор» прямо в строке снимка: по макету строка ведёт себя
+     кнопкой. Вся строка и так ссылка, но без видимой кнопки врач на приёме
+     не понимает, что разбор уже посчитан и его можно открыть. */
+  .study .go {
+    font-size: 12.5px; padding: 6px 12px; border-radius: 8px; white-space: nowrap;
+    background: var(--accent); color: var(--accent-ink); font-weight: 600;
+  }
+  .study:hover .go { filter: brightness(1.08); }
   .cover {
     display: grid; grid-template-columns: auto 1fr; gap: 11px; align-items: start;
     padding: 9px 0; border-bottom: 1px solid var(--line);
@@ -214,21 +222,22 @@
   .tile.warn .v { color: var(--warn); }
   .tile.ok .v { color: var(--ok); }
 
-  /* Вкладки карточки: у врача четыре разные задачи, и в одном столбце они
-     мешают друг другу — до плана приходилось прокручивать два экрана. */
-  .ptabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line);
-           margin-bottom: 14px; overflow-x: auto; }
-  .ptab {
-    background: none; border: none; color: var(--muted); font-size: 13px;
-    padding: 9px 14px; border-bottom: 2px solid transparent; white-space: nowrap;
+  /* Заголовок раздела карточки. Вкладок здесь нет: они прятали снимок —
+     то, ради чего карточку и открывают, — за кликом по пятой из них.
+     Разделы отбиваются заголовком с чертой: видно, что ниже есть ещё, и
+     ничего не спрятано. */
+  .sect {
+    display: flex; align-items: center; gap: 9px;
+    margin: 26px 0 11px; font-size: 12px; font-weight: 600;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    scroll-margin-top: 76px;        /* шапка липкая: без этого заголовок
+                                       раздела уезжает под неё */
   }
-  .ptab:hover { color: var(--text); }
-  .ptab.on { color: var(--cyan); border-bottom-color: var(--cyan); }
-  .ptab .n {
-    font-size: 10.5px; background: rgba(169,162,154,.18); color: var(--muted);
-    border-radius: 999px; padding: 1px 6px; margin-left: 5px;
+  .sect::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+  .sect .n {
+    font-size: 10.5px; background: rgba(53,201,224,.16); color: var(--cyan);
+    border-radius: 999px; padding: 1px 7px; letter-spacing: 0;
   }
-  .ptab.on .n { background: rgba(53,201,224,.18); color: var(--cyan); }
 
   /* Находка: заголовок читается сразу, основание — по запросу. Длинные
      «на чём основано» в развёрнутом виде превращали ленту в простыню. */
@@ -532,29 +541,20 @@
           </div>
         </aside>
 
-        <div class="ptabs">
-          <button class="ptab" :class="{ on: tab === 'overview' }"
-                  @click="tab = 'overview'">{{ t("Обзор") }}</button>
-          <button class="ptab" :class="{ on: tab === 'findings' }"
-                  @click="tab = 'findings'">{{ t("Находки") }}
-            <span class="n" v-if="summary.counts">{{ summary.counts.total }}</span>
-          </button>
-          <button class="ptab" :class="{ on: tab === 'plan' }"
-                  @click="tab = 'plan'">{{ t("План лечения") }}
-            <span class="n" v-if="planCount">{{ planCount }}</span>
-          </button>
-          <button class="ptab" :class="{ on: tab === 'photo' }"
-                  @click="tab = 'photo'">{{ t("Фотопротокол") }}
-            <span class="n" v-if="photos.length">{{ photos.length }}</span>
-          </button>
-          <button class="ptab" :class="{ on: tab === 'studies' }"
-                  @click="tab = 'studies'">{{ t("Исследования") }}
-            <span class="n">{{ studies.length }}</span>
-          </button>
-        </div>
+        <!-- КАРТОЧКА БЕЗ ВКЛАДОК.
 
-        <!-- ОБЗОР: состояние за один взгляд, без прокрутки -->
-        <template v-if="tab === 'overview'">
+             Было пять вкладок: обзор, находки, план, фотопротокол,
+             исследования. Вкладка прячет содержимое за кликом, и снимок —
+             главное, ради чего карточку открывают, — лежал в последней из
+             них: врач на приёме каждый раз искал, куда нажать, чтобы
+             открыть разбор.
+
+             Теперь всё одной страницей, как в макете, и снимки стоят сразу
+             под анкетой. Разделы отбиваются заголовком, а не кнопкой.
+             Ссылка на раздел осталась: прежний адрес `?tab=plan` теперь
+             прокручивает к нужному заголовку, а не открывает вкладку. -->
+
+
           <!-- Анкета человека. Есть только у карточек-примеров: в базе этих
                полей нет и не заводится (см. patients.DEMO_PROFILES). У
                настоящего пациента блок просто не показывается — пустые
@@ -603,7 +603,33 @@
             <div class="note-st">{{ noteState }}</div>
           </div>
 
-          <div class="tiles">
+        <div class="sect" id="s-studies">{{ t("Снимки и исследования") }}
+          <span class="n">{{ studies.length }}</span></div>
+
+          <div class="card">
+            <a class="study" v-for="st in studies" :key="st.id" :href="st.view_url">
+              <span class="chip" :class="st.kind">{{ kindShort(st.kind) }}</span>
+              <span>
+                <div>{{ st.kind_label }}</div>
+                <div class="sub">{{ fmtDate(st.taken_at || st.uploaded_at, true) }}<template
+                  v-if="st.scanner"> · {{ st.scanner }}</template></div>
+                <div class="err" v-if="st.status === 'error'">{{ st.error }}
+                  <button class="btn-sm" @click.prevent.stop="retry(st)"
+                          :disabled="retrying === st.id">
+                    {{ retrying === st.id ? t("Ставим в очередь…") : t("Повторить") }}
+                  </button>
+                </div>
+              </span>
+              <span class="st" :class="'st-' + st.status">{{ statusText(st) }}</span>
+              <span class="go" v-if="st.status === 'ready'">{{ t("Открыть разбор") }}</span>
+              <span v-else></span>
+            </a>
+            <div class="empty" v-if="!studies.length">
+              {{ t("Исследований пока нет") }}</div>
+          </div>
+
+        <div class="sect">{{ t("Состояние по всем исследованиям") }}</div>
+<div class="tiles">
             <div class="tile" :class="(summary.counts || {}).attention ? 'warn' : 'ok'">
               <div class="k">{{ t("Требует внимания") }}</div>
               <div class="v">{{ (summary.counts || {}).attention ?? "—" }}</div>
@@ -628,7 +654,7 @@
             </div>
           </div>
 
-          <div class="card" v-if="summary.teeth_present && summary.teeth_present.length">
+<div class="card" v-if="summary.teeth_present && summary.teeth_present.length">
             <div class="card-t">{{ t("Зубная карта") }} ·
               {{ t("находки со всех исследований") }}</div>
             <div class="chart">
@@ -644,7 +670,7 @@
             </div>
           </div>
 
-          <div class="two-col">
+<div class="two-col">
             <div class="card" v-if="summary.attention && summary.attention.length">
               <div class="card-t">{{ t("Требует внимания") }}</div>
               <div class="f-row" :class="f.severity"
@@ -657,7 +683,7 @@
                 </div>
               </div>
               <button class="btn-sm" v-if="summary.counts.attention > 6"
-                      @click="tab = 'findings'" style="float:none;margin-top:4px">
+                      @click="jump('s-findings')" style="float:none;margin-top:4px">
                 {{ t("Показать все") }} ({{ summary.counts.attention }})</button>
             </div>
 
@@ -671,10 +697,10 @@
               </div>
             </div>
           </div>
-        </template>
 
-        <!-- НАХОДКИ: полный список, сгруппированный по специальностям -->
-        <template v-else-if="tab === 'findings'">
+        <div class="sect" id="s-findings">{{ t("Находки") }}
+          <span class="n" v-if="summary.counts">{{ summary.counts.total }}</span></div>
+
           <div class="card">
             <div v-for="grp in findingGroups" :key="grp.role">
               <div class="role-h">{{ grp.label }} · {{ grp.items.length }}</div>
@@ -696,12 +722,12 @@
             </div>
             <div class="empty" v-if="!findingGroups.length">{{ t("Находок нет") }}</div>
           </div>
-        </template>
 
-        <!-- ПЛАН -->
-        <template v-else-if="tab === 'plan'">
+        <div class="sect" id="s-plan">{{ t("План лечения") }}
+          <span class="n" v-if="planCount">{{ planCount }}</span></div>
+
           <div class="card">
-            <div class="card-t">{{ t("План лечения") }} — {{ t("черновик") }}
+            <div class="card-t">{{ t("Черновик: пороги врачом не подтверждены") }}
               <button class="btn-sm" @click="composePlan" :disabled="composing">
                 {{ composing ? t("Собираем…") : t("Собрать текстом") }}</button>
             </div>
@@ -753,14 +779,13 @@
               </div>
             </template>
           </div>
-        </template>
 
-        <!-- ФОТОПРОТОКОЛ -->
-        <template v-else-if="tab === 'photo'">
+        <div class="sect" id="s-photo">{{ t("Фотопротокол") }}
+          <span class="n" v-if="photos.length">{{ photos.length }}</span></div>
+
           <div class="card">
-            <div class="card-t">{{ t("Фотопротокол") }}
-              <span class="dim" style="font-weight:400">{{ photoCount }}</span>
-            </div>
+            <div class="card-t"><span class="dim"
+              style="font-weight:400">{{ photoCount }}</span></div>
             <div class="err" v-if="photoError">{{ photoError }}</div>
             <div class="pgrid">
               <div class="pslot" v-for="sl in photoGrid" :key="sl.key"
@@ -796,30 +821,6 @@
               Автоматический анализ фотографий не выполняется.
             </div>
           </div>
-        </template>
-
-        <!-- ИССЛЕДОВАНИЯ -->
-        <template v-else>
-          <div class="card">
-            <a class="study" v-for="st in studies" :key="st.id" :href="st.view_url">
-              <span class="chip" :class="st.kind">{{ kindShort(st.kind) }}</span>
-              <span>
-                <div>{{ st.kind_label }}</div>
-                <div class="sub">{{ fmtDate(st.taken_at || st.uploaded_at, true) }}<template
-                  v-if="st.scanner"> · {{ st.scanner }}</template></div>
-                <div class="err" v-if="st.status === 'error'">{{ st.error }}
-                  <button class="btn-sm" @click.prevent.stop="retry(st)"
-                          :disabled="retrying === st.id">
-                    {{ retrying === st.id ? t("Ставим в очередь…") : t("Повторить") }}
-                  </button>
-                </div>
-              </span>
-              <span class="st" :class="'st-' + st.status">{{ statusText(st) }}</span>
-            </a>
-            <div class="empty" v-if="!studies.length">
-              {{ t("Исследований пока нет") }}</div>
-          </div>
-        </template>
 
       </template>
     </template>
@@ -860,7 +861,7 @@ createApp({
       patient: null, studies: [], registration: {}, summary: {},
       profile: null, noteDraft: "", noteState: "",
       plan: {}, planLoaded: false, composed: null, composing: false,
-      composeError: "", tab: "overview", openedKeys: [],
+      composeError: "", openedKeys: [],
       upOpen: false, uploading: false, upError: "", upKind: "", files: [],
       upDone: 0,
       dragOver: false,
@@ -893,13 +894,18 @@ createApp({
 
     function go(path) { history.pushState(null, "", path); draw(); }
 
-    // Переключение вкладки отражаем в адресе, не перезагружая данные.
-    Vue.watch(() => state.tab, (v) => {
-      if (state.view !== "card") return;
-      const u = new URL(location.href);
-      v === "overview" ? u.searchParams.delete("tab") : u.searchParams.set("tab", v);
-      history.replaceState(null, "", u);
-    });
+    /* Переход к разделу карточки.
+     *
+     * Вкладок в карточке нет — разделы идут одной страницей. Ссылка на
+     * раздел при этом осталась: прежний адрес `?tab=plan` прокручивает к
+     * заголовку плана. Врач присылает коллеге ссылку «смотри план», а не
+     * объясняет, куда нажать; ломать уже разосланные ссылки нельзя. */
+    const SECTIONS = { findings: "s-findings", plan: "s-plan",
+                       photo: "s-photo", studies: "s-studies" };
+    function jump(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
     function open(id) { go(`/patients/${id}`); }
 
     async function loadList() {
@@ -933,21 +939,24 @@ createApp({
       state.summary = {};
       // Сводка приходит отдельным запросом: она собирается из всех
       // исследований и считается дольше, а список должен появиться сразу.
-      api(`/api/patients/${id}/summary`)
+      const sumDone = api(`/api/patients/${id}/summary`)
         .then(sum => { state.summary = sum; })
         .catch(() => {});
-      // Вкладка берётся из адреса: врач присылает коллеге ссылку на раздел
-      // («смотри план»), а не объясняет, куда нажать. Тот же принцип, что во
-      // вьюерах КЛКТ и скана.
-      const want = new URLSearchParams(location.search).get("tab");
-      state.tab = ["overview", "findings", "plan", "photo", "studies"].includes(want)
-        ? want : "overview";
       state.openedKeys = [];
       state.plan = {}; state.planLoaded = false;
       state.composed = null; state.composeError = "";
-      api(`/api/patients/${id}/plan`)
+      const planDone = api(`/api/patients/${id}/plan`)
         .then(pl => { state.plan = pl; state.planLoaded = true; })
         .catch(() => { state.planLoaded = true; });
+      /* Раздел из адреса. Прокручиваем ПОСЛЕ того, как пришли находки и
+         план: они приходят отдельными запросами и растягивают страницу уже
+         после первой отрисовки — прокрутка сразу промахивалась мимо
+         заголовка на две сотни пикселей (замер: план оказывался на +207). */
+      const want = SECTIONS[new URLSearchParams(location.search).get("tab")];
+      if (want) {
+        Promise.allSettled([sumDone, planDone])
+          .then(() => Vue.nextTick(() => setTimeout(() => jump(want), 60)));
+      }
       loadPhotos(id);
       watchPending();
     }
@@ -1382,7 +1391,7 @@ createApp({
       ...toRefs(state), coverage, subtitle, chartRows, hasTooth, toothTitle,
       planStages, composePlan, t, lang,
       planCount, kindsLine, findingGroups, isOpen, toggle,
-      go, open, createPatient, searchDebounced, upload, onPick, onDrop,
+      go, open, jump, createPatient, searchDebounced, upload, onPick, onDrop,
       fmtDate, statusText, rowStatus, reviewDone, initials, avStyle,
       sexWord, isFlag, saveNote,
       retry, photoGrid, photoCount, pickPhotos, dropPhotos, movePhoto, removePhoto, isArmed,
