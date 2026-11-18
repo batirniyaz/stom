@@ -752,6 +752,25 @@ def cbct_info(case_id: str):
         # крупинкой — врачу во вьюере он показывается вместе с пометкой
         # «измерения недостоверны», но на первом экране это просто мусор.
         out["teeth_usable"] = list(cached["teeth_present"])
+    # Уровень находок НА ЗУБ — для заставки: она красит зубы так же, как
+    # лента находок красит строки, и человек видит не абстрактный череп, а
+    # «вот этот зуб требует внимания». Берётся ТОЛЬКО ИЗ КЭША и той же
+    # шкалой, что везде (clinic_routes.LEVELS): свой порядок уровней здесь
+    # развёл бы цвет на заставке с цветом в ленте.
+    if cached:
+        import clinic_routes
+        rank = {k: v[4] for k, v in clinic_routes.LEVELS.items()}
+        worst: dict[int, str] = {}
+        for f in (cached.get("findings") or []):
+            sev = f.get("severity")
+            if sev not in rank:
+                continue
+            teeth = f.get("teeth") or ([f["tooth"]] if f.get("tooth") else [])
+            for t in teeth:
+                cur = worst.get(int(t))
+                if cur is None or rank[sev] < rank[cur]:
+                    worst[int(t)] = sev
+        out["teeth_levels"] = {str(k): v for k, v in worst.items()}
     import cbct_report
     out["metrics_line"] = cbct_report._metrics_line(out.get("model") or "")
     out["metrics_short"] = cbct_report.metrics_short(out.get("model") or "")
