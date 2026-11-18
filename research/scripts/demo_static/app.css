@@ -116,6 +116,24 @@ button { font: inherit; cursor: pointer; }
 .tab:hover { color: var(--text); }
 .tab.on { color: var(--accent-ink); background: var(--grad); font-weight: 600; }
 
+/* Кто вошёл и выход. Одинаковы на всех экранах, поэтому живут здесь:
+   копия в каждой странице в этом проекте уже расходилась. */
+.who { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+.who .doc { color: var(--muted); white-space: nowrap; }
+.who .out {
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 9px; padding: 6px 11px; font-size: 12.5px;
+}
+.who .out:hover { color: var(--bad); border-color: rgba(224, 82, 82, .45); }
+@media (max-width: 900px) { .who .doc { display: none; } }
+
+.hdr-nav {
+  color: var(--muted); font-size: 13px; padding: 7px 13px; margin-left: 18px;
+  border: 1px solid var(--line); border-radius: 9px; text-decoration: none;
+  white-space: nowrap;
+}
+.hdr-nav:hover { color: var(--text); border-color: var(--line-2); }
+
 .hdr-right { margin-left: auto; display: flex; align-items: center; gap: 9px; }
 #lang-switch { display: flex; gap: 3px; }
 .lang-btn {

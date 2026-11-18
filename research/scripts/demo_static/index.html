@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Actina — разбор снимков</title>
 <link rel="stylesheet" href="/app.css">
+<!-- Проверка входа — до отрисовки: иначе на долю секунды виден
+     чужой экран, а на показе это читается как сбой. -->
+<script src="/auth.js"></script>
+<script>actinaAuth.guard();</script>
 <style>
   /* Палитра и шрифт приходят из /app.css — одни на все экраны. Своя копия
      здесь уже разошлась с копиями на других страницах: у вьюера был холодный
@@ -399,6 +403,10 @@
   .f-loc { font-size: 11.5px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
 
   /* ---- переключение 2D/3D ---- */
+  /* `hidden` у элемента со своим display не срабатывает: правило класса
+     перебивает служебный стиль браузера, и скрытый блок остаётся виден.
+     Эти вкладки так и «вернулись» в шапку после переноса. */
+  .view-tabs[hidden] { display: none; }
   .view-tabs {
     display: flex; gap: 3px; padding: 3px; margin-left: 20px;
     background: rgba(142,153,168,.07); border: 1px solid var(--border);
@@ -794,6 +802,15 @@
     font-size: 26px; font-weight: 700; color: var(--cyan); line-height: 1;
   }
   .tooth-geom { font-size: 12px; color: var(--muted); }
+  .iso-btn {
+    margin-left: auto; font: inherit; font-size: 12px; padding: 5px 11px;
+    border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--muted); white-space: nowrap;
+  }
+  .iso-btn:hover { color: var(--text); border-color: var(--line-2); }
+  .iso-btn.on {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+  }
   .tooth-slices { display: grid; gap: 12px; }
   .tooth-slice img {
     width: 100%; border-radius: 10px; background: #000; display: block;
@@ -968,7 +985,14 @@
   body.case-mode .chat-pane #chat-log { flex: 1; min-height: 0; overflow: auto; }
 
   /* ---- подвал: чем посчитано ---- */
+  /* Режим просмотра по ссылке: отметки врача и подпись скрыты. Снимок
+     показать коллеге можно, подписать за врача — нет. */
+  body.guest .find-rev, body.guest .sign-box, body.guest #find-progress { display: none; }
+
   .cfoot {
+    /* Подвал страницы отцентрован, этот — нет: строка про метод читается
+       слева направо вместе с остальным интерфейсом. */
+    text-align: left; margin: 0;
     flex: none; padding: 5px 14px; border-top: 1px solid var(--line);
     background: var(--panel); color: var(--dim); font-size: 11.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1001,6 +1025,55 @@
     color: var(--muted); cursor: pointer;
   }
   .pp input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+
+  /* Заключение поверх экрана разбора. */
+  .rep-modal {
+    position: absolute; inset: 0; z-index: 20; display: grid;
+    place-items: center; padding: 18px; background: rgba(6, 9, 13, .72);
+  }
+  .rep-modal[hidden] { display: none; }
+  .rep-box {
+    width: min(980px, 100%); height: min(92%, 980px); display: flex;
+    flex-direction: column; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  }
+  .rep-head {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    border-bottom: 1px solid var(--line); flex: none;
+  }
+  .rep-tabs { display: flex; gap: 4px; }
+  .rep-tabs button {
+    border: 1px solid var(--line); background: var(--panel-2);
+    color: var(--muted); border-radius: 9px; padding: 6px 14px; font-size: 13px;
+  }
+  .rep-tabs button.on {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+    font-weight: 600;
+  }
+  #rep-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #fff; }
+
+  /* Карточка структуры. Под легендой слева: там уже «читальный» угол
+     экрана, и врачу не приходится искать ответ в другом месте. */
+  .obj-card {
+    position: absolute; left: 12px; top: 92px; z-index: 4; width: 288px;
+    background: rgba(17, 21, 27, .96); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px; font-size: 12.5px;
+    line-height: 1.5; color: var(--muted);
+  }
+  .obj-card[hidden] { display: none; }
+  .obj-card b { color: var(--text); font-size: 13.5px; display: block; }
+  .obj-card small { color: var(--dim); display: block; margin-top: 1px; }
+  .obj-card p { margin: 8px 0 0; }
+  .obj-card .obj-no { color: var(--warn); }
+  .obj-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 3px;
+    margin-right: 7px; vertical-align: 1px;
+  }
+  .obj-card .x {
+    position: absolute; right: 6px; top: 6px; border: 0; background: none;
+    color: var(--dim); font-size: 13px; padding: 4px 7px; border-radius: 7px;
+  }
+  .obj-card .x:hover { color: var(--text); background: var(--panel-2); }
 
   .scn { position: absolute; left: 12px; bottom: 12px; z-index: 3; }
   .scn > button {
@@ -1074,16 +1147,22 @@
 <div class="grid-bg"></div>
 
 <script src="/i18n.js"></script>
+<script src="/doctor.js"></script>
 <script src="/patient-bar.js"></script>
 
+<!-- Шапка по макету: знак, путь к пациентам, врач. Вкладок модальностей
+     («2D ОПТГ», «3D скан») здесь больше нет — в показе один трек, КЛКТ, и
+     строка выбора снимка сбивала с него на первом же экране. Экраны никуда
+     не делись и открываются адресами /2d и /ios; переключатель видов в
+     разметке остался скрытым, на нём держится showView(). -->
 <header>
-  <a class="wm" href="/patients" title="К списку пациентов"><i></i>Actina</a>
-  <div class="view-tabs" id="view-tabs">
-    <a class="view-tab" href="/patients" data-i18n>Пациенты</a>
+  <a class="wm" href="/" title="На главную"><i></i>Actina</a>
+  <div class="view-tabs" id="view-tabs" hidden>
     <button class="view-tab active" data-view="2d" data-i18n>2D ОПТГ</button>
     <button class="view-tab" data-view="cbct" data-i18n>3D КЛКТ</button>
     <button class="view-tab" data-view="ios">3D скан (IOS)</button>
   </div>
+  <a class="hdr-nav" href="/patients" data-i18n>Пациенты</a>
   <div class="header-right">
     <div class="model-picker">
       <span class="model-picker-label" data-i18n>Модель</span>
@@ -1091,6 +1170,7 @@
     </div>
     <div id="lang-switch"></div>
     <div class="header-badge" id="header-badge"></div>
+    <div class="who" id="who"></div>
   </div>
 </header>
 
@@ -1329,6 +1409,10 @@
             <button id="scn-btn" data-i18n>⚙ Сцена</button>
           </div>
 
+          <!-- Что это за структура: ответ на клик по нерву, пазухе или
+               челюсти. Накладной, закрывается крестиком. -->
+          <div class="obj-card" id="obj-card" hidden></div>
+
           <!-- Зубная карта на самой сцене: врач выбирает зуб, не уводя
                глаза со снимка. -->
           <div class="mm" id="tooth-chart"></div>
@@ -1415,6 +1499,25 @@
       <!-- Чем посчитано и с какой измеренной точностью. Строка приходит с
            сервера той же функцией, что печатает её в PDF. -->
       <footer class="cfoot" id="cbct-foot"></footer>
+
+      <!-- Заключение прямо на экране. Врач показывает его пациенту, не
+           уходя со снимка и не копаясь в папке «Загрузки». Внутри —
+           НАСТОЯЩИЙ PDF с сервера, а не его пересказ: второй вёрстки того
+           же документа в проекте быть не должно. -->
+      <div class="rep-modal" id="rep-modal" hidden>
+        <div class="rep-box">
+          <div class="rep-head">
+            <div class="rep-tabs">
+              <button data-kind="doctor" class="on">Врачу</button>
+              <button data-kind="patient">Пациенту</button>
+            </div>
+            <span style="flex:1"></span>
+            <a class="btn-ghost sm" id="rep-open" target="_blank" rel="noopener">Открыть отдельно</a>
+            <button class="btn-ghost sm" id="rep-close">Закрыть</button>
+          </div>
+          <iframe id="rep-frame" title="Заключение"></iframe>
+        </div>
+      </div>
     </section>
   </div><!-- /view-cbct -->
 </main>
@@ -2415,7 +2518,11 @@ async function showCbctResult(caseId) {
   window.scrollTo({ top: 0 });
   const info = await fetch(`/api/cbct/info/${caseId}`).then(r => r.json());
   curInfo = info;
-  $c("cbct-case-name").textContent = `${info.name} · ${info.model_label}`;
+  // Имя кейса не дублируем, когда рядом стоит полоса пациента: там уже
+  // написано, чей это снимок, а служебное «Пример: пациент 5» на приёме
+  // выглядит как чужая подпись.
+  $c("cbct-case-name").textContent = $c("cbct-patient-bar").children.length
+    ? info.model_label : `${info.name} · ${info.model_label}`;
   renderCbctInfo(info);
   renderCaseFoot(info);
   // У кейса может не быть исходного тома (демо-кейс из fixtures: том весит
@@ -2503,6 +2610,10 @@ function renderCbctPlan(plan) {
    план не идёт; любая правка отметок СНИМАЕТ подпись, иначе под подписью
    молча оказался бы другой план. */
 function doctorName() {
+  // Имя берём из профиля врача (doctor.js): он один на все экраны, и
+  // раньше одно и то же имя писалось в отчётах по-разному, потому что
+  // вводилось заново под каждым кейсом.
+  if (window.actinaDoctor) return actinaDoctor.name();
   try { return localStorage.getItem("stomadent-doctor") || ""; }
   catch (e) { return ""; }
 }
@@ -2663,6 +2774,17 @@ function progressHtml(rv) {
     </div>
   </div>`;
 }
+
+/* Кнопки отчёта открывают окно, а не скачивают файл. Делегируем: лента
+   находок перерисовывается при каждой отметке врача, и обработчики на
+   самих кнопках пришлось бы навешивать заново. */
+document.addEventListener("click", ev => {
+  const a = ev.target.closest && ev.target.closest(".pdf-btn");
+  if (!a || a.getAttribute("aria-disabled") === "true") return;
+  const kind = a.href.includes("kind=patient") ? "patient" : "doctor";
+  ev.preventDefault();
+  openReport(kind);
+});
 
 function renderSignBox(review) {
   const box = $c("cbct-sign");
@@ -3102,6 +3224,8 @@ async function openToothCard(fdi) {
   let html = `<div class="tooth-head">
       <span class="tooth-num">${fdi}</span>
       <span class="tooth-geom">${geom}</span>
+      <button class="iso-btn" type="button" data-fdi="${fdi}"
+        title="Убрать из кадра всё, кроме этого зуба">Только этот зуб</button>
     </div>
     <div class="tooth-slices">`;
   for (const p of info.planes) {
@@ -3159,9 +3283,158 @@ async function openToothCard(fdi) {
       }, 120);
     });
   });
+
+  const iso = box.querySelector(".iso-btn");
+  if (iso) {
+    iso.addEventListener("click", () => {
+      isolateTooth(isolatedTooth === fdi ? null : fdi);
+    });
+  }
+  syncIsolateUi();
 }
 
 /** Подсветить зуб в 3D и подвести к нему камеру. */
+/* ================= пролёт камеры к зубу =================
+
+   Было: камера ПЕРЕПРЫГИВАЛА к зубу одним кадром. На приёме это
+   дезориентирует — врач не понимает, куда его перенесло, и каждый раз
+   заново ищет, где он находится относительно челюсти.
+
+   Стало: дуга из трёх точек. Камера сначала отходит и приподнимается
+   (средняя точка вынесена наружу от центра челюсти и вверх), потом
+   подлетает к зубу. Движение по квадратичной кривой Безье со смягчением
+   на обоих концах — глаз успевает проследить путь и не теряет ориентир.
+   Приём и числа взяты из прототипа (`site/index.html`, flyBox). */
+let camFly = null;
+let sceneCenter = null;     // центр челюсти: от него считается «наружу»
+let homeCam = null;         // общий вид, к которому возвращает сброс
+let homeZoom = 1;           // и его масштаб: в параллельной проекции
+                            // приближение живёт в zoom, а не в расстоянии
+
+/* ================= один зуб отдельно =================
+
+   Задача §11.3.11. Зуб в ряду закрыт соседями с трёх сторон: чтобы
+   показать пациенту, почему этот корень близко к каналу, врач крутит
+   модель и всё равно смотрит сквозь чужие коронки. Изоляция убирает из
+   кадра всё, кроме выбранного зуба.
+
+   Прежнюю видимость ЗАПОМИНАЕМ и возвращаем: врач доходит до изоляции,
+   уже настроив сцену (погасил верхнюю челюсть, поднял прозрачность), и
+   выход из неё не должен сбрасывать эти настройки. */
+let isolatedTooth = null;
+let visBeforeIsolate = null;
+
+function isolateTooth(fdi) {
+  if (!meshRoot) return;
+  if (fdi == null) {                       // выход
+    if (visBeforeIsolate) {
+      for (const [mesh, vis] of visBeforeIsolate) mesh.visible = vis;
+    }
+    visBeforeIsolate = null;
+    isolatedTooth = null;
+    syncIsolateUi();
+    /* Возвращаем и КАДР, а не только видимость. В изоляции камера стоит
+       вплотную к одному зубу; показать после выхода весь ряд с той же
+       крупностью — значит вывалить врача в упор на чужие коронки. */
+    if (homeCam && camera && controls) {
+      camFly = { t: 0, n: 55, p0: camera.position.clone(),
+                 pm: camera.position.clone().lerp(homeCam, 0.5),
+                 p1: homeCam.clone(), z0: camera.zoom, z1: homeZoom,
+                 c0: controls.target.clone(),
+                 c1: (sceneCenter || controls.target).clone() };
+    }
+    return;
+  }
+  const keep = meshRoot.getObjectByName(`tooth_${fdi}`);
+  if (!keep) return;
+  if (!visBeforeIsolate) {
+    visBeforeIsolate = new Map();
+    meshRoot.traverse(o => { if (o.isMesh) visBeforeIsolate.set(o, o.visible); });
+  }
+  meshRoot.traverse(o => { if (o.isMesh) o.visible = (o === keep); });
+  // Пульпа своего зуба остаётся: ради неё изоляцию чаще всего и включают.
+  const pulp = meshRoot.getObjectByName(`pulp_${fdi}`);
+  if (pulp) pulp.visible = true;
+  isolatedTooth = fdi;
+  syncIsolateUi();
+  const box = new THREE.Box3().setFromObject(keep);
+  /* Крупнее, чем при обычном наведении (множитель 4.2): изоляцию включают,
+     чтобы показать пациенту ОДИН зуб, и он должен занимать кадр. Прежний
+     множитель 2.6 подбирался под широкий объектив, который сам раздувал
+     ближнее; в честном масштабе зуб при нём занимал меньше половины
+     высоты кадра. Замер: 1.7 даёт около двух третей. */
+  flyToBox(box, Math.max(box.getSize(new THREE.Vector3()).length(), 6) * 1.7);
+}
+
+function syncIsolateUi() {
+  const b = document.querySelector("#tooth-card .iso-btn");
+  if (b) {
+    b.textContent = isolatedTooth != null ? "Показать все зубы" : "Только этот зуб";
+    b.classList.toggle("on", isolatedTooth != null);
+  }
+}
+
+function flyToBox(box, dist) {
+  if (!camera || !controls) return;
+  const c = box.getCenter(new THREE.Vector3());
+  const home = sceneCenter || new THREE.Vector3();
+  // Подлетаем СНАРУЖИ челюсти: если зайти с внутренней стороны, зуб
+  // закроют соседние, и врач увидит чужую коронку вместо своей.
+  const dir = c.clone().sub(home); dir.y = 0;
+  if (dir.length() < 1) dir.set(0, 0, 1);
+  dir.normalize();
+
+  const p0 = camera.position.clone();
+  const p1 = c.clone().add(dir.clone().multiplyScalar(dist))
+              .add(new THREE.Vector3(0, dist * 0.19, 0));
+  const mid = p0.clone().add(p1).multiplyScalar(0.5);
+  const out = mid.clone().sub(home); out.y = 0;
+  if (out.length() < 1) out.set(0, 0, 1);
+  out.normalize();
+  const k = Math.max(35, p0.distanceTo(p1) * 0.55);
+  const pm = mid.add(out.multiplyScalar(k)).add(new THREE.Vector3(0, k * 0.45, 0));
+
+  /* В параллельной проекции подлёт НЕ приближает: расстояние на крупность
+     не влияет вовсе. Поэтому вместе с положением тянем масштаб, и целевую
+     крупность считаем из того же `dist`, которым раньше задавалось
+     приближение: half = dist · tg(45°/2). Так обе точки входа (карточка
+     зуба и изоляция) сохраняют прежнюю крупность без новых чисел. */
+  const z1 = Math.min(Math.max(viewHalf / Math.max(dist * 0.414, 1), 0.6), 30);
+
+  camFly = { t: 0, n: 85, p0, pm, p1, z0: camera.zoom, z1,
+             c0: controls.target.clone(), c1: c };
+}
+
+function stepCamFly() {
+  if (!camFly) return;
+  camFly.t += 1 / camFly.n;
+  const k = Math.min(camFly.t, 1);
+  // Смягчение на обоих концах (smootherstep): линейное движение выглядит
+  // механическим, а рывок в начале сбивает взгляд.
+  const e = k * k * k * (k * (6 * k - 15) + 10);
+  const u = 1 - e;
+  camera.position.set(
+    u * u * camFly.p0.x + 2 * u * e * camFly.pm.x + e * e * camFly.p1.x,
+    u * u * camFly.p0.y + 2 * u * e * camFly.pm.y + e * e * camFly.p1.y,
+    u * u * camFly.p0.z + 2 * u * e * camFly.pm.z + e * e * camFly.p1.z);
+  controls.target.lerpVectors(camFly.c0, camFly.c1, e);
+  if (camFly.z1) {
+    camera.zoom = camFly.z0 + (camFly.z1 - camFly.z0) * e;
+    camera.updateProjectionMatrix();
+  }
+  if (k >= 1) camFly = null;
+}
+
+/* Выбранный зуб дышит подсветкой. Статичная заливка на белой эмали
+   читается как дефект материала, пульсация — как «вот этот». */
+function pulseSelected() {
+  if (!hlMesh || !hlMesh.material.emissive) return;
+  // Размах подсветки небольшой: на полной яркости бирюза заливает эмаль
+  // целиком, и врач перестаёт видеть сам зуб — а смотреть он пришёл на
+  // зуб, а не на подсветку.
+  hlMesh.material.emissiveIntensity = 0.26 + 0.16 * Math.sin(performance.now() / 260);
+}
+
 function focusTooth(fdi) {
   if (!meshRoot) return;
   const mesh = meshRoot.getObjectByName(`tooth_${fdi}`);
@@ -3179,18 +3452,15 @@ function focusTooth(fdi) {
   if (!mesh) { hlMesh = null; return; }       // зуб отсутствует — меша нет
   hlEmissive = mesh.material.emissive.clone();
   hlMesh = mesh;
-  mesh.material.emissive = new THREE.Color(0xff9500);
-  mesh.material.emissiveIntensity = 0.9;
+  // Бирюза, а не оранжевый: оранжевый в этом интерфейсе означает
+  // уровень «важная», и подсветка выбора спорила бы с ним.
+  mesh.material.emissive = new THREE.Color(0x2fc4b2);
+  mesh.material.emissiveIntensity = 0.3;
   mesh.visible = true;
 
   const box = new THREE.Box3().setFromObject(mesh);
-  const center = box.getCenter(new THREE.Vector3());
   const size = Math.max(box.getSize(new THREE.Vector3()).length(), 6);
-  // направление взгляда сохраняем — иначе врача дезориентирует рывок камеры
-  const dir = camera.position.clone().sub(controls.target).normalize();
-  controls.target.copy(center);
-  camera.position.copy(center.clone().add(dir.multiplyScalar(size * 4)));
-  camera.updateProjectionMatrix();
+  flyToBox(box, size * 4.2);
 }
 
 /* ================= MPR-срезы =================
@@ -3335,6 +3605,9 @@ let quadrantColors = false;
 const TRANSLUCENT = new Set(["mandible", "maxilla", "sinus", "pharynx"]);
 
 let renderer = null, scene = null, camera = null, controls = null;
+/* Половина высоты кадра в миллиметрах. У ортографической камеры масштаб
+   задаёт ИМЕННО кадр, а не расстояние — отсюда отдельная переменная. */
+let viewHalf = 60;
 let meshRoot = null;
 const groupMeshes = {};  // key -> [Mesh]
 const groupMats = {};    // key -> [Material]
@@ -3349,7 +3622,32 @@ function initGL() {
   renderer.toneMappingExposure = 1.15;
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070b);
-  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
+  /* Камера ОРТОГРАФИЧЕСКАЯ, а не перспективная.
+
+     Жалоба врача на 3D: «картина спереди сжимается в одну точку, и чем
+     дальше от неё, тем шире становится кость» — то есть геометрия
+     челюсти выглядит сломанной. Данные при этом верны: расстояние от
+     каждого зуба до кости по мешу даёт медиану 2.0 мм при максимуме 3.1,
+     дальше 6 мм ни одного зуба.
+
+     Виноват объектив. Искажение зависит от того, во сколько раз дальний
+     край модели дальше ближнего, а камера здесь стояла фактически внутри
+     габарита черепа: расстояние считается от ЗУБОВ, а череп вдвое
+     больше. Замер (`window.__viewDbg` в конце frameOnTeeth):
+
+         было, угол 45°          раздутие 2.38
+         длинный объектив 18°    раздутие 1.34
+         ортографическая         раздутие 1.00
+
+     У ортографической камеры раздутия нет по определению: все части
+     модели в одном масштабе независимо от удалённости. Для анатомии это
+     и вернее — так рисуют рентген и технические виды, и врач сравнивает
+     нашу картинку именно с ними.
+
+     Near отрицательный намеренно: у параллельной проекции отсечение не
+     зависит от зума, и при близкой орбите положительный near резал бы
+     ближнюю половину черепа. */
+  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4000, 6000);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
@@ -3384,7 +3682,10 @@ function initGL() {
   controls.addEventListener("end", hold);
   (function anim() {
     requestAnimationFrame(anim);
-    controls.autoRotate = autoRotateOn && performance.now() > holdUntil;
+    stepCamFly();
+    controls.autoRotate = autoRotateOn && !camFly
+                          && performance.now() > holdUntil;
+    pulseSelected();
     controls.update();
     renderer.render(scene, camera);
   })();
@@ -3392,13 +3693,28 @@ function initGL() {
   initPicking();
 }
 
+/** Пересчитать кадр ортографической камеры.
+
+    `half` — половина высоты кадра в мм; без неё берётся прежняя (вызов
+    при изменении размера окна). Ширина следует за пропорциями холста,
+    поэтому при растягивании панели модель не сплющивается. */
+function orthoFrame(half) {
+  if (half) viewHalf = half;
+  const w = $c("gl-wrap").clientWidth || 1, h = $c("gl-wrap").clientHeight || 1;
+  const a = w / h;
+  camera.left = -viewHalf * a;
+  camera.right = viewHalf * a;
+  camera.top = viewHalf;
+  camera.bottom = -viewHalf;
+  camera.updateProjectionMatrix();
+}
+
 function resizeGL() {
   if (!renderer) return;
   const w = $c("gl-wrap").clientWidth, h = $c("gl-wrap").clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  orthoFrame();
 }
 
 function groupKeyOf(name) {
@@ -3440,6 +3756,152 @@ function toothMeshAt(ev) {
   if (!targets.length) return null;
   const hit = _ray.intersectObjects(targets, false)[0];
   return hit ? hit.object : null;
+}
+
+/* ================= заключение на экране =================
+
+   Кнопки «PDF врачу» и «PDF пациенту» раньше вели в загрузку файла: врач
+   уходил со снимка, искал файл в папке и возвращался. Теперь документ
+   открывается поверх разбора, а внутри — ТОТ ЖЕ PDF с сервера. Второй
+   вёрстки того же заключения в проекте быть не должно: она разойдётся с
+   первой, и врач подпишет не то, что увидел. */
+function openReport(kind) {
+  if (!curCase) return;
+  const box = $c("rep-modal");
+  const url = `/api/cbct/report/${encodeURIComponent(curCase)}?kind=${kind}`;
+  $c("rep-frame").src = url;
+  $c("rep-open").href = url;
+  box.querySelectorAll(".rep-tabs button").forEach(b =>
+    b.classList.toggle("on", b.dataset.kind === kind));
+  box.hidden = false;
+}
+
+(() => {
+  const box = $c("rep-modal");
+  if (!box) return;
+  box.querySelectorAll(".rep-tabs button").forEach(b => {
+    b.onclick = () => openReport(b.dataset.kind);
+  });
+  $c("rep-close").onclick = () => { box.hidden = true; $c("rep-frame").src = ""; };
+  // Клик по тёмному фону закрывает: привычный жест, и у окна всегда должен
+  // быть выход, кроме единственной кнопки.
+  box.addEventListener("click", ev => {
+    if (ev.target === box) { box.hidden = true; $c("rep-frame").src = ""; }
+  });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && !box.hidden) {
+      box.hidden = true; $c("rep-frame").src = "";
+    }
+  });
+})();
+
+/* ================= карточка объекта сцены =================
+
+   Клик по нерву, пазухе или челюсти раньше не делал ничего: луч целился
+   только в зубы. Врач тыкал в красный тяж и не получал ответа — а это
+   первый вопрос, который задаёт и он, и пациент: «что это?».
+
+   Карточка отвечает тем же, чем весь интерфейс: что это за структура,
+   ЧТО по ней считается и чего мы НЕ считаем. Последнее важнее: «объём
+   пазухи не оцениваем» честнее пустого места, из которого читается
+   «пазуха в норме». */
+const OBJ_CARDS = {
+  nerve: {
+    sub: "нижний альвеолярный нерв",
+    text: "Канал, по которому идёт нерв нижней челюсти. Считаем расстояние "
+        + "от корней до канала и долю кортикальной стенки со стороны зуба: "
+        + "её отсутствие поднимает находку до критичной.",
+    no: "Ход канала врачом не размечен — измерения опираются на маску сети.",
+  },
+  sinus: {
+    sub: "гайморова пазуха",
+    text: "Считаем расстояние от корней верхних зубов до ДНА пазухи — именно "
+        + "оно нужно при имплантации в боковом отделе.",
+    no: "Объём пазухи, утолщение слизистой и признаки синусита НЕ оцениваем: "
+      + "в разметке размечено только дно полости.",
+  },
+  mandible: {
+    sub: "нижняя челюсть",
+    text: "Кость, в которой сидят зубы. В лунке отсутствующего зуба считаем "
+        + "долю костной ткани и сравниваем с обычной для этой зоны.",
+    no: "Класс кости D1–D4 не выдаём: пороги Миша определены через единицы "
+      + "Хаунсфилда, а шкала КЛКТ не количественная.",
+  },
+  maxilla: {
+    sub: "верхняя челюсть",
+    text: "Кость верхней челюсти. В лунке отсутствующего зуба считаем долю "
+        + "костной ткани и сравниваем с обычной для этой зоны.",
+    no: "Класс кости D1–D4 не выдаём: шкала КЛКТ не количественная.",
+  },
+  prosthetics: {
+    sub: "коронки, мосты, импланты",
+    text: "Плотные объекты рядом с зубами. Факт наличия реставрации "
+        + "фиксируем и учитываем в плане.",
+    no: "Качество прилегания и состояние под коронкой по КЛКТ не читаются: "
+      + "металл даёт артефакты вокруг себя.",
+  },
+  pulp: {
+    sub: "пульпа и корневые каналы",
+    text: "Полость зуба. По плотности внутри канала отличаем пролеченный "
+        + "зуб от живого: разница с дентином того же зуба выше 300 HU.",
+    no: "Качество пломбирования не оцениваем — зазор до верхушки одинаков "
+      + "у пролеченных и живых зубов, это предел маски, а не недопломбировка.",
+  },
+  incisive: {
+    sub: "резцовый канал",
+    text: "Проходит в передней части нёба. Имплантат во фронтальном отделе "
+        + "ставится рядом с ним, поэтому канал показан отдельным слоем.",
+    no: "",
+  },
+  lingual: {
+    sub: "язычный канал",
+    text: "Канал на внутренней поверхности нижней челюсти, во фронтальном "
+        + "отделе. Показан отдельным слоем по той же причине.",
+    no: "",
+  },
+  pharynx: {
+    sub: "дыхательные пути",
+    text: "Воздушный столб глотки. Показан как ориентир — помогает понять, "
+        + "как ориентирован снимок.",
+    no: "Клинических выводов по нему не делаем.",
+  },
+};
+
+function meshAt(ev, meshes) {
+  if (!meshRoot || !renderer) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  _ptr.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+  _ptr.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+  _ray.setFromCamera(_ptr, camera);
+  const hit = _ray.intersectObjects(meshes.filter(m => m.visible), false)[0];
+  return hit ? hit.object : null;
+}
+
+function groupAt(ev) {
+  const all = [];
+  for (const [key, list] of Object.entries(groupMeshes)) {
+    if (key === "teeth") continue;          // зубы разбираются отдельно
+    for (const m of list) all.push(m);
+  }
+  const mesh = meshAt(ev, all);
+  return mesh ? groupKeyOf(mesh.name) : null;
+}
+
+function showObjectCard(key) {
+  const box = $c("obj-card");
+  if (!box) return;
+  const card = OBJ_CARDS[key];
+  const ginfo = (curInfo && curInfo.groups || []).find(g => g.group === key);
+  if (!card && !ginfo) { box.hidden = true; return; }
+  const title = (ginfo && ginfo.label_ru) || key;
+  const color = (ginfo && ginfo.color) || "var(--muted)";
+  box.innerHTML = `
+    <button class="x" type="button" aria-label="Закрыть">✕</button>
+    <b><span class="obj-dot" style="background:${color}"></span>${title}</b>
+    ${card ? `<small>${card.sub}</small><p>${card.text}</p>` : ""}
+    ${card && card.no ? `<p class="obj-no">${card.no}</p>` : ""}`;
+  box.hidden = false;
+  box.querySelector(".x").addEventListener("click", () => { box.hidden = true; });
 }
 
 function fdiOf(mesh) {
@@ -3496,15 +3958,40 @@ function initPicking() {
     downAt = null;
     if (moved > 5) return;
     const mesh = toothMeshAt(ev);
-    if (!mesh) return;
+    if (!mesh) {
+      // Не попали в зуб — может быть, попали в нерв или пазуху. Молчать
+      // в ответ на клик нельзя: это читается как «не работает».
+      const key = groupAt(ev);
+      if (key) showObjectCard(key); else { const b = $c("obj-card"); if (b) b.hidden = true; }
+      return;
+    }
     const fdi = fdiOf(mesh);
     if (!fdi) return;
+    { const b = $c("obj-card"); if (b) b.hidden = true; }
     // Снять подсветку наведения ДО выбора: иначе focusTooth запомнит как
     // «исходный» цвет бирюзу от hover и вернёт её, когда врач выберет
     // следующий зуб — тот так и останется подсвеченным.
     setHover(null);
     focusTooth(fdi);
     openToothCard(fdi);
+  });
+  // Двойной клик по зубу — показать только его. Самый короткий путь к
+  // изоляции: врач уже навёлся на зуб, и лезть за кнопкой во вкладку
+  // «Зуб» ради этого не нужно.
+  el.addEventListener("dblclick", ev => {
+    const mesh = toothMeshAt(ev);
+    const fdi = mesh && fdiOf(mesh);
+    if (!fdi) return;
+    isolateTooth(isolatedTooth === fdi ? null : fdi);
+    if (isolatedTooth) openToothCard(fdi);
+  });
+  // Esc выводит из изоляции: это состояние, из которого должен быть выход
+  // без поиска кнопки.
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && isolatedTooth != null
+        && !$c("cbct-result-view").hidden) {
+      isolateTooth(null);
+    }
   });
 }
 
@@ -3664,7 +4151,24 @@ async function loadMesh(caseId) {
             transparent: tunable,
             opacity: translucent ? ($c("opacity-slider").value / 100) : 1.0,
             depthWrite: !translucent,
-            side: translucent ? THREE.DoubleSide : THREE.FrontSide,
+            /* ПОЛУПРОЗРАЧНАЯ КОСТЬ — ТОЛЬКО ДАЛЬНЯЯ СТЕНКА (`BackSide`).
+
+               Оболочка челюсти это десятки налегающих поверхностей, и при
+               `DoubleSide` каждая умножает затемнение: зубы тонут в молочной
+               пелене, а врач смотрит на них, а не на кость. Аддитивное
+               смешивание проверено и врёт иначе — высвечивает толстые ветви
+               и полностью съедает ТОНКУЮ альвеолярную кость вокруг корней,
+               отчего зубы выглядят висящими в воздухе (в данных они сидят в
+               кости: медиана 2.0 мм, максимум 3.1).
+
+               Дальняя стенка зубов не закрывает вовсе и при этом даёт кости
+               силуэт и глубину — видно, что зуб стоит В челюсти. То же
+               решение, что на заставке (`home.html`).
+
+               При 100% ползунка сторона возвращается в `FrontSide` —
+               непрозрачная кость с дальней стенкой выглядела бы вывернутой
+               наизнанку; переключает обработчик ползунка. */
+            side: translucent ? THREE.BackSide : THREE.FrontSide,
           });
       if (key === "nerve") mat.emissive = new THREE.Color(0x7f1d1d);
       o.material = mat;
@@ -3719,12 +4223,47 @@ function frameOnTeeth() {
   if (!fwd) fwd = new THREE.Vector3(0, 0, 1);
 
   controls.target.copy(center);
+  sceneCenter = center.clone();     // нужен пролёту камеры: «наружу» от него
+  homeCam = null;                   // домашнее положение запомним ниже
   camera.position.copy(center)
     .addScaledVector(fwd, size * 0.95)
     .addScaledVector(new THREE.Vector3(0, 1, 0), size * 0.28);
-  camera.near = size / 100;
-  camera.far = size * 20;
-  camera.updateProjectionMatrix();
+  homeCam = camera.position.clone();
+  /* Высоту кадра берём ту же, какую давал прежний объектив в плоскости
+     зубов: half = расстояние · tg(45°/2) = 0.414 · 0.95 · габарит. Так
+     привычная компоновка сохраняется, а раздутие уходит — менять заодно
+     и крупность значило бы править две вещи одной правкой и не знать,
+     которая подействовала. */
+  camera.zoom = homeZoom = 1;
+  camera.near = -size * 4;        // параллельной проекции отрицательный near
+  camera.far = size * 8;          // нужен: иначе отсекается ближняя половина
+  orthoFrame(size * 0.39);
+
+  /* Отладочный замер перспективы — тот же, что на заставке. «Ближнее
+     раздувается» зависит не от угла обзора самого по себе, а от того, во
+     сколько раз дальний край модели дальше ближнего: при 1.8 кость у носа
+     вдвое крупнее такой же кости у затылка, при 1.0 разницы нет вовсе.
+     Нужен, чтобы о деформации говорить числом, а не впечатлением —
+     интерфейс без расширения браузера иначе не проверить. */
+  {
+    const full = new THREE.Box3().setFromObject(meshRoot);
+    const fs = full.getSize(new THREE.Vector3());
+    const depth = Math.max(fs.x, fs.y, fs.z);
+    const dist = camera.position.distanceTo(center);
+    window.__viewDbg = {
+      камера: camera.isOrthographicCamera ? "ортографическая" : camera.fov,
+      расстояние: Math.round(dist),
+      габарит_модели: Math.round(depth),
+      габарит_зубов: Math.round(size),
+      раздутие: camera.isOrthographicCamera ? 1
+        : +((dist + depth / 2) / Math.max(1, dist - depth / 2)).toFixed(2),
+    };
+    // Масштаб читается на момент опроса, а не на момент кадрирования:
+    // пролёт камеры меняет именно его, и проверить пролёт снаружи больше
+    // нечем — кликать headless-браузер не умеет.
+    Object.defineProperty(window.__viewDbg, "масштаб",
+      { get: () => +camera.zoom.toFixed(2) });
+  }
 }
 
 
@@ -3847,7 +4386,13 @@ $c("opacity-slider").addEventListener("input", () => {
   const v = $c("opacity-slider").value;
   $c("opacity-out").textContent = v + "%";
   for (const key of TRANSLUCENT) {
-    (groupMats[key] || []).forEach(m => { m.opacity = v / 100; });
+    (groupMats[key] || []).forEach(m => {
+      m.opacity = v / 100;
+      // Полупрозрачная кость — дальней стенкой (см. создание материала),
+      // непрозрачная — обычной передней, иначе она вывернется наизнанку.
+      m.side = v >= 100 ? THREE.FrontSide : THREE.BackSide;
+      m.depthWrite = v >= 100;
+    });
   }
 });
 
@@ -3951,6 +4496,11 @@ syncAllSliderFills();
 // когда-то её включил, не осталось следа в браузере.
 try { localStorage.removeItem("mirrorOverride"); localStorage.removeItem("swapSides"); } catch (e) {}
 
+/* Блок «кто вошёл» и профиль врача рисует общий doctor.js: он один на
+   список пациентов и на вьюер, копия в каждом файле уже расходилась. */
+actinaDoctor.mountWho("who");
+if (window.actinaAuth && actinaAuth.isGuest()) document.body.classList.add("guest");
+
 /* ================= оболочка экрана разбора =================
    Перенос макета: панель сцены, ширина колонки, подвал с методом.
    Всё, что здесь, — только про раскладку; данные и 3D не трогаются. */
@@ -4007,8 +4557,13 @@ if (window.ResizeObserver) {
 /* Ссылка на кейс продублирована в верхней строке: на приёме ею пользуются
    чаще, чем вкладкой «Кейс», где она лежала. */
 $c("cbct-share-top").onclick = async function () {
+  // Ссылка уходит с пометкой «просмотр»: тот, кому её дали, видит находки
+  // и план, но не отмечает их за врача. Это подсказка интерфейса, а не
+  // ограничение доступа — настоящих прав здесь нет (см. auth.js).
+  const u = new URL(location.href);
+  u.searchParams.set("guest", "1");
   try {
-    await navigator.clipboard.writeText(location.href);
+    await navigator.clipboard.writeText(u.toString());
     this.textContent = "Ссылка скопирована";
   } catch (e) { this.textContent = location.href; }
   setTimeout(() => { this.textContent = "Поделиться ссылкой"; }, 2500);

@@ -654,9 +654,30 @@ class CbctSegmentRequest(BaseModel):
     model: str = "ours"  # ours | pretrained
 
 
+# Кейс для главной и для кнопки «Посмотреть демо-кейс».
+#
+# Почему не первый попавшийся. На публичной фикстуре (`pair001_cbct`,
+# figshare, CC BY 4.0) сегментация заметно хуже: модель путает зубы, а
+# позади черепа у неё вырастает лишний зуб — это видно невооружённым
+# глазом на заставке во весь экран. На снимке с аппарата клиники тех же
+# артефактов нет. Фикстура остаётся в примерах: она единственная, которую
+# можно класть в репозиторий.
+#
+# Порядок — предпочтение; берём первый зарегистрированный.
+SHOWCASE_CASES = ("client5", "client4", "client2")
+
+
 @app.get("/api/cbct/examples")
 def cbct_examples() -> dict:
-    return {"examples": cbct.list_examples()}
+    ex = cbct.list_examples()
+    have = {e["case_id"] for e in ex}
+    pick = next((cid for cid in SHOWCASE_CASES if cid in have), None)
+    if pick is None and ex:
+        pick = ex[0]["case_id"]
+    for e in ex:
+        if e["case_id"] == pick:
+            e["showcase"] = True
+    return {"examples": ex}
 
 
 @app.post("/api/cbct/upload")
@@ -719,6 +740,18 @@ def cbct_info(case_id: str):
     # цифра на экране и цифра в отчёте разойдутся, а разойтись им нельзя.
     # Для моделей, на которых точность не мерили, приходит null, и подвал
     # про точность молчит.
+    # Сколько зубов РАЗБОР реально считает своими. Маска может содержать
+    # зуб-огрызок: формально он распознан, но измерения по нему
+    # недостоверны, и слой находок его исключает. Показывать на главной
+    # число из маски, когда разбор работает с другим, — мелкая, но ложь.
+    # Только из кэша: пересчёт занимает минуты.
+    cached = _cached_findings(c)
+    if cached and cached.get("teeth_present"):
+        # Список, а не число: по нему заставка прячет исключённые зубы.
+        # Зуб-огрызок (маска в 7 мм³ вместо 140+) висит в 3D отдельной
+        # крупинкой — врачу во вьюере он показывается вместе с пометкой
+        # «измерения недостоверны», но на первом экране это просто мусор.
+        out["teeth_usable"] = list(cached["teeth_present"])
     import cbct_report
     out["metrics_line"] = cbct_report._metrics_line(out.get("model") or "")
     out["metrics_short"] = cbct_report.metrics_short(out.get("model") or "")
@@ -1277,10 +1310,55 @@ class PatientIn(BaseModel):
     note: str = ""
 
 
+def _last_study_brief(st: dict) -> dict:
+    """Строка списка: с чем человек приходил и что с разбором.
+
+    Врач ищет глазами «кого ещё не разобрал» и «у кого критичное». Если
+    список показывает только фамилию и дату, за этим приходится заходить в
+    каждую карточку по очереди.
+
+    НИЧЕГО НЕ СЧИТАЕТ. Находки берутся только из кэша: пересчёт занимает
+    минуты, и запускать его при открытии СПИСКА нельзя — открыли список на
+    двадцать пациентов и положили машину.
+    """
+    out = {
+        "kind": st.get("kind"), "kind_label": st.get("kind_label"),
+        "status": st.get("status"), "complaints": st.get("complaints") or "",
+        "at": st.get("taken_at") or st.get("uploaded_at"),
+        "case_id": st.get("legacy_case") or "",
+    }
+    if st.get("kind") != "cbct" or st.get("status") != "ready":
+        return out
+    c = cbct.get_case(out["case_id"]) if out["case_id"] else None
+    cached = _cached_findings(c) if c else None
+    if cached is None:
+        return out
+    st2 = cbct.apply_review(cached, cbct.review_for(c), drop_rejected=False)
+    counts = {"alert": 0, "warning": 0, "info": 0}
+    for f in (st2.get("findings") or []):
+        key = ((f.get("level") or {}).get("key")) or f.get("severity")
+        if key in counts:
+            counts[key] += 1
+    rev = st2.get("review") or {}
+    out["levels"] = counts
+    out["review"] = {"reviewed": rev.get("reviewed", 0),
+                     "total": rev.get("total", 0),
+                     "signed": (rev.get("signed") or {}).get("at")
+                               if isinstance(rev.get("signed"), dict)
+                               else rev.get("signed")}
+    return out
+
+
 @app.get("/api/patients")
 def api_patients(q: str = Query("", description="поиск по фамилии или карте"),
                  limit: int = 200) -> dict:
-    return {"patients": pat.list_patients(q, limit)}
+    rows = pat.list_patients(q, limit)
+    last = pat.last_studies([r["id"] for r in rows])
+    for r in rows:
+        st = last.get(r["id"])
+        if st:
+            r["last"] = _last_study_brief(st)
+    return {"patients": rows}
 
 
 @app.post("/api/patients")
@@ -1305,7 +1383,12 @@ def api_patient(pid: str) -> dict:
     # нужна ссылка, а не идентификатор.
     for st in studies:
         st["view_url"] = _study_view_url(st)
+    # Анкета (контакты, здоровье, история в клинике) есть ТОЛЬКО у
+    # карточек-примеров и лежит не в базе, а рядом с ростером: вести
+    # медицинскую анкету — отдельный продукт, и девять колонок под показ
+    # дали бы девять пустых граф у настоящих пациентов.
     return {"patient": p, "studies": studies,
+            "profile": pat.demo_profile(p),
             "registration": _registration_state(studies)}
 
 
@@ -1862,8 +1945,15 @@ def api_patient_summary(pid: str) -> dict:
                 for x in f:
                     out.append({**x, "source": "cbct",
                                 "source_label": "КЛКТ", "study_id": st["id"]})
+                # Зубы берём ИЗ СЛОЯ НАХОДОК, а не из info: в маске может
+                # лежать зуб-огрызок, который находки исключают как
+                # недостоверный. Иначе плитка «Зубов» в карточке говорит
+                # 31, а разбор работает с 30 — и врач ищет, где потерялся
+                # зуб.
+                fcache = c.get("findings") or {}
                 info = c.get("info") or {}
-                teeth_present |= set(info.get("teeth_present") or [])
+                teeth_present |= set(fcache.get("teeth_present")
+                                     or info.get("teeth_present") or [])
 
         elif src == "ios" and case:
             # ТА ЖЕ функция, что у плана (`cbct_plan.load_ios`): она читает и
@@ -2171,6 +2261,17 @@ def _page(static_dir: Path, name: str = "index.html"):
                         headers=PAGE_HEADERS)
 
 
+@app.get("/")
+def page_home():
+    """Главная. Первый экран сценария показа.
+
+    Раньше корень отдавал экран анализа панорам с зоной перетаскивания —
+    вход в исследовательское демо, а не в продукт: врач сразу упирался в
+    форму загрузки вместо снимка.
+    """
+    return _page(STATIC_DIR, "home.html")
+
+
 @app.get("/2d")
 @app.get("/2d/{name}")
 def page_2d(name: str = ""):
@@ -2242,6 +2343,12 @@ def main() -> None:
     # пациентов, хотя смотреть есть что.
     if pat.seed_fixture_patient():
         print("заведён пациент-пример для кейса из fixtures/")
+    # Список из одного человека не похож на рабочий день клиники: не видно
+    # ни сортировки по свежести, ни разного состояния разбора. Заводим
+    # небольшой список-пример — только на базе БЕЗ настоящих пациентов.
+    seeded = pat.seed_demo_patients()
+    if seeded:
+        print(f"заведён список-пример: {seeded} карточек")
     print(f"Пациенты: {len(pat.list_patients(limit=10000))} "
           f"(хранилище {pat.DATA_DIR})")
 

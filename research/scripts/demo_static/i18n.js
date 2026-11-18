@@ -210,8 +210,10 @@
      пересылает целиком, и получатель должен увидеть тот же язык, а не свой
      прошлый выбор. Без параметра — прошлый выбор, по умолчанию русский. */
   const fromUrl = new URLSearchParams(location.search).get("lang");
-  let lang = (fromUrl === "kk" || fromUrl === "ru")
+  const KNOWN = ["ru", "kk", "uz"];
+  let lang = KNOWN.indexOf(fromUrl) >= 0
     ? fromUrl : (localStorage.getItem(KEY) || "ru");
+  if (lang !== "ru" && !DICT[lang]) lang = "ru";   // словаря нет — не делаем вид
   if (fromUrl) localStorage.setItem(KEY, lang);
 
   function t(s) {
@@ -240,7 +242,7 @@
   }
 
   let setLang = function (v) {
-    lang = v === "kk" ? "kk" : "ru";
+    lang = DICT[v] ? v : "ru";
     localStorage.setItem(KEY, lang);
     apply();
     document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
@@ -252,14 +254,28 @@
     const box = document.getElementById("lang-switch");
     if (box) {
       box.innerHTML = "";
-      for (const [code, label] of [["ru", "РУС"], ["kk", "QQ"]]) {
+      /* RU / UZ — решение по рынку: клиника работает на русском и
+         узбекском. Узбекского словаря ещё нет, и кнопка честно говорит об
+         этом вместо того, чтобы молча оставить русский текст: «переключил,
+         ничего не изменилось» читается как поломка.
+
+         Каракалпакский словарь (DICT.kk) из файла НЕ УДАЛЁН: он написан и
+         проверен, и переводится им обвязка, а не клинический текст.
+         Включается адресом `?lang=kk` — так его можно показать, не ставя в
+         шапку третью кнопку без перевода. */
+      for (const [code, label] of [["ru", "RU"], ["uz", "UZ"]]) {
         const b = document.createElement("button");
         b.textContent = label;
         b.className = "lang-btn" + (code === lang ? " on" : "");
         b.onclick = () => {
+          if (code === "uz" && !DICT.uz) {
+            b.textContent = "скоро";
+            setTimeout(() => { b.textContent = label; }, 1600);
+            return;
+          }
           setLang(code);
           box.querySelectorAll("button").forEach(x =>
-            x.classList.toggle("on", x.textContent === (lang === "ru" ? "РУС" : "QQ")));
+            x.classList.toggle("on", x.textContent === (lang === "ru" ? "RU" : "UZ")));
         };
         box.appendChild(b);
       }

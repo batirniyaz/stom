@@ -43,7 +43,7 @@ import os
 import re
 import secrets
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -364,6 +364,36 @@ def list_studies(patient_id: str) -> list[dict]:
     return [_study_row(r) for r in rows]
 
 
+def last_studies(patient_ids: list[str]) -> dict[str, dict]:
+    """Последнее исследование каждого пациента — одним запросом.
+
+    Нужно списку пациентов: врач смотрит на строку и хочет видеть, с чем
+    человек приходил в последний раз. Запрос на пациента в цикле на
+    двух сотнях карточек дал бы двести обращений к базе ради одной
+    страницы.
+    """
+    ids = [i for i in (patient_ids or []) if i]
+    if not ids:
+        return {}
+    marks = ",".join("?" * len(ids))
+    sql = (f"SELECT s.* FROM studies s"
+           f" JOIN (SELECT patient_id, MAX(uploaded_at) AS m FROM studies"
+           f"       WHERE patient_id IN ({marks}) GROUP BY patient_id) t"
+           f"   ON t.patient_id = s.patient_id AND t.m = s.uploaded_at")
+    with connect() as con:
+        rows = con.execute(sql, ids).fetchall()
+    out: dict[str, dict] = {}
+    for r in rows:
+        d = _study_row(r)
+        # У двух исследований может совпасть время загрузки (пакетный ввоз
+        # кладёт их одной секундой). Тогда берём любое, но устойчиво —
+        # по идентификатору, чтобы список не прыгал между перезагрузками.
+        prev = out.get(d["patient_id"])
+        if prev is None or d["id"] < prev["id"]:
+            out[d["patient_id"]] = d
+    return out
+
+
 def _study_row(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["kind_label"] = STUDY_KINDS.get(d["kind"], d["kind"])
@@ -605,6 +635,165 @@ def seed_fixture_patient() -> str | None:
                      legacy_kind="cbct", complaints=FIXTURE_COMPLAINTS)
         return pid
     return None
+
+
+# Приём на показе идёт по списку, а список из одного человека не похож на
+# рабочий день клиники: не видно ни сортировки по свежести, ни того, что у
+# разных людей разное состояние разбора. Поэтому на ПУСТОЙ базе заводится
+# небольшой список-пример.
+#
+# Все записи помечены `is_example`, и в списке у них стоит значок «пример»:
+# выдавать выдуманных людей за пациентов клиники нельзя.
+#
+# Снимок привязан только к первому: у остальных исследование числится
+# загруженным и неразобранным — это честное состояние, которое не станет
+# ложью, если кто-то откроет карточку. Рисовать им находки было бы враньём:
+# находок у них нет.
+DEMO_ROSTER = [
+    # (фамилия, имя, год, пол, карта, тип снимка, жалоба)
+    ("Кутлымуратов", "Нурлан", 1968, "М", "NK-2045", "cbct",
+     "подвижность нижних резцов, десна кровит при чистке"),
+    ("Алламуратова", "Айгуль", 1999, "Ж", "NK-2044", "opg",
+     "скученность, направлена ортодонтом"),
+    ("Оразбаев", "Бахтияр", 1976, "М", "NK-2043", "cbct",
+     "тянет в верхней челюсти справа, отдаёт в висок"),
+    ("Жумабаева", "Гулнара", 1991, "Ж", "NK-2042", "cbct",
+     "планирует имплантацию на месте 36"),
+]
+
+# Кейс, который открывают на показе. Снимок клиники: сегментация на нём
+# заметно лучше, чем на публичной фикстуре, где у модели путаются зубы.
+SHOWCASE = ("Сейтмуратов", "Азамат", 1984, "М", "NK-2041", "client5",
+            "ноет слева снизу при накусывании, третий день")
+
+
+# Анкета карточек-ПРИМЕРОВ: контакты, здоровье, история в клинике.
+#
+# ЭТИХ ПОЛЕЙ В БАЗЕ НЕТ И НЕ ЗАВОДИТСЯ. Решение осознанное: вести
+# медицинскую анкету — это отдельный продукт (согласия, доступ, хранение
+# персональных данных), и заводить под показ девять колонок, которые никто
+# не заполняет, значит получить девять пустых граф у настоящих пациентов.
+#
+# Поэтому анкета лежит здесь, рядом с ростером, и отдаётся ТОЛЬКО карточкам
+# с пометкой «пример». У настоящего пациента её нет вовсе, и карточка
+# показывает то, что в базе действительно есть.
+DEMO_PROFILES = {
+    "NK-2041": {
+        "phone": "+998 61 222 14 07", "addr": "Нукус, ул. Дослык, 12",
+        "job": "инженер-строитель",
+        "emerg": "супруга, +998 61 222 14 08",
+        "blood": "II (A) Rh+", "allergy": "нет",
+        "chronic": "нет", "meds": "нет", "habit": "не курит",
+        "since": "03.2024", "ref": "самообращение", "cleaning": "09.2026",
+    },
+    "NK-2042": {
+        "phone": "+998 61 224 51 30", "addr": "Нукус, мкр. 4, д. 7",
+        "job": "преподаватель",
+        "emerg": "брат, +998 61 224 51 31",
+        "blood": "I (0) Rh+", "allergy": "лидокаин — сыпь",
+        "chronic": "нет", "meds": "нет", "habit": "не курит",
+        "since": "11.2023", "ref": "по рекомендации", "cleaning": "05.2026",
+    },
+    "NK-2043": {
+        "phone": "+998 61 229 03 18", "addr": "Нукус, ул. Бердаха, 44",
+        "job": "предприниматель",
+        "emerg": "супруга, +998 61 229 03 19",
+        "blood": "III (B) Rh+", "allergy": "нет",
+        "chronic": "гипертония", "meds": "бисопролол",
+        "habit": "курит, около 10 сигарет в день",
+        "since": "07.2022", "ref": "самообращение", "cleaning": "не было",
+    },
+    "NK-2044": {
+        "phone": "+998 61 227 76 92", "addr": "Нукус, ул. Гарезсизлик, 3",
+        "job": "студентка",
+        "emerg": "отец, +998 61 227 76 93",
+        "blood": "II (A) Rh−", "allergy": "пенициллин",
+        "chronic": "нет", "meds": "нет", "habit": "не курит",
+        "since": "11.2026", "ref": "направление ортодонта",
+        "cleaning": "не было",
+    },
+    "NK-2045": {
+        "phone": "+998 61 221 40 55", "addr": "Нукус, ул. Каракалпакстан, 9",
+        "job": "водитель",
+        "emerg": "сын, +998 61 221 40 56",
+        "blood": "IV (AB) Rh+", "allergy": "нет",
+        "chronic": "сахарный диабет 2 типа", "meds": "метформин",
+        "habit": "курит",
+        "since": "02.2021", "ref": "по рекомендации", "cleaning": "03.2026",
+    },
+    "DEMO-001": {
+        "phone": "—", "addr": "—", "job": "—", "emerg": "—",
+        "blood": "—", "allergy": "—", "chronic": "—", "meds": "—",
+        "habit": "—",
+        "since": "—", "ref": "публичный набор figshare (CC BY 4.0)",
+        "cleaning": "—",
+    },
+}
+
+
+def demo_profile(p: dict) -> dict | None:
+    """Анкета карточки-примера. None — у настоящего пациента её нет.
+
+    Проверяем именно `is_example`: анкета выдуманная, и показать её рядом с
+    настоящей фамилией нельзя ни при каких обстоятельствах.
+    """
+    if not p or not p.get("is_example"):
+        return None
+    return DEMO_PROFILES.get(p.get("card_no") or "")
+
+
+def seed_demo_patients() -> int:
+    """Список-пример для показа. Возвращает, сколько карточек завела.
+
+    СРАБАТЫВАЕТ ТОЛЬКО НА БАЗЕ БЕЗ НАСТОЯЩИХ ПАЦИЕНТОВ. У клиники свои
+    карточки, и подкладывать им выдуманных людей нельзя ни при каких
+    обстоятельствах — даже с пометкой «пример».
+    """
+    with connect() as con:
+        real = con.execute(
+            "SELECT 1 FROM patients WHERE is_example = 0 LIMIT 1").fetchone()
+        if real:
+            return 0
+        if con.execute("SELECT 1 FROM patients WHERE card_no LIKE 'NK-20%'"
+                       " LIMIT 1").fetchone():
+            return 0                       # уже заводили
+
+    def _backdate(sid: str, days: int) -> None:
+        """Отодвинуть исследование на `days` дней назад.
+
+        Список сортируется по времени последнего снимка. Заведённые подряд
+        записи получают одну и ту же секунду, порядок при равенстве
+        произвольный — показательный кейс оказывался в середине списка.
+        Заодно это правдоподобнее: пять снимков в одну секунду в клинике
+        не делают.
+
+        Время считаем в Python, а не функцией `datetime()` в SQL: она
+        отбрасывает часовой пояс и пишет «2026-11-16 21:45:44», тогда как
+        все остальные записи лежат в ISO со смещением. Два формата в одной
+        колонке — это разбор дат, который где-нибудь да сломается.
+        """
+        t = (datetime.now(timezone.utc) - timedelta(days=days))
+        iso = t.astimezone().isoformat(timespec="seconds")
+        with connect() as con:
+            con.execute("UPDATE studies SET uploaded_at = ?, taken_at = ?"
+                        " WHERE id = ?", (iso, iso, sid))
+
+    n = 0
+    for i, (last, first, year, sex, card, kind, cmp_) in enumerate(DEMO_ROSTER):
+        pid = create_patient(last, first, birth_year=year, sex=sex,
+                             card_no=card, is_example=True,
+                             note="пример для демонстрации, не пациент клиники")
+        sid = create_study(pid, kind, status="uploaded", complaints=cmp_)
+        _backdate(sid, len(DEMO_ROSTER) - i)
+        n += 1
+
+    last, first, year, sex, card, case_id, cmp_ = SHOWCASE
+    pid = create_patient(last, first, birth_year=year, sex=sex, card_no=card,
+                         is_example=True,
+                         note="пример для демонстрации, не пациент клиники")
+    create_study(pid, "cbct", status="ready", legacy_case=case_id,
+                 legacy_kind="cbct", complaints=cmp_)
+    return n + 1
 
 
 # -------------------------------------------------------------------- CLI
