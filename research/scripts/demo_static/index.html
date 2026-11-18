@@ -639,6 +639,22 @@
     color: var(--muted); cursor: pointer;
   }
   .chat-used button:hover { color: var(--fg); border-color: var(--accent); }
+  .chat-head { display: flex; align-items: center; gap: 9px; padding-bottom: 9px;
+               margin-bottom: 9px; border-bottom: 1px solid var(--line); }
+  .chat-head .bot-av {
+    width: 28px; height: 28px; border-radius: 9px; display: grid;
+    place-items: center; font-weight: 700; font-size: 13px; color: #04211d;
+    background: linear-gradient(135deg, #2fc4b2, #1b6f8f); flex: none;
+  }
+  .chat-head b { font-size: 13.5px; display: block; }
+  .chat-head small { font-size: 11.5px; color: var(--muted); }
+  .chat-sug { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 9px; }
+  .chat-sug button {
+    font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--border); background: none; color: var(--muted);
+    cursor: pointer;
+  }
+  .chat-sug button:hover { color: var(--text); border-color: var(--cyan); }
   .chat-form { display: flex; gap: 6px; align-items: flex-end; }
   .chat-form textarea {
     flex: 1 1 auto; resize: vertical; font: inherit; font-size: 13px;
@@ -650,6 +666,13 @@
     border: 1px solid var(--border); background: rgba(47,196,178,.14);
     color: var(--fg); cursor: pointer; white-space: nowrap;
   }
+  .chat-form button.mic { padding: 7px 10px; display: inline-flex;
+                          align-items: center; background: none; }
+  .chat-form button.mic.rec {
+    color: #fff; background: var(--lv-k); border-color: var(--lv-k);
+    animation: micpulse 1.1s infinite;
+  }
+  @keyframes micpulse { 50% { opacity: .55; } }
   .chat-note { font-size: 11px; color: var(--muted); margin-top: 7px; }
   /* Чек-лист и кнопки отчёта */
   /* Чек-лист прилипает к верху ленты находок: врач прокручивает список
@@ -1483,14 +1506,36 @@
           <!-- Чат по кейсу. Отвечает ТОЛЬКО по находкам этого пациента:
                контекст собирает сервер, снимки и ФИО в него не попадают. -->
           <div class="cbct-pane chat-pane" id="pane-chat" hidden>
+            <!-- У помощника есть имя и роль: врач должен понимать, с кем
+                 говорит и по каким данным тот отвечает. -->
+            <div class="chat-head">
+              <span class="bot-av">A</span>
+              <span><b>Actis</b><small>помощник по этому снимку</small></span>
+            </div>
             <div id="chat-log"></div>
+            <!-- Подсказки: врач не обязан догадываться, о чём спрашивать.
+                 Последняя — про границы: честный помощник сам говорит, чего
+                 он не видит. -->
+            <div class="chat-sug" id="chat-sug"></div>
             <div class="chat-form">
               <textarea id="chat-q" rows="2"
                 placeholder="Например: почему уровень кости у 12 критичный?"></textarea>
+              <!-- Голосовой ввод: на приёме руки врача заняты, а вопрос
+                   короткий. Кнопка исчезает, если распознавания в браузере
+                   нет, — неработающая кнопка хуже отсутствующей. -->
+              <button id="chat-mic" class="mic" type="button"
+                      title="Продиктовать вопрос" aria-label="Продиктовать вопрос">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <rect x="9" y="3" width="6" height="12" rx="3"/>
+                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              </button>
               <button id="chat-send">Спросить</button>
             </div>
-            <div class="chat-note">Отвечает по находкам этого снимка и плану.
-              Чего нет в данных — скажет, что не знает. Диагноз ставит врач.</div>
+            <div class="chat-note">Actis отвечает по находкам этого снимка и
+              плану. Чего нет в данных — скажет, что не знает. Диагноз ставит
+              врач. Голосовой ввод распознаёт браузер, то есть звук уходит в
+              облако Google: имя пациента диктовать не нужно.</div>
           </div>
 
           <div class="cbct-pane" id="pane-tooth" hidden>
@@ -2381,6 +2426,77 @@ document.querySelectorAll("#cbct-tabs button[data-pane]").forEach(b => {
   b.onclick = () => selectCbctPane(b.dataset.pane);
 });
 $c("auto-rot").onchange = ev => { autoRotateOn = ev.target.checked; };
+/* ГОЛОСОВОЙ ВВОД ВОПРОСА.
+
+   На приёме у врача заняты руки, а вопрос к Actis короткий — продиктовать
+   быстрее, чем набрать. Распознавание берём браузерное
+   (`SpeechRecognition`): своего сервиса у нас нет, а в Chrome оно есть.
+
+   ЧТО ПРИ ЭТОМ ВАЖНО ЗНАТЬ: браузерное распознавание отправляет звук в
+   облако Google. Диктовать туда имя пациента нельзя — об этом говорит
+   подпись под полем. Сам вопрос и так уходит к модели вместе с находками,
+   то есть новой утечки это не создаёт, но микрофон слышит и то, что
+   говорят рядом, поэтому запись идёт только по нажатию и видна красной
+   кнопкой.
+
+   Кнопка исчезает, если распознавания в браузере нет: неработающая
+   кнопка хуже отсутствующей. */
+/* Подсказки вопросов. Пустое поле ввода на приёме не используют: врач не
+   знает, что этот помощник умеет, и закрывает вкладку. Последний вопрос —
+   про ГРАНИЦЫ: ответ на него («пазухи не меряем, кариес на КЛКТ не
+   ищем») полезнее любого другого, потому что мешает поверить в то, чего
+   мы не считаем. */
+const CHAT_SUGGEST = [
+  "Почему это важно?",
+  "Что сказать пациенту?",
+  "Чего не видно на этом снимке?",
+];
+(function initSuggest() {
+  const box = $c("chat-sug");
+  if (!box) return;
+  box.innerHTML = "";
+  for (const q of CHAT_SUGGEST) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = q;
+    b.onclick = () => { $c("chat-q").value = q; $c("chat-send").click(); };
+    box.appendChild(b);
+  }
+})();
+
+(function initMic() {
+  const btn = $c("chat-mic");
+  if (!btn) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { btn.hidden = true; return; }
+  let rec = null, on = false;
+  btn.onclick = () => {
+    if (on && rec) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = "ru-RU";
+    rec.interimResults = true;     // текст появляется по ходу речи
+    rec.continuous = false;        // одна фраза — один вопрос
+    const base = $c("chat-q").value;
+    rec.onstart = () => { on = true; btn.classList.add("rec"); };
+    rec.onresult = ev => {
+      let t = "";
+      for (let i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
+      $c("chat-q").value = (base ? base + " " : "") + t;
+    };
+    rec.onend = () => {
+      on = false; btn.classList.remove("rec");
+      if ($c("chat-q").value.trim() !== base.trim()) $c("chat-q").focus();
+    };
+    rec.onerror = ev => {
+      on = false; btn.classList.remove("rec");
+      if (ev.error === "not-allowed") {
+        $c("chat-q").placeholder = "Браузер не дал доступ к микрофону";
+      }
+    };
+    rec.start();
+  };
+})();
+
 $c("chat-send").onclick = () => {
   const q = $c("chat-q").value.trim();
   if (!q || !curCase) return;
@@ -2777,9 +2893,9 @@ async function chatAsk(question) {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || `ошибка ${r.status}`);
-    chatAdd("ИИ", d.answer || "—", d.used);
+    chatAdd("Actis", d.answer || "—", d.used);
   } catch (e) {
-    chatAdd("чат недоступен", String(e.message || e), null, "err");
+    chatAdd("Actis недоступен", String(e.message || e), null, "err");
   } finally {
     sent.disabled = false;
     sent.textContent = "Спросить";
@@ -2799,10 +2915,10 @@ async function chatSummary(caseId) {
                             body: "{}" });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || `ошибка ${r.status}`);
-    chatAdd("ИИ", d.answer || "—", d.used);
+    chatAdd("Actis", d.answer || "—", d.used);
     $c("cnt-chat").textContent = "1";
   } catch (e) {
-    chatAdd("чат недоступен", String(e.message || e), null, "err");
+    chatAdd("Actis недоступен", String(e.message || e), null, "err");
     $c("cnt-chat").textContent = "—";
   }
 }
