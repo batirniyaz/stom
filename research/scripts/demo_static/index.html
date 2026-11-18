@@ -1386,8 +1386,8 @@
                 <div>
                   <div id="struct-list"></div>
                   <div class="rg">
-                    <div><span data-i18n>Прозрачность кости и пазух</span><output id="opacity-out">35%</output></div>
-                    <input type="range" id="opacity-slider" min="5" max="100" value="35">
+                    <div><span data-i18n>Прозрачность кости и пазух</span><output id="opacity-out">22%</output></div>
+                    <input type="range" id="opacity-slider" min="5" max="100" value="22">
                   </div>
                   <div id="superimpose" style="display:none"></div>
                 </div>
@@ -2885,6 +2885,26 @@ function renderCbctInfo(info) {
 
 /* ================= находки и маршрут ================= */
 let hlMesh = null, hlEmissive = null;
+/* Кость приглушается, когда врач выбрал зуб.
+
+   Приём из макета, и он решает настоящую задачу приёма: врач показывает
+   пациенту ОДИН зуб, а полупрозрачная челюсть всё равно лежит поверх
+   него слоем. Ползунок при этом не трогаем — врач его не двигал, и
+   вернуть прежнюю прозрачность надо ровно ту, что он выставил. */
+let boneDimmed = false;
+const BONE_DIM = 0.10;
+function boneOpacity() {
+  const v = +$c("opacity-slider").value / 100;
+  return boneDimmed ? Math.min(v, BONE_DIM) : v;
+}
+function dimBone(on) {
+  if (on === boneDimmed) return;
+  boneDimmed = on;
+  const o = boneOpacity();
+  for (const key of TRANSLUCENT) {
+    (groupMats[key] || []).forEach(m => { m.opacity = o; });
+  }
+}
 
 async function loadFindings(caseId) {
   const box = $c("cbct-findings");
@@ -3449,9 +3469,10 @@ function focusTooth(fdi) {
     hlMesh.material.emissive.copy(hlEmissive);
     hlMesh.material.emissiveIntensity = 1;
   }
-  if (!mesh) { hlMesh = null; return; }       // зуб отсутствует — меша нет
+  if (!mesh) { hlMesh = null; dimBone(false); return; }   // зуба в маске нет
   hlEmissive = mesh.material.emissive.clone();
   hlMesh = mesh;
+  dimBone(true);              // челюсть не должна лежать поверх выбранного
   // Бирюза, а не оранжевый: оранжевый в этом интерфейсе означает
   // уровень «важная», и подсветка выбора спорила бы с ним.
   mesh.material.emissive = new THREE.Color(0x2fc4b2);
@@ -4151,24 +4172,25 @@ async function loadMesh(caseId) {
             transparent: tunable,
             opacity: translucent ? ($c("opacity-slider").value / 100) : 1.0,
             depthWrite: !translucent,
-            /* ПОЛУПРОЗРАЧНАЯ КОСТЬ — ТОЛЬКО ДАЛЬНЯЯ СТЕНКА (`BackSide`).
+            /* КОСТЬ — ОБЕ СТОРОНЫ ПРИ МАЛОЙ ПРОЗРАЧНОСТИ, как в макете.
 
-               Оболочка челюсти это десятки налегающих поверхностей, и при
-               `DoubleSide` каждая умножает затемнение: зубы тонут в молочной
-               пелене, а врач смотрит на них, а не на кость. Аддитивное
-               смешивание проверено и врёт иначе — высвечивает толстые ветви
-               и полностью съедает ТОНКУЮ альвеолярную кость вокруг корней,
-               отчего зубы выглядят висящими в воздухе (в данных они сидят в
-               кости: медиана 2.0 мм, максимум 3.1).
+               Решает не сторона, а ЧИСЛО. Проверены три варианта:
 
-               Дальняя стенка зубов не закрывает вовсе и при этом даёт кости
-               силуэт и глубину — видно, что зуб стоит В челюсти. То же
-               решение, что на заставке (`home.html`).
+               - DoubleSide при 0.35: десятки налегающих оболочек, каждая
+                 умножает затемнение — зубы тонут в молочной пелене;
+               - BackSide при 0.30: пелены нет, но нет и объёма — челюсть
+                 читается плоским силуэтом без внутренней структуры;
+               - DoubleSide при 0.22 (макет): слои складываются в
+                 рентгеновскую глубину, и зубы сквозь них остаются белыми.
+
+               Аддитивное смешивание отброшено отдельно: оно съедает тонкую
+               альвеолярную кость вокруг корней, и зубы выглядят висящими,
+               хотя в данных сидят в кости (медиана 2.0 мм, максимум 3.1).
 
                При 100% ползунка сторона возвращается в `FrontSide` —
                непрозрачная кость с дальней стенкой выглядела бы вывернутой
                наизнанку; переключает обработчик ползунка. */
-            side: translucent ? THREE.BackSide : THREE.FrontSide,
+            side: translucent ? THREE.DoubleSide : THREE.FrontSide,
           });
       if (key === "nerve") mat.emissive = new THREE.Color(0x7f1d1d);
       o.material = mat;
@@ -4387,10 +4409,10 @@ $c("opacity-slider").addEventListener("input", () => {
   $c("opacity-out").textContent = v + "%";
   for (const key of TRANSLUCENT) {
     (groupMats[key] || []).forEach(m => {
-      m.opacity = v / 100;
-      // Полупрозрачная кость — дальней стенкой (см. создание материала),
-      // непрозрачная — обычной передней, иначе она вывернется наизнанку.
-      m.side = v >= 100 ? THREE.FrontSide : THREE.BackSide;
+      m.opacity = boneOpacity();
+      // Непрозрачная кость — обычной передней стороной, иначе она
+      // вывернется наизнанку; полупрозрачная — обеими.
+      m.side = v >= 100 ? THREE.FrontSide : THREE.DoubleSide;
       m.depthWrite = v >= 100;
     });
   }
