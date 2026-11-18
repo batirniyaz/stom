@@ -771,6 +771,21 @@ def cbct_info(case_id: str):
                 if cur is None or rank[sev] < rank[cur]:
                     worst[int(t)] = sev
         out["teeth_levels"] = {str(k): v for k, v in worst.items()}
+        # Коды находок на зуб — для раскраски ПО ТИПУ находки. Уровень
+        # («насколько срочно») и тип («что именно нашли») отвечают на
+        # разные вопросы, поэтому отдаём и то и другое, а не одно вместо
+        # другого. Тоже только из кэша.
+        codes: dict[int, list[str]] = {}
+        for f in (cached.get("findings") or []):
+            code = f.get("code")
+            if not code:
+                continue
+            teeth = f.get("teeth") or ([f["tooth"]] if f.get("tooth") else [])
+            for t in teeth:
+                lst = codes.setdefault(int(t), [])
+                if code not in lst:
+                    lst.append(code)
+        out["teeth_codes"] = {str(k): v for k, v in codes.items()}
     import cbct_report
     out["metrics_line"] = cbct_report._metrics_line(out.get("model") or "")
     out["metrics_short"] = cbct_report.metrics_short(out.get("model") or "")

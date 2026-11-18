@@ -53,6 +53,15 @@
   }
   .hcopy .lead { font-size: clamp(16px, 1.6vw, 20px); color: #c1cad6; margin: 0 0 26px; }
 
+  .hero-legend {
+    display: flex; flex-wrap: wrap; gap: 7px 14px;
+    margin: -16px 0 24px; font-size: 12.5px; color: var(--muted);
+  }
+  .hero-legend[hidden] { display: none; }
+  .hero-legend i { width: 9px; height: 9px; border-radius: 50%;
+    display: inline-block; margin-right: 6px; vertical-align: 0; }
+  @media (max-width: 760px) { .hero-legend { display: none; } }
+
   .facts {
     display: flex; flex-direction: column; gap: 9px;
     margin-bottom: 28px; font-size: 13px; color: var(--muted); max-width: 490px;
@@ -163,6 +172,9 @@
       <div id="f-acc">Точность распознавания зубов измерена на независимой выборке</div>
       <div>Каждая находка несёт основание: что измерено, сколько и при каком пороге</div>
     </div>
+    <!-- Легенда: что означают цвета зубов на модели. Без неё раскраска —
+         украшение; с ней на первом экране видно, ЧТО именно нашли. -->
+    <div class="hero-legend" id="hero-legend" hidden></div>
     <div class="hbtns">
       <button class="btn big" id="h-open">Открыть пациентов</button>
       <a class="btn-ghost big" id="demo-link" href="/cbct">Посмотреть демо-кейс</a>
@@ -200,6 +212,9 @@
 
 <script src="/auth.js"></script>
 <script src="/i18n.js"></script>
+<!-- Цвета по типу находки — тот же справочник, что красит зубную карту в
+     разборе. Свои цвета на заставке разошлись бы с ней при первой правке. -->
+<script src="/finding-marks.js"></script>
 <script>
 /* ---- вход ---- */
 const $h = id => document.getElementById(id);
@@ -286,6 +301,11 @@ let usable = null;
    ЖЕ цветами, какими лента находок красит строки. Цвета берутся из
    app.css (--lv-k / --lv-v), чтобы шкала была одна на весь продукт. */
 let levels = {};
+/* Коды находок на зуб: {FDI: ["bone_loss", …]}. Красим зубы ПО ТИПУ
+   находки, а не только по важности: одного жёлтого зуба на заставке мало,
+   чтобы понять, что система вообще что-то нашла, а шесть разноцветных
+   сразу говорят, что находки РАЗНЫЕ — и что у каждой свой смысл. */
+let codes = {};
 
 async function facts() {
   let ex;
@@ -307,6 +327,7 @@ async function facts() {
       // который слой находок исключает как недостоверный.
       usable = info.teeth_usable || null;
       levels = info.teeth_levels || {};
+      codes = info.teeth_codes || {};
       const n = (usable || info.teeth_present || []).length;
       if (n) {
         $("f-teeth").textContent = String(n);
@@ -414,6 +435,7 @@ async function hero(caseId) {
      зубами что-то ещё есть. Остальное (пазухи, пульпа, реставрации)
      заставку только засоряет: разбирают их во вьюере. */
   const SHOW = ["mandible", "maxilla", "nerve"];
+  const usedMarks = new Set();      // что показывать в легенде
   const NERVE = 0xf08aa6;          // тот же розовый, что в макете
   root.traverse(o => {
     if (!o.isMesh) return;
@@ -439,17 +461,22 @@ async function hero(caseId) {
     // физический материал с clearcoat в этой сцене уходил в чёрное —
     // отражать ему нечего, а разбираться с окружением ради заставки
     // дороже, чем она стоит.
-    /* Зуб с находкой красится уровнем находки. Это не декорация: на
-       первом экране человек должен увидеть не «красивый череп», а то, что
-       разбор что-то НАШЁЛ и знает, где. Цвета те же, что в ленте находок
-       и в легенде, и берутся из одного места (`LV`). */
-    const lv = tooth ? levels[nm.slice(6)] : null;
-    const LV = { alert: 0xe05252, warning: 0xd6a327 };   // info не красим:
-    //   «вариант нормы» не должен выглядеть тревогой
+    /* Зуб с находкой красится ПО ТИПУ находки. Это не декорация: на
+       первом экране человек должен увидеть не «красивый череп», а что
+       разбор что-то нашёл, где именно и что находки разные. Цвет берётся
+       из общего справочника (`finding-marks.js`) — того же, которым
+       красится зубная карта в разборе.
+
+       Зуб без находок остаётся эмалевым: красить всё подряд значило бы
+       сказать, что проблема у каждого. */
+    const fdi = tooth ? nm.slice(6) : null;
+    const mark = tooth && window.findingMarks
+      ? findingMarks.markOf(codes[fdi]) : null;
+    if (mark) usedMarks.add(mark.label);
     o.material = tooth
       ? new THREE.MeshStandardMaterial({
-          color: LV[lv] || 0xf6f3ee,
-          roughness: lv ? 0.42 : 0.38, metalness: 0,
+          color: mark ? new THREE.Color(mark.color) : 0xf6f3ee,
+          roughness: mark ? 0.42 : 0.38, metalness: 0,
         })
       : grp === "nerve"
       ? new THREE.MeshStandardMaterial({ color: NERVE, roughness: 0.5 })
@@ -590,6 +617,18 @@ async function hero(caseId) {
   orthoFrame(half);
   frameShift();
   camera.updateProjectionMatrix();
+
+  /* Легенда строится по ТОМУ, ЧТО РЕАЛЬНО ПОКРАШЕНО на этой модели.
+     Полный список типов находок на заставке означал бы, что мы их все
+     здесь и нашли, — а это другой снимок и другой пациент. */
+  if (window.findingMarks && usedMarks.size) {
+    const box = $("hero-legend");
+    box.innerHTML = findingMarks.legend()
+      .filter(m => usedMarks.has(m.label))
+      .map(m => `<span><i style="background:${m.color}"></i>${m.label}</span>`)
+      .join("");
+    box.hidden = false;
+  }
 
   $("hload").hidden = true;
 

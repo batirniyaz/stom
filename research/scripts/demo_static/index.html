@@ -807,6 +807,67 @@
   .find-rev .rv-no:hover, .find-rev .rv-no.on {
     color: #fff; background: var(--lv-k); border-color: var(--lv-k);
   }
+  /* ---- план лечения маршрутом ---- */
+  .plan-top { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .plan-chip { font-size: 12px; padding: 4px 10px; border-radius: 999px;
+               border: 1px solid var(--line); color: var(--muted); }
+  .plan-chip.acc { color: var(--accent); border-color: rgba(47,196,178,.45);
+                   background: rgba(47,196,178,.12); }
+  .plan-num {
+    width: 24px; height: 24px; border-radius: 50%; flex: none; display: grid;
+    place-items: center; font-size: 12px; font-weight: 700;
+    background: rgba(47,196,178,.16); color: var(--accent);
+  }
+  .plan-step, .plan-stage {
+    border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2);
+  }
+  .plan-step { display: flex; gap: 11px; align-items: flex-start; padding: 12px 14px; }
+  .plan-step.done .plan-num { background: rgba(34,197,94,.18); color: var(--ok); }
+  .plan-step-b { min-width: 0; flex: 1; }
+  .plan-step-h { display: flex; gap: 10px; align-items: baseline;
+                 font-weight: 600; font-size: 13.5px; }
+  .plan-step-h b { margin-left: auto; font-variant-numeric: tabular-nums;
+                   color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .plan-note { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  /* Стрелка между шагами: порядок этапов клинический, и читаться он
+     должен как маршрут, а не как нумерованный список. */
+  .plan-arrow { height: 16px; position: relative; }
+  .plan-arrow::before { content: ""; position: absolute; left: 26px; top: 0;
+    bottom: 5px; width: 2px; background: var(--line); }
+  .plan-arrow::after { content: ""; position: absolute; left: 22px; bottom: 0;
+    border: 5px solid transparent; border-top-color: var(--line); }
+  .plan-arrow.sm { height: 12px; }
+  .plan-arrow.sm::before { left: 13px; }
+  .plan-arrow.sm::after { left: 9px; }
+  .plan-stage { padding: 12px 14px; }
+  .plan-stage-h { display: flex; gap: 11px; align-items: center;
+                  font-size: 13.5px; margin-bottom: 10px; }
+  .plan-when { margin-left: auto; font-size: 11.5px; color: var(--muted);
+               text-align: right; }
+  .plan-proc { border: 1px solid var(--line); border-radius: 10px;
+               padding: 9px 11px; background: var(--panel); }
+  .plan-proc-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px;
+                 font-size: 13px; }
+  .plan-x { font-size: 11.5px; color: var(--accent); }
+  .plan-why { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+  .plan-teeth { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+  .plan-warn { font-size: 11.5px; color: var(--lv-v); margin-top: 5px; }
+  /* Параллельные этапы — в скобку. Строкой «параллельно этапу 1» это
+     читается как примечание, и врач всё равно планирует их по очереди, а
+     это лишний месяц для пациента. */
+  .plan-par { position: relative; border: 1px dashed var(--line);
+              border-radius: 14px; padding: 18px 10px 10px;
+              display: flex; flex-direction: column; gap: 10px; }
+  .plan-par-l { position: absolute; top: -9px; left: 14px; font-size: 10.5px;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    background: var(--panel); padding: 0 7px; }
+  .plan-nd { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .plan-nd-h { font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
+               color: var(--muted); margin-bottom: 7px; }
+  .plan-nd-row { font-size: 12.5px; margin-bottom: 6px; }
+  .plan-nd-row b { font-weight: 600; }
+  .plan-nd-row span { display: block; color: var(--muted); font-size: 12px; }
+
   .find-title { font-weight: 600; font-size: 13.5px; line-height: 1.45; }
   .find-text { font-size: 13px; color: var(--muted); line-height: 1.5;
                margin-top: 3px; }
@@ -1308,6 +1369,7 @@
 <script src="/i18n.js"></script>
 <script src="/doctor.js"></script>
 <script src="/patient-bar.js"></script>
+<script src="/finding-marks.js"></script>
 
 <!-- Шапка по макету: знак, путь к пациентам, врач. Вкладок модальностей
      («2D ОПТГ», «3D скан») здесь больше нет — в показе один трек, КЛКТ, и
@@ -3113,44 +3175,119 @@ async function loadCbctPlan(caseId) {
 
 function renderCbctPlan(plan) {
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  let html = plan.draft
-    ? `<div class="find-draft">Черновик: правила и пороги врачом не
-       подтверждены. Это материал для приёма, а не план лечения.</div>` : "";
-  let total = 0;
-  for (const st of plan.stages) {
-    html += `<div class="find-group"><div class="find-group-h">
-             <span class="find-order">${st.num}</span>${esc(st.label)}</div>
-             <div class="find-action" style="margin:-4px 0 6px 26px">${esc(st.note)}</div>`;
-    if (!st.procedures.length) {
-      html += `<div class="find-item"><span class="find-tooth"
-               style="background:none;color:#64748b">—</span>
-               <div>показаний не выявлено</div></div></div>`;
-      continue;
-    }
-    for (const pr of st.procedures) {
-      total++;
+  const stages = (plan.stages || []).filter(st => (st.procedures || []).length);
+  const rows = stages.reduce((n, st) => n + st.procedures.length, 0);
+  const teeth = new Set();
+  for (const st of stages) for (const pr of st.procedures)
+    for (const t of (pr.teeth || [])) teeth.add(t);
+
+  /* ПЛАН — МАРШРУТ, А НЕ СПИСОК.
+     Этапы идут в клиническом порядке, и порядок этот не формальный:
+     ортопедия не делается до хирургии, а хирургия идёт ПАРАЛЛЕЛЬНО
+     терапии, а не после неё. Плоский список этого не показывал — врач
+     читал его как перечень услуг и сам держал порядок в голове. */
+  let html = "";
+
+  // Сводка одной строкой. Числа только те, что мы считаем: визитов и
+  // общего срока у нас нет, и выдумывать «около 10 визитов» нельзя —
+  // по этой цифре пациент планирует отпуск.
+  html += `<div class="plan-top">
+      <span class="plan-chip acc">Позиций: ${rows}</span>
+      <span class="plan-chip">Этапов: ${stages.length}</span>
+      ${teeth.size ? `<span class="plan-chip">Зубов затронуто: ${teeth.size}</span>` : ""}
+    </div>`;
+
+  if (plan.draft) {
+    html += `<div class="find-draft">Черновик: правила и пороги врачом не
+       подтверждены. Это материал для приёма, а не план лечения.</div>`;
+  }
+
+  /* ШАГ НОЛЬ — ПРОВЕРКА НАХОДОК. План собран из находок, а находка до
+     отметки врача это черновик: отклонённая в план не идёт. Поэтому
+     разбор стоит ПЕРВЫМ шагом маршрута, а не отдельной вкладкой — иначе
+     план читается как готовый документ, которым он ещё не является. */
+  const rv = plan.review || {};
+  if (rv.total) {
+    const left = (rv.total || 0) - (rv.reviewed || 0);
+    html += `<div class="plan-step${left ? "" : " done"}">
+        <span class="plan-num">${left ? "0" : "✓"}</span>
+        <div class="plan-step-b">
+          <div class="plan-step-h">Проверка находок врачом
+            <b>${rv.reviewed || 0} из ${rv.total}</b></div>
+          <div class="plan-note">${left
+            ? `осталось разобрать: ${left}; отклонённые в план не пойдут`
+            : "разобрано полностью — отчёт можно собирать"}</div>
+        </div></div>
+      <div class="plan-arrow"></div>`;
+  }
+
+  const stageHtml = st => {
+    let h = `<div class="plan-stage">
+        <div class="plan-stage-h"><span class="plan-num">${st.num}</span>
+          <b>${esc(st.label)}</b><span class="plan-when">${esc(st.note || "")}</span></div>`;
+    st.procedures.forEach((pr, i) => {
+      // Доверие показываем только когда оно НЕ высокое: «доверие:
+      // высокое» у каждой строки превращается в фон, который перестают
+      // читать, и тогда пометка на слабой позиции тоже не видна.
       const conf = pr.confidence === "high" ? ""
-        : `<span class="find-conf">доверие: ${pr.confidence === "medium" ? "среднее" : "низкое"}</span>`;
-      html += `<div class="find-item"><span class="find-tooth">${pr.count || "—"}</span>
-        <div><div>${esc(pr.name)}${conf}</div>
-        ${pr.teeth.length ? `<div class="find-action">зубы: ${pr.teeth.join(", ")}</div>` : ""}
-        <div class="find-action">${esc(pr.why)}</div>
-        ${pr.note ? `<div class="find-action">! ${esc(pr.note)}</div>` : ""}</div></div>`;
+        : `<span class="find-conf">доверие: ${
+            pr.confidence === "medium" ? "среднее" : "низкое"}</span>`;
+      if (i) h += `<div class="plan-arrow sm"></div>`;
+      h += `<div class="plan-proc">
+          <div class="plan-proc-h"><b>${esc(pr.name)}</b>${
+            pr.count > 1 ? `<span class="plan-x">×${pr.count}</span>` : ""}${conf}</div>
+          <div class="plan-why">${esc(pr.why)}</div>
+          ${pr.teeth && pr.teeth.length
+            ? `<div class="plan-teeth">${pr.teeth.map(t =>
+                `<span class="find-tooth" data-tooth="${t}">${t}</span>`).join("")}</div>`
+            : ""}
+          ${pr.note ? `<div class="plan-warn">! ${esc(pr.note)}</div>` : ""}
+        </div>`;
+    });
+    return h + `</div>`;
+  };
+
+  /* Параллельные этапы берём В СКОБКУ. «Параллельно этапу 1» строкой
+     мелким шрифтом читается как примечание, и врач всё равно планирует
+     их по очереди — а это лишний месяц для пациента. */
+  let i = 0;
+  while (i < stages.length) {
+    const par = /параллельно/i.test(stages[i + 1]?.note || "");
+    if (par) {
+      html += `<div class="plan-par"><div class="plan-par-l">параллельно</div>`
+            + stageHtml(stages[i]) + stageHtml(stages[i + 1]) + `</div>`;
+      i += 2;
+    } else {
+      html += stageHtml(stages[i]);
+      i += 1;
     }
-    html += `</div>`;
+    if (i < stages.length) html += `<div class="plan-arrow"></div>`;
   }
+
+  if (!stages.length) {
+    html += `<div class="find-empty">Показаний к лечению по этому снимку
+             не найдено</div>`;
+  }
+
   if (plan.not_determined && plan.not_determined.length) {
-    html += `<div class="find-group"><div class="find-group-h">
-             <span class="find-order">—</span>По этим данным не определяется</div>`;
+    html += `<div class="plan-nd"><div class="plan-nd-h">По этим данным не
+             определяется</div>`;
     for (const [what, need] of plan.not_determined)
-      html += `<div class="find-item"><span class="find-tooth"
-               style="background:none;color:#64748b">—</span>
-               <div><div>${esc(what)}</div>
-               <div class="find-action">${esc(need)}</div></div></div>`;
+      html += `<div class="plan-nd-row"><b>${esc(what)}</b>
+               <span>${esc(need)}</span></div>`;
     html += `</div>`;
   }
+
   $c("cbct-plan").innerHTML = html;
-  $c("cnt-plan").textContent = total || "0";
+  $c("cnt-plan").textContent = rows || "0";
+  // Номер зуба в плане ведёт туда же, куда в ленте находок: к зубу.
+  $c("cbct-plan").querySelectorAll(".find-tooth[data-tooth]").forEach(el => {
+    el.addEventListener("click", () => {
+      const t = +el.dataset.tooth;
+      focusTooth(t);
+      openToothCard(t);
+    });
+  });
   renderSignBox(plan.review);
 }
 
@@ -3513,17 +3650,11 @@ const TOOTH_PATH = "M10 4.5C8 3 5 2.5 3.5 5.5C2.5 8 3.5 11 4.5 14C5.5 17 5 22"
   + " 10 4.5Z";
 const TOOTH_SVG = `<svg class="chart-ic" viewBox="0 1 20 28"
    preserveAspectRatio="none" aria-hidden="true"><path d="${TOOTH_PATH}"/></svg>`;
-// Значки на зубе: код находки -> цвет точки. Порядок = порядок в легенде.
-const CHART_MARKS = [
-  ["endo_filled",  "#f43f5e", "канал пломбирован"],
-  ["restoration",  "#cbd5e1", "реставрация"],
-  ["bone_loss",    "#f59e0b", "уровень кости"],
-  ["tooth_impacted", "#a78bfa", "ретенция"],
-  ["canal_contact", "#ef4444", "близко к каналу"],
-  ["canal_close",  "#ef4444", "близко к каналу"],
-  ["sinus_contact", "#56b8d6", "близко к пазухе"],
-  ["sinus_close",  "#56b8d6", "близко к пазухе"],
-];
+/* Значки на зубе: код находки -> цвет точки. Справочник ОБЩИЙ с
+   заставкой (`finding-marks.js`): две копии разошлись бы при первой же
+   правке, и один и тот же тип находки оказался бы разного цвета на
+   первом экране и в разборе. */
+const CHART_MARKS = (window.findingMarks || {}).MARKS || [];
 
 function renderChart(data) {
   const box = $c("tooth-chart");
