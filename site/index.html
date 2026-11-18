@@ -145,6 +145,11 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:#7d8896;font-size:14px;text-align:center;padding:20px;pointer-events:none}
 .objcard{position:absolute;right:12px;top:52px;z-index:4;width:min(290px,calc(100% - 24px));background:rgba(17,21,27,.92);border:1px solid var(--line);border-radius:12px;padding:12px 34px 12px 14px;backdrop-filter:blur(6px);animation:pop .3s both}
 .objcard[hidden]{display:none}
+.objcard.wide{width:min(330px,calc(100% - 24px));max-height:calc(100% - 70px);overflow:auto}
+.slices{display:grid;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.sl .slh{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.sl canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;background:#000}
+.sl input{width:100%;margin-top:5px}
 .objcard b{display:block;font-size:15px}.objcard small{display:block;color:var(--accent);font-size:12px;margin-top:2px}
 .objcard p{margin:6px 0 0;font-size:13px;line-height:1.45;color:#c1cad6}
 .objcard .x{position:absolute;right:8px;top:8px;border:0;background:none;color:var(--muted);font-size:14px;padding:2px 6px;cursor:pointer}
@@ -444,6 +449,8 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
 .chpane .cm{max-width:96%}
 .chpane .cm .bub{font-size:14px;padding:8px 12px}
 .chpane .chfoot{padding:8px 14px 12px}
+.mic{padding:0 10px!important;display:inline-flex;align-items:center}.mic.rec{color:#fff;background:var(--crit);border-color:var(--crit);animation:micp 1.1s infinite}
+@keyframes micp{50%{opacity:.55}}
 .chpane .chfoot .cin textarea{height:42px;font-size:14px;padding:9px 12px}
 @media (max-width:900px){.chpane{flex:none;height:70vh;min-height:420px}}
 @page{size:A4;margin:16mm 15mm}
@@ -542,10 +549,11 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
         </div></details>
         <details open><summary>Зубы</summary><div>
           <label class="sw"><span>Показывать зубы</span><input type="checkbox" data-l="teeth" checked></label>
-          <div class="lab">Окраска</div><div class="seg" id="sgColor"><button data-c="lvl" class="on">По уровням</button><button data-c="anat">По типу</button><button data-c="plain">Однотонно</button></div>
+          <div class="lab">Окраска</div><div class="seg" id="sgColor"><button data-c="lvl" class="on">По уровням</button><button data-c="anat">По типу</button><button data-c="quad">По квадрантам</button><button data-c="plain">Однотонно</button></div>
           <div class="lab">Какие зубы</div><div class="seg" id="sgJaw"><button data-j="all" class="on">Все</button><button data-j="up">Верхние</button><button data-j="lo">Нижние</button></div>
           <label class="sw"><span>Только с находками</span><input type="checkbox" id="cOnly"></label>
           <label class="sw"><span>Номера зубов (FDI)</span><input type="checkbox" id="cLbl"></label>
+          <div class="rg"><div><span>Блеск зубов</span><b id="glv">55%</b></div><input type="range" id="rGl" min="0" max="100" value="55"></div>
           <div class="rg"><div><span>Непрозрачность зубов</span><b id="topv">100%</b></div><input type="range" id="rTop" min="15" max="100" value="100"></div>
         </div></details>
         <details open><summary>Камера</summary><div>
@@ -566,7 +574,7 @@ details.nt{margin-top:18px}details.nt summary{cursor:pointer;color:var(--muted)}
         <button class="ex" id="expand" title="Развернуть колонку">⤢</button>
       </div>
       <div class="pane" id="p-find"></div>
-      <div class="pane chpane" id="p-chat" hidden><div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div><div class="chmsgs" id="chmsgs"></div><div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn pri sm" type="submit">Спросить</button></form></div></div>
+      <div class="pane chpane" id="p-chat" hidden><div class="chhead"><div class="bot-av">A</div><div><b>Actis</b><span>Ассистент по снимку</span></div></div><div class="chmsgs" id="chmsgs"></div><div class="chfoot"><div class="sug" id="chsug"></div><form class="cin" id="chform"><textarea id="chta" placeholder="Вопрос по снимку" aria-label="Вопрос"></textarea><button class="btn sm mic" type="button" id="chmic" title="Голосовой ввод" aria-label="Голосовой ввод"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn pri sm" type="submit">Спросить</button></form></div></div>
       <div class="pane" id="p-plan" hidden></div>
       <div class="pane" id="p-info" hidden></div>
     </aside>
@@ -859,8 +867,9 @@ function runProcess(id){
 /* ---------- 3D (одна сцена на главную и разбор) ---------- */
 var selMeshes=[],scene,camera,renderer,controls,model,teethMesh={},G={maxilla:[],mandible:[],nerve:[],sinus:[],pulp:[],canal:[],resto:[],airway:[]},tc={},lblEl={},origCam,origTarget,anim=null,isolated=null,gl3d=false,curHost=null,paused=false,resumeT=null,shotReq=false;
 var cur=null,sel=null,partSel=null,HERO={36:'k',16:'k',37:'v',46:'v',26:'v',47:'v'};
-var V0={maxilla:true,mandible:true,nerve:true,sinus:false,pulp:false,canal:false,resto:false,airway:false,teeth:true,boneOp:.22,toothOp:1,color:'lvl',jaw:'all',only:false,wire:false,labels:false,speed:1.2};
+var V0={maxilla:true,mandible:true,nerve:true,sinus:false,pulp:false,canal:false,resto:false,airway:false,teeth:true,boneOp:.22,toothOp:1,color:'lvl',gloss:.55,jaw:'all',only:false,wire:false,labels:false,speed:1.2};
 var V=Object.assign({},V0);
+var QUAD={1:0x7fb8ff,2:0x9be37f,3:0xffc46b,4:0xe58fd0};
 var ANAT={1:0x8fd3c8,2:0x8fd3c8,3:0xf2c26b,4:0x9db7ff,5:0x9db7ff,6:0xe59ad0,7:0xe59ad0,8:0xe59ad0};
 function ensure3d(){
   if(gl3d)return;gl3d=true;
@@ -939,12 +948,12 @@ function applyMode(){
   Object.keys(teethMesh).forEach(function(k){var kk=+k,f2=fByTooth(kk),isSel=(!home&&!!sel&&!!f2&&f2.id===sel)||(!home&&!!partSel&&partSel.fdi===kk),useLvl=home||V.color==='lvl',lvl=home?HERO[k]:(f2?lvOf(f2):null);
     var show=home||(V.teeth&&(!iso||isolated===kk)&&(V.jaw==='all'||(V.jaw==='up')===(kk<30))&&(!V.only||!!f2));
     var tr=!home&&V.toothOp<1;
-    teethMesh[k].forEach(function(m){var c=new THREE.Color(V.color==='anat'&&!home?ANAT[kk%10]:0xefeadf);
+    teethMesh[k].forEach(function(m){var c=new THREE.Color(!home&&V.color==='anat'?ANAT[kk%10]:(!home&&V.color==='quad'?QUAD[Math.floor(kk/10)]:0xefeadf));
       if(useLvl&&lvl)c.lerp(new THREE.Color(COL[lvl]),(!home&&f2&&C.rev[f2.id]==='rej')?0.25:0.95);
       if(isSel){c.set(0x2fe3cf);selMeshes.push(m)}
       m.material.color.copy(c);m.material.emissive=new THREE.Color(isSel?0x0e8a7c:0x000000);m.material.emissiveIntensity=isSel?.8:1;
       if(m.material.transparent!==tr){m.material.transparent=tr;m.material.depthWrite=!tr;m.material.needsUpdate=true}
-      m.material.opacity=tr?V.toothOp:1;m.visible=show});
+      m.material.opacity=tr?V.toothOp:1;m.material.roughness=home?.45:.8-.65*V.gloss;m.material.metalness=home?0:.12*V.gloss;m.visible=show});
     var e=lblEl[k];if(e){e.className='lbl '+(lvl&&!home?lvl:'')}});
   ['maxilla','mandible','nerve','sinus','pulp','canal','resto','airway'].forEach(function(g){var on=!home&&!!partSel&&partSel.kind===g;G[g].forEach(function(m){m.material.emissive=new THREE.Color(on?0x0e8a7c:0x000000);m.material.emissiveIntensity=on?.8:1;if(on){selMeshes.push(m);if(g==='maxilla'||g==='mandible')m.material.opacity=.5}})});
   $('#lbls').style.display=(!home&&V.labels)?'':'none';
@@ -978,7 +987,7 @@ function isolate(n){isolated=n;applyMode();drawFind()}
 function syncScene(){
   $$('#pnl [data-l]').forEach(function(i){i.checked=!!V[i.dataset.l]});
   $('#rOp').value=Math.round(V.boneOp*100);$('#opv').textContent=Math.round(V.boneOp*100)+'%';
-  $('#rTop').value=Math.round(V.toothOp*100);$('#topv').textContent=Math.round(V.toothOp*100)+'%';
+  $('#rGl').value=Math.round(V.gloss*100);$('#glv').textContent=Math.round(V.gloss*100)+'%';$('#rTop').value=Math.round(V.toothOp*100);$('#topv').textContent=Math.round(V.toothOp*100)+'%';
   $('#rSp').value=Math.round(V.speed*10);$('#spv').textContent=V.speed.toFixed(1);
   $('#cWire').checked=V.wire;$('#cOnly').checked=V.only;$('#cLbl').checked=V.labels;
   $$('#sgColor button').forEach(function(b){b.classList.toggle('on',b.dataset.c===V.color)});
@@ -998,7 +1007,8 @@ function openCase(id){
   findAnim=true;syncScene();tab('find');drawAll();applyMode();setTimeout(function(){resize();fit(true)},60);
   if(pendingSel){var ps=pendingSel;pendingSel=null;setTimeout(function(){select(ps)},700)}
 }
-function drawAll(){drawFind();drawPlan();drawInfo();drawMap();initChat()}
+var micInit=false;
+function drawAll(){drawFind();drawPlan();drawInfo();drawMap();initChat();if(!micInit){micInit=true;initMic()}}
 var curTab='find';
 function tab(t){curTab=t;$$('.tabs .t').forEach(function(x){x.setAttribute('aria-selected',x.dataset.t===t)});['find','chat','plan','info'].forEach(function(k){$('#p-'+k).hidden=k!==t});if(t==='chat'&&cur){renderMsgs(false)}}
 $$('.tabs .t').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.t)})});
@@ -1014,13 +1024,60 @@ var PART={
 var TTYPE={1:['Центральный резец','Режущий зуб с одним корнем. Откусывает пищу, задаёт линию улыбки.'],2:['Боковой резец','Режущий зуб с одним корнем. Стоит рядом с центральным, обычно мельче.'],3:['Клык','Самый длинный зуб с одним мощным корнем. Направляет движения челюсти при смыкании.'],4:['Первый премоляр','Зуб с двумя буграми, один или два корня. Раскусывает и перетирает пищу.'],5:['Второй премоляр','Зуб с двумя буграми и одним корнем. Переход от клыка к моляру.'],6:['Первый моляр','Жевательный зуб: нижний с двумя корнями, верхний с тремя. Несёт основную нагрузку.'],7:['Второй моляр','Жевательный зуб с двумя или тремя корнями, прорезывается около 12 лет.'],8:['Зуб мудрости','Третий моляр. Прорезывается после 17 лет, часто остаётся в кости или отсутствует.']};
 var TQ={1:'верхняя челюсть, справа',2:'верхняя челюсть, слева',3:'нижняя челюсть, слева',4:'нижняя челюсть, справа'};
 function showObj(title,sub,text,extra){
+  $('#objc').classList.remove('wide');
   $('#objc').innerHTML='<button class="x" id="objx" aria-label="Закрыть">✕</button><b>'+esc(title)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'<p>'+esc(text)+'</p>'+(extra||'');
   $('#objc').hidden=false;$('#objx').addEventListener('click',closeObj)}
+/* ---------- срезы зуба (3 плоскости вдоль оси зуба) ---------- */
+function rnd(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+var SLP=[['md','Мезио-дистальный'],['bl','Вестибуло-язычный'],['ax','Поперечный, шейка']];
+function drawSlice(cv,fdi,kind,off){
+  var W=cv.width,H=cv.height,g=cv.getContext('2d'),R=rnd(fdi*97+(kind==='md'?1:kind==='bl'?2:3)),t=fdi%10,up=fdi<30,
+      roots=t>=6?(up?3:2):(t===4&&up?2:1),cw=t>=6?46:t>=4?34:t===3?30:28,rl=t===3?78:t>=6?60:66,cl=t>=6?34:42;
+  g.fillStyle='#050608';g.fillRect(0,0,W,H);
+  /* губчатая кость */
+  var img=g.getImageData(0,0,W,H),d=img.data;
+  for(var i=0;i<d.length;i+=4){var v=52+R()*46+((i/4%W)%9<2?10:0);d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
+  g.putImageData(img,0,0);
+  g.save();
+  if(kind==='ax'){
+    var cx=W/2,cy=H/2,rx=cw*1.15,ry=cw*.95;
+    g.fillStyle='rgba(8,9,11,.55)';g.beginPath();g.ellipse(cx,cy,rx+22,ry+20,0,0,7);g.fill();
+    g.fillStyle='#b9bcc2';g.beginPath();g.ellipse(cx,cy,rx+5,ry+5,0,0,7);g.fill();
+    g.fillStyle='#8b8e94';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,7);g.fill();
+    var pr=Math.max(4,13-Math.abs(off)*1.2);g.fillStyle='#14161a';g.beginPath();g.ellipse(cx,cy,pr*1.3,pr,0,0,7);g.fill();
+    if(roots>1){for(var k=0;k<roots;k++){var a=k*6.283/roots+.5;g.beginPath();g.ellipse(cx+Math.cos(a)*rx*.5,cy+Math.sin(a)*ry*.5,4,3,0,0,7);g.fill()}}
+  }else{
+    var cx2=W/2,top=up?24:H-24,dir=up?1:-1,neck=top+dir*cl,apex=neck+dir*rl,sh=off*3;
+    var wob=function(y){return Math.sin(y*.07+fdi)*1.4};
+    /* лунка и кортикал */
+    g.fillStyle='rgba(8,9,11,.5)';g.beginPath();g.moveTo(cx2-cw/2-9,neck);g.lineTo(cx2-cw/2+4,apex+dir*8);g.lineTo(cx2+cw/2-4,apex+dir*8);g.lineTo(cx2+cw/2+9,neck);g.fill();
+    g.fillStyle='#8b8e94';g.beginPath();g.moveTo(cx2-cw/2,top);g.quadraticCurveTo(cx2,top-dir*7,cx2+cw/2,top);g.lineTo(cx2+cw/2,neck);
+    for(var k2=0;k2<roots;k2++){var rw=cw/2/roots,rc=cx2+cw/2-(k2+.5)*cw/roots*1+0;var ax_=cx2+(roots>1?(k2-(roots-1)/2)*cw*.42:0)+sh*.2;g.lineTo(ax_+rw*.7,apex-dir*(k2%2?8:0));g.lineTo(ax_-rw*.7,apex-dir*(k2%2?8:0))}
+    g.lineTo(cx2-cw/2,neck);g.closePath();g.fill();
+    g.strokeStyle='#d5d7dc';g.lineWidth=4;g.beginPath();g.moveTo(cx2-cw/2,neck);g.lineTo(cx2-cw/2,top);g.quadraticCurveTo(cx2,top-dir*8,cx2+cw/2,top);g.lineTo(cx2+cw/2,neck);g.stroke();
+    /* пульпа и каналы */
+    var vis=Math.max(.25,1-Math.abs(off)/5);g.fillStyle='rgba(16,18,22,'+vis+')';g.strokeStyle='rgba(16,18,22,'+vis+')';
+    g.beginPath();g.ellipse(cx2,top+dir*cl*.45,cw*.26,cl*.34,0,0,7);g.fill();
+    g.lineWidth=2.6;for(var k3=0;k3<roots;k3++){var ax2=cx2+(roots>1?(k3-(roots-1)/2)*cw*.42:0)+sh*.2;g.beginPath();g.moveTo(cx2+(k3-(roots-1)/2)*cw*.1,top+dir*cl*.7);g.bezierCurveTo(ax2,neck,ax2+wob(neck)*2,neck+dir*rl*.5,ax2+wob(apex)*2,apex-dir*(k3%2?10:4));g.stroke()}
+    /* гребень альвеолы */
+    g.strokeStyle='#cfd2d8';g.lineWidth=3;g.beginPath();g.moveTo(8,neck+dir*5);g.lineTo(cx2-cw/2-10,neck+dir*5);g.moveTo(cx2+cw/2+10,neck+dir*5);g.lineTo(W-8,neck+dir*5);g.stroke();
+  }
+  g.restore();
+  var vg=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.85);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+function slicesHtml(n){
+  var h='<div class="slices">';
+  SLP.forEach(function(p){h+='<div class="sl" data-k="'+p[0]+'"><div class="slh"><span>'+p[1]+'</span><output>по центру</output></div><canvas width="260" height="170"></canvas><input type="range" min="-4" max="4" step=".25" value="0" aria-label="Смещение среза"></div>'});
+  return h+'</div>'}
+function bindSlices(box,n){
+  $$('.sl',box).forEach(function(sl){
+    var cv=$('canvas',sl),rg=$('input',sl),o=$('output',sl),k=sl.dataset.k;
+    function draw(){var v=+rg.value;o.textContent=v?(v>0?'+':'')+v.toFixed(2)+' мм':'по центру';drawSlice(cv,n,k,v)}
+    rg.addEventListener('input',draw);draw()})}
 function showTooth(n){
   var t=TTYPE[n%10],f=fByTooth(n);if(!t)return;
   var ex=f?'<div class="of '+lvOf(f)+'"><i></i>'+esc(ftext(f))+'</div>':'';
-  showObj('Зуб '+n+' · '+t[0].toLowerCase(),TQ[Math.floor(n/10)],t[1],ex)}
-function closeObj(){var had=!!partSel;partSel=null;if($('#objc'))$('#objc').hidden=true;if(had)applyMode()}
+  showObj('Зуб '+n+' · '+t[0].toLowerCase(),TQ[Math.floor(n/10)],t[1],ex+slicesHtml(n));bindSlices($('#objc'),n);$('#objc').classList.add('wide')}
+function closeObj(){var had=!!partSel;partSel=null;if($('#objc')){$('#objc').hidden=true;$('#objc').classList.remove('wide')}if(had)applyMode()}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('#objc')&&!$('#objc').hidden)closeObj()});
 function pickPart(kind){
   var inf=PART[kind];if(!inf||!G[kind].length)return;
@@ -1086,6 +1143,7 @@ $('#rSp').addEventListener('input',function(){V.speed=this.value/10;$('#spv').te
 $('#cWire').addEventListener('change',function(){V.wire=this.checked;applyMode()});
 $('#cOnly').addEventListener('change',function(){V.only=this.checked;applyMode()});
 $('#cLbl').addEventListener('change',function(){V.labels=this.checked;applyMode()});
+$('#rGl').addEventListener('input',function(){V.gloss=+this.value/100;syncScene();applyMode()});
 $('#sgColor').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;V.color=b.dataset.c;syncScene();applyMode()});
 $('#sgJaw').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;V.jaw=b.dataset.j;syncScene();applyMode()});
 $$('#pnl [data-v]').forEach(function(b){b.addEventListener('click',function(){viewTo(b.dataset.v)})});
@@ -1126,6 +1184,19 @@ function answer(q){
   return {h:'Не понял вопрос. Назовите зуб или находку.',s:[]}}
 var thinking=false,typeT=null;
 function hist(){if(!S.msgs[cur]||!S.msgs[cur].length){S.msgs[cur]=[firstMsg()];save()}return S.msgs[cur]}
+function initMic(){
+  var b=$('#chmic'),SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){b.hidden=true;return}
+  var rec=null,on=false;
+  b.addEventListener('click',function(){
+    if(on){rec.stop();return}
+    rec=new SR();rec.lang='ru-RU';rec.interimResults=true;rec.continuous=false;
+    var base=$('#chta').value;
+    rec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$('#chta').value=(base?base+' ':'')+t};
+    rec.onstart=function(){on=true;b.classList.add('rec')};
+    rec.onend=function(){on=false;b.classList.remove('rec');if($('#chta').value.trim()&&$('#chta').value!==base)$('#chta').focus()};
+    rec.onerror=function(e){on=false;b.classList.remove('rec');if(e.error==='not-allowed')toast('Нет доступа к микрофону')};
+    rec.start()})}
 function initChat(){
   thinking=false;clearInterval(typeT);
   var sg=$('#chsug');sg.innerHTML='';
