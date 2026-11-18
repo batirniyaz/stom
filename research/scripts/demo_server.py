@@ -1454,6 +1454,12 @@ def _last_study_brief(st: dict) -> dict:
     out["levels"] = counts
     out["review"] = {"reviewed": rev.get("reviewed", 0),
                      "total": rev.get("total", 0),
+                     # Подтверждено и отклонено ОТДЕЛЬНО: по ним профиль
+                     # врача считает, сколько он реально отсмотрел. Сумма
+                     # «разобрано» этого не показывает — отклонённая
+                     # находка это тоже работа врача, и работа важная.
+                     "confirmed": rev.get("confirmed", 0),
+                     "rejected": rev.get("rejected", 0),
                      "signed": (rev.get("signed") or {}).get("at")
                                if isinstance(rev.get("signed"), dict)
                                else rev.get("signed")}
@@ -2469,6 +2475,13 @@ def page_design():
 @app.get("/patients/{pid}")
 def page_patients(pid: str = ""):
     return _page(STATIC_DIR, "patients.html")
+
+
+@app.get("/profile")
+def page_profile():
+    """Профиль врача. Отдельная страница, а не окно поверх списка: в ней
+    есть и счётчики работы, и выход, и язык — окном это не живёт."""
+    return _page(STATIC_DIR, "profile.html")
 
 
 @app.get("/ios")

@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actina — профиль врача</title>
+<link rel="stylesheet" href="/app.css">
+<script src="/auth.js"></script>
+<script>actinaAuth.guard();</script>
+<script src="/i18n.js"></script>
+<script src="/doctor.js"></script>
+<style>
+  /* Профиль врача отдельной СТРАНИЦЕЙ, а не окном поверх списка.
+     Окном он и был: три поля и «Сохранить». Но у профиля три разные
+     задачи — кто я (имя уходит в заключение), сколько я уже разобрал и
+     как отсюда выйти, — и окно, которое надо закрыть, чтобы увидеть
+     список, для этого не годится. */
+  main { max-width: 1120px; margin: 0 auto; padding: 22px 20px 60px; }
+  .crumb { margin-bottom: 14px; }
+  .crumb a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  .crumb a:hover { color: var(--text); }
+
+  .pcard {
+    display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 20px 22px; margin-bottom: 14px;
+  }
+  .avw { position: relative; flex: none; }
+  .av-big {
+    width: 96px; height: 96px; border-radius: 50%; display: grid;
+    place-items: center; font-size: 30px; font-weight: 700; color: #04211d;
+    background: linear-gradient(135deg, #2fc4b2, #1b6f8f);
+    object-fit: cover; overflow: hidden;
+  }
+  img.av-big { background: none; }
+  .cam {
+    position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px;
+    border-radius: 50%; border: 2px solid var(--panel); cursor: pointer;
+    background: var(--panel-2); color: var(--muted); font-size: 13px;
+    display: grid; place-items: center;
+  }
+  .cam:hover { color: var(--text); }
+  .pwho h1 { margin: 0 0 4px; font-size: 26px; font-weight: 600; }
+  .pwho .sub { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+  .chip {
+    font-size: 12.5px; padding: 4px 11px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .chip b { color: var(--text); font-family: var(--mono); font-weight: 500;
+            margin-left: 5px; }
+
+  .tiles { display: grid; gap: 10px; margin-bottom: 14px;
+           grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .tile { background: var(--panel); border: 1px solid var(--line);
+          border-radius: 14px; padding: 15px 17px; }
+  .tile .v { font-size: 27px; font-weight: 600; color: var(--accent);
+             font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile .k { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+
+  .cols { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line);
+          border-radius: 14px; padding: 18px 20px; }
+  .card h2 { margin: 0 0 14px; font-size: 11.5px; font-weight: 600;
+             letter-spacing: .09em; text-transform: uppercase;
+             color: var(--accent); }
+  .form { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 680px) { .form { grid-template-columns: 1fr; } }
+  .form label { display: block; font-size: 12px; color: var(--muted);
+                margin-bottom: 4px; }
+  .form .wide { grid-column: 1 / -1; }
+  .field {
+    width: 100%; font: inherit; font-size: 13.5px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 9px;
+    padding: 9px 11px;
+  }
+  .field:focus { outline: none; border-color: rgba(47,196,178,.5); }
+  textarea.field { resize: vertical; min-height: 72px; }
+  .acts { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+          justify-content: flex-end; }
+  .saved { font-size: 12.5px; color: var(--ok); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px;
+        font-size: 13px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .note {
+    margin-top: 14px; font-size: 12px; color: var(--warn);
+    background: rgba(214,163,39,.09); border: 1px solid rgba(214,163,39,.25);
+    border-radius: 9px; padding: 9px 11px; line-height: 1.5;
+  }
+  .lang { display: flex; gap: 6px; }
+  .lang button {
+    font: inherit; font-size: 12.5px; padding: 5px 13px; border-radius: 999px;
+    border: 1px solid var(--line); background: none; color: var(--muted);
+    cursor: pointer;
+  }
+  .lang button.on { color: var(--accent); border-color: rgba(47,196,178,.45);
+                    background: rgba(47,196,178,.12); }
+  .out-row { margin-top: 16px; }
+  .btn-out {
+    font: inherit; font-size: 13px; padding: 9px 16px; border-radius: 10px;
+    cursor: pointer; color: var(--lv-k); background: rgba(224,82,82,.10);
+    border: 1px solid rgba(224,82,82,.55);
+  }
+  .btn-out:hover { background: rgba(224,82,82,.2); }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="wm" href="/" title="На главную"><i></i>Actina</a>
+  <a class="hdr-nav" href="/patients">Пациенты</a>
+  <div class="hdr-right">
+    <div id="lang-switch"></div>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+
+<main>
+  <div class="crumb"><a href="/patients">← Пациенты</a></div>
+
+  <div class="pcard">
+    <span class="avw">
+      <span class="av-big" id="av">ВР</span>
+      <button class="cam" id="cam" title="Загрузить фото"
+              aria-label="Загрузить фото">📷</button>
+      <input type="file" id="photo" accept="image/*" hidden>
+    </span>
+    <div class="pwho">
+      <h1 id="h-name">Врач</h1>
+      <div class="sub" id="h-sub">—</div>
+      <div class="chips" id="h-chips"></div>
+    </div>
+  </div>
+
+  <!-- Счётчики СЧИТАЮТСЯ ПО ДАННЫМ, а не рисуются: это работа врача за
+       всё время, и выдуманное число здесь обесценило бы остальные. -->
+  <div class="tiles" id="tiles"></div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>О враче</h2>
+      <div class="form">
+        <div>
+          <label for="f-name">Фамилия и имя</label>
+          <input class="field" id="f-name" placeholder="Каримова Мадина">
+        </div>
+        <div>
+          <label for="f-spec">Специальность</label>
+          <input class="field" id="f-spec" placeholder="стоматолог-терапевт, рентгенолог">
+        </div>
+        <div>
+          <label for="f-clinic">Клиника</label>
+          <input class="field" id="f-clinic" placeholder="название и город">
+        </div>
+        <div>
+          <label for="f-years">Стаж, лет</label>
+          <input class="field" id="f-years" type="number" min="0" max="60">
+        </div>
+        <div>
+          <label for="f-phone">Телефон</label>
+          <input class="field" id="f-phone" placeholder="+998 ">
+        </div>
+        <div>
+          <label for="f-mail">Почта</label>
+          <input class="field" id="f-mail" type="email" placeholder="—">
+        </div>
+        <div>
+          <label for="f-lic">Номер лицензии</label>
+          <input class="field" id="f-lic" placeholder="—">
+        </div>
+        <div>
+          <label for="f-langs">Языки приёма</label>
+          <input class="field" id="f-langs" placeholder="русский, каракалпакский">
+        </div>
+        <div class="wide">
+          <label for="f-about">О себе</label>
+          <textarea class="field" id="f-about"
+            placeholder="что принимаете, на чём специализируетесь"></textarea>
+        </div>
+        <div class="acts">
+          <span class="saved" id="saved"></span>
+          <button class="btn" id="save">Сохранить</button>
+        </div>
+      </div>
+      <div class="note">Имя из профиля печатается в заключении и в подписи
+        под находками. Учётных записей в системе нет: профиль хранится в
+        этом браузере, а подпись под находками — отметка врача, а не
+        электронная подпись.</div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h2>Вход и язык</h2>
+        <dl class="kv">
+          <dt>Вход</dt><dd id="s-how">по номеру телефона и коду</dd>
+          <dt>Телефон входа</dt><dd id="s-phone">—</dd>
+          <dt>Этот компьютер</dt><dd id="s-remember">—</dd>
+          <dt>Сеанс начат</dt><dd id="s-at">—</dd>
+        </dl>
+        <div style="margin-top:14px">
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">
+            Язык интерфейса</label>
+          <div class="lang" id="lang-pick">
+            <button data-l="ru">Русский</button>
+            <button data-l="kk">Qaraqalpaqsha</button>
+          </div>
+        </div>
+        <div class="out-row">
+          <button class="btn-out" id="out">Выйти из системы</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Что считает профиль</h2>
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.6">
+          Числа выше собраны по вашим пациентам: сколько снимков ждут
+          разбора, сколько находок вы подтвердили и отклонили, сколько
+          заключений подписано. Журнала действий система не ведёт —
+          показывать «последние действия» ей неоткуда, и выдумывать их мы
+          не стали.
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const D = actinaDoctor;
+
+  /* ---- данные профиля ---- */
+  const FIELDS = ["name", "spec", "clinic", "years", "phone", "mail",
+                  "lic", "langs", "about"];
+  const EL = { name: "f-name", spec: "f-spec", clinic: "f-clinic",
+               years: "f-years", phone: "f-phone", mail: "f-mail",
+               lic: "f-lic", langs: "f-langs", about: "f-about" };
+
+  function initials(s) {
+    return String(s || "").split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(w => w[0]).join("").toUpperCase() || "ВР";
+  }
+
+  function paint(d) {
+    $("h-name").textContent = d.name ? "Др. " + d.name : "Врач";
+    $("h-sub").innerHTML = [d.spec, d.clinic].filter(Boolean)
+      .map(x => `<div>${x.replace(/[<>&]/g, "")}</div>`).join("")
+      || "<div>специальность и клиника не заполнены</div>";
+    const chips = [];
+    if (d.years) chips.push(`<span class="chip">Стаж<b>${+d.years} лет</b></span>`);
+    if (d.lic) chips.push(`<span class="chip">Лицензия<b>${
+      String(d.lic).replace(/[<>&]/g, "")}</b></span>`);
+    if (d.langs) chips.push(`<span class="chip">Приём<b>${
+      String(d.langs).replace(/[<>&]/g, "")}</b></span>`);
+    $("h-chips").innerHTML = chips.join("");
+    const av = $("av");
+    if (d.photo) {
+      av.outerHTML = `<img class="av-big" id="av" src="${d.photo}" alt="">`;
+    } else {
+      const cur = $("av");
+      if (cur.tagName === "IMG") cur.outerHTML = `<span class="av-big" id="av"></span>`;
+      $("av").textContent = initials(d.name);
+    }
+  }
+
+  const d = D.read();
+  for (const f of FIELDS) if (EL[f] && d[f] != null) $(EL[f]).value = d[f];
+  paint(d);
+
+  $("save").onclick = () => {
+    const next = { ...D.read() };
+    for (const f of FIELDS) next[f] = $(EL[f]).value.trim();
+    D.save(next);
+    paint(next);
+    D.mountWho("who");
+    $("saved").textContent = "сохранено";
+    setTimeout(() => { $("saved").textContent = ""; }, 2500);
+  };
+
+  /* Фото живёт в том же профиле, что и остальное, — в браузере. Ужимаем
+     до 256 px: исходный снимок с телефона это 3–5 МБ, а localStorage
+     около пяти мегабайт на весь домен. */
+  $("cam").onclick = () => $("photo").click();
+  $("photo").onchange = ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const c = document.createElement("canvas");
+        c.width = c.height = 256;
+        c.getContext("2d").drawImage(img, (img.width - side) / 2,
+          (img.height - side) / 2, side, side, 0, 0, 256, 256);
+        const next = { ...D.read(), photo: c.toDataURL("image/jpeg", 0.85) };
+        D.save(next);
+        paint(next);
+        D.mountWho("who");
+      };
+      img.src = String(fr.result);
+    };
+    fr.readAsDataURL(file);
+  };
+
+  /* ---- вход ---- */
+  const ses = actinaAuth.read() || {};
+  $("s-phone").textContent = ses.phone || "—";
+  $("s-at").textContent = ses.at
+    ? new Date(ses.at).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit",
+        year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "—";
+  let remembered = false;
+  try { remembered = !!localStorage.getItem("actina_session"); } catch (e) {}
+  $("s-remember").textContent = remembered ? "запомнен" : "не запомнен";
+  $("out").onclick = () => { actinaAuth.end(); location.href = "/"; };
+
+  /* ---- язык ---- */
+  function syncLang() {
+    const cur = (window.i18n && i18n.lang) || "ru";
+    document.querySelectorAll("#lang-pick button").forEach(b =>
+      b.classList.toggle("on", b.dataset.l === cur));
+  }
+  document.getElementById("lang-pick").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-l]");
+    if (!b) return;
+    if (window.i18n && i18n.setLang) i18n.setLang(b.dataset.l);
+    syncLang();
+  });
+  syncLang();
+
+  /* ---- счётчики работы: СЧИТАЮТСЯ, а не рисуются ---- */
+  (async () => {
+    const box = $("tiles");
+    let rows = [];
+    try {
+      const r = await fetch("/api/patients?limit=1000");
+      rows = (await r.json()).patients || [];
+    } catch (e) { /* ниже покажем прочерки */ }
+
+    let work = 0, ok = 0, no = 0, signed = 0;
+    for (const p of rows) {
+      const rv = (p.last || {}).review;
+      if (!rv || !rv.total) continue;
+      ok += rv.confirmed || 0;
+      no += rv.rejected || 0;
+      if (rv.signed) signed++;
+      else if ((rv.reviewed || 0) < rv.total) work++;
+    }
+    const tiles = [
+      [work, "разборов в работе"],
+      [ok, "находок подтверждено"],
+      [no, "находок отклонено"],
+      [signed, "заключений подписано"],
+    ];
+    box.innerHTML = tiles.map(([v, k]) =>
+      `<div class="tile"><div class="v">${rows.length ? v : "—"}</div>
+       <div class="k">${k}</div></div>`).join("");
+  })();
+})();
+</script>
+</body>
+</html>

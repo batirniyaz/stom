@@ -153,7 +153,11 @@
     btn.title = "Профиль врача";
     btn.innerHTML = `<span class="doc-av">${initials(d.name || "Врач")}</span>`
                   + `<span class="doc">${who.replace(/[<>&]/g, "")}</span>`;
-    btn.onclick = openProfile;
+    /* Клик по имени ведёт на СТРАНИЦУ профиля, а не открывает окно: у
+       профиля появились счётчики работы, язык и выход, и окном это уже не
+       живёт. Окно `openProfile` оставлено — им пользуются экраны, где
+       уводить врача со снимка нельзя. */
+    btn.onclick = () => { location.href = "/profile"; };
     const out = document.createElement("button");
     out.className = "out";
     out.type = "button";
