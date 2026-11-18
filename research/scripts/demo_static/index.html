@@ -702,10 +702,11 @@
   /* ---- проверка находок врачом ---- */
   .find-rev { display: flex; gap: 4px; margin-left: auto; align-self: flex-start; }
   .find-rev button {
-    width: 24px; height: 22px; border-radius: 6px; cursor: pointer;
+    width: 28px; height: 26px; border-radius: 7px; cursor: pointer;
     background: none; border: 1px solid var(--border); color: var(--dim);
-    font-size: 12px; line-height: 1; padding: 0;
+    font-size: 14px; line-height: 1; padding: 0;
   }
+  .actis { color: var(--accent); }
   .find-rev .rv-ok:hover, .find-rev .rv-ok.on {
     color: var(--accent-ink); background: var(--ok); border-color: var(--ok);
   }
@@ -771,20 +772,35 @@
   .chart-row { display: flex; gap: 2px; justify-content: center; }
   .chart-row + .chart-row { margin-top: 3px; }
   .chart-gap { width: 8px; flex: 0 0 8px; }
+  /* Зуб на карте: силуэт плюс номер. Рамки у клетки нет — её роль играет
+     сам силуэт, а рамка вокруг каждого зуба превращала карту в таблицу. */
   .chart-t {
-    flex: 1 1 0; min-width: 0; height: 30px; border-radius: 6px;
-    border: 1px solid var(--border); background: rgba(142,153,168,.06);
-    color: var(--muted); font-size: 10.5px; font-weight: 600; cursor: pointer;
+    flex: 1 1 0; min-width: 0; border: 0; background: none; cursor: pointer;
+    color: var(--muted); font-size: 10px; font-weight: 600;
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 2px; padding: 0; font-family: inherit;
-    line-height: 1;
+    justify-content: flex-end; gap: 1px; padding: 1px 0; font-family: inherit;
+    line-height: 1; border-radius: 6px;
+    --tf: rgba(245,240,230,.14);      /* заливка силуэта */
+    --ts: var(--line-2);              /* обводка */
   }
-  .chart-t:hover { border-color: var(--cyan); color: var(--text); }
-  .chart-t.sel { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
-  .chart-t.present { color: var(--text); background: rgba(245,240,230,.10); }
-  .chart-t.missing { color: var(--line-2); background: none; border-style: dashed; }
-  .chart-t.warning { border-color: var(--lv-v); background: rgba(214,163,39,.14); }
-  .chart-t.alert   { border-color: var(--lv-k); background: rgba(224,82,82,.16); }
+  .chart-ic { width: 100%; max-width: 19px; height: 21px; display: block;
+              overflow: visible; }
+  .chart-t:not(.low) .chart-ic { transform: scaleY(-1); }
+  .chart-ic path { fill: var(--tf); stroke: var(--ts); stroke-width: 1.1;
+                   stroke-linejoin: round; transition: fill .2s, stroke .2s; }
+  .chart-n { font-variant-numeric: tabular-nums; }
+  .chart-t:hover { color: var(--text); background: rgba(47,196,178,.10); }
+  .chart-t.sel { --ts: var(--cyan); color: var(--text);
+                 box-shadow: 0 0 0 1px var(--cyan); }
+  .chart-t.present { color: var(--text); }
+  /* Отсутствующий зуб — пустое место с пунктирным контуром: так он и
+     читается как «зуба нет», а не как «зуб серый». */
+  .chart-t.missing { color: var(--line-2); --tf: none; --ts: var(--line); }
+  .chart-t.missing .chart-ic path { stroke-dasharray: 2 2; }
+  .chart-t.warning { --tf: rgba(214,163,39,.38); --ts: var(--lv-v);
+                     color: var(--lv-v); }
+  .chart-t.alert   { --tf: rgba(224,82,82,.42); --ts: var(--lv-k);
+                     color: var(--lv-k); }
   .chart-dots { display: flex; gap: 2px; height: 4px; }
   .chart-dot { width: 4px; height: 4px; border-radius: 50%; }
   .chart-legend {
@@ -910,7 +926,14 @@
      на этом экране, остальные страницы остаются прокручиваемыми. */
 
   body.case-mode { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-  body.case-mode header { padding: 8px 18px; flex: none; }
+  /* В РАЗБОРЕ ШАПКА ОДНА. Их было две: сайта (логотип, язык, врач) и
+     кейса (пациент, модель, ссылка). Две полосы над снимком съедали 55 px
+     высоты — на ноутбуке это заметная часть 3D, — и взгляд врача дважды
+     спотыкался о служебное, прежде чем дойти до зубов. Язык и профиль
+     переезжают в полосу кейса (переносом узлов, а не копией: копия в этом
+     проекте уже расходилась дважды). */
+  body.case-mode > header { display: none; }
+  body.case-mode header.ctop { padding: 8px 18px; flex: none; }
   /* Фоновые свечения и сетка рассчитаны на длинную страницу; за 3D-сценой
      они только подмешивают цвет в снимок. */
   body.case-mode .glow, body.case-mode .grid-bg { display: none; }
@@ -932,6 +955,13 @@
     border-bottom: 1px solid var(--line); background: var(--panel);
   }
   .ctop-sp { flex: 1; min-width: 0; }
+  /* Язык и профиль, переехавшие из шапки сайта: в полосе кейса они стоят
+     плотнее, иначе строка перестаёт помещаться на ноутбуке. */
+  .ctop #lang-switch { flex: none; }
+  .ctop .who { flex: none; display: flex; align-items: center; gap: 6px; }
+  .ctop .who .doc { max-width: 190px; overflow: hidden; text-overflow: ellipsis;
+                    white-space: nowrap; }
+  .ctop #cbct-patient-bar { flex: 1 1 auto; min-width: 0; }
   .ctop-case {
     display: flex; align-items: center; gap: 7px; white-space: nowrap;
     color: var(--muted); font-size: 12.5px;
@@ -940,7 +970,13 @@
   /* Полоса пациента пришла с другого экрана, где она была отдельным блоком
      во всю ширину. Здесь она — часть строки. */
   .ctop #cbct-patient-bar { margin: 0; }
-  .ctop #cbct-patient-bar .pbar { margin: 0; border: 0; background: none; padding: 0; }
+  .ctop #cbct-patient-bar .pbar {
+    margin: 0; border: 0; background: none; padding: 0;
+    /* Полоса кейса — одна строка. Перенос внутри неё делал шапку в две
+       строки и съедал ровно ту высоту 3D, ради которой шапки и свели. */
+    flex-wrap: nowrap; min-width: 0;
+  }
+  .ctop button, .ctop .btn-ghost { white-space: nowrap; }
 
   /* ---- сцена и колонка ---- */
   .cmain { flex: 1; min-height: 0; min-width: 0; display: flex; }
@@ -1423,7 +1459,10 @@
         <aside class="col" id="cbct-col">
           <div class="pane-tabs" id="cbct-tabs">
             <button data-pane="find" class="on"><span data-i18n>Находки</span><span class="cnt" id="cnt-find">·</span></button>
-            <button data-pane="chat"><span data-i18n>Чат</span><span class="cnt" id="cnt-chat">·</span></button>
+            <!-- Имя ассистента из макета: у помощника есть имя, и оно не
+                 «Чат». Врач говорит «спроси у Actis», а не «открой чат». -->
+            <button data-pane="chat" title="Actis — помощник по этому снимку">
+              <span class="actis">✦</span> Actis<span class="cnt" id="cnt-chat">·</span></button>
             <button data-pane="plan"><span data-i18n>План</span><span class="cnt" id="cnt-plan">·</span></button>
             <button data-pane="tooth"><span data-i18n>Зуб</span><span class="cnt" id="cnt-tooth">·</span></button>
             <button data-pane="mpr" data-i18n>Срезы</button>
@@ -2454,6 +2493,27 @@ function chosenModel() {
 /* Панель пациента над результатом: чей это снимок и что ещё у него есть.
    Без неё вьюер — тупик: на экране зубы, а чьи, не написано, и чтобы
    свериться со сканом того же человека, надо возвращаться в список. */
+/* Язык и профиль врача в разборе живут в полосе кейса, а не в шапке
+   сайта: двух полос над снимком быть не должно (см. `body.case-mode`).
+   Узлы ПЕРЕНОСЯТСЯ, а не копируются — копия разошлась бы с оригиналом,
+   как уже было со справочником ролей и с палитрой. */
+function caseHeader(on) {
+  const top = document.querySelector("header.ctop");
+  const home = document.querySelector("header .header-right");
+  const share = $c("cbct-share-top");
+  const lang = $c("lang-switch"), who = $c("who");
+  if (!top || !home || !lang || !who) return;
+  if (on) {
+    top.insertBefore(lang, share);
+    top.insertBefore(who, share);
+    top.classList.add("with-who");
+  } else {
+    home.appendChild(lang);
+    home.appendChild(who);
+    top.classList.remove("with-who");
+  }
+}
+
 function mountPatientBar(caseId) {
   const box = $c("cbct-patient-bar");
   if (!box || !window.patientBar) return;
@@ -2515,6 +2575,7 @@ async function showCbctResult(caseId) {
   // Полноэкранный режим: страница перестаёт прокручиваться, 3D занимает
   // всё, что не занято колонкой разбора. Класс снимается при выходе.
   document.body.classList.add("case-mode");
+  caseHeader(true);
   window.scrollTo({ top: 0 });
   const info = await fetch(`/api/cbct/info/${caseId}`).then(r => r.json());
   curInfo = info;
@@ -2836,6 +2897,7 @@ $c("cbct-back").addEventListener("click", () => {
   clearInterval(pollTimer);
   $c("cbct-result-view").style.display = "none";
   document.body.classList.remove("case-mode");
+  caseHeader(false);
   $c("cbct-upload-view").style.display = "block";
   $c("cbct-progress").style.display = "none";
 });
@@ -2947,6 +3009,16 @@ const CHART_ROWS = [
   [[18, 17, 16, 15, 14, 13, 12, 11], [21, 22, 23, 24, 25, 26, 27, 28]],
   [[48, 47, 46, 45, 44, 43, 42, 41], [31, 32, 33, 34, 35, 36, 37, 38]],
 ];
+/* Силуэт зуба из макета. Клетка с номером работает как список, а карта
+   должна читаться как ЧЕЛЮСТЬ: силуэт даёт верх и низ без подписей, и
+   глаз находит нужный квадрант, не читая цифры. Коронки смотрят наружу —
+   у верхнего ряда вниз (`scaleY(-1)`), у нижнего вверх. */
+const TOOTH_PATH = "M10 4.5C8 3 5 2.5 3.5 5.5C2.5 8 3.5 11 4.5 14C5.5 17 5 22"
+  + " 6.3 24.5C7.3 26.5 8.8 25 9.2 21.5C9.4 20 10.6 20 10.8 21.5C11.2 25 12.7"
+  + " 26.5 13.7 24.5C15 22 14.5 17 15.5 14C16.5 11 17.5 8 16.5 5.5C15 2.5 12 3"
+  + " 10 4.5Z";
+const TOOTH_SVG = `<svg class="chart-ic" viewBox="0 1 20 28"
+   preserveAspectRatio="none" aria-hidden="true"><path d="${TOOTH_PATH}"/></svg>`;
 // Значки на зубе: код находки -> цвет точки. Порядок = порядок в легенде.
 const CHART_MARKS = [
   ["endo_filled",  "#f43f5e", "канал пломбирован"],
@@ -2996,9 +3068,13 @@ function renderChart(data) {
           .filter(([, color]) => !seen.has(color) && seen.add(color))
           .map(([, color]) => `<span class="chart-dot"
                  style="background:${color}"></span>`).join("");
-        html += `<button class="chart-t ${cls}" data-tooth="${d}"
+        // Нижний ряд: силуэт сверху, номер под ним — как стоит зуб.
+        const low = t >= 31 && t <= 48;
+        const num = `<span class="chart-n">${t}</span>`;
+        html += `<button class="chart-t ${cls}${low ? " low" : ""}"
+                   data-tooth="${d}"
                    title="Зуб ${t}${has ? "" : " — отсутствует"}">
-                   <span>${t}</span>
+                   ${low ? TOOTH_SVG + num : num + TOOTH_SVG}
                    <span class="chart-dots">${dots}</span></button>`;
       }
     });
@@ -4251,15 +4327,30 @@ function frameOnTeeth() {
     .addScaledVector(fwd, size * 0.95)
     .addScaledVector(new THREE.Vector3(0, 1, 0), size * 0.28);
   homeCam = camera.position.clone();
-  /* Высоту кадра берём ту же, какую давал прежний объектив в плоскости
-     зубов: half = расстояние · tg(45°/2) = 0.414 · 0.95 · габарит. Так
-     привычная компоновка сохраняется, а раздутие уходит — менять заодно
-     и крупность значило бы править две вещи одной правкой и не знать,
-     которая подействовала. */
+  /* КАДР СТРОИМ ПО ЧЕЛЮСТЯМ, а не по зубному ряду.
+
+     По ряду камера вставала так близко, что челюсть обрезало краем
+     экрана: врач при открытии видел зубы крупно, но не видел, где они
+     стоят. В макете кадр берёт зубы ВМЕСТЕ с верхней и нижней челюстью и
+     делит ширину на пропорции окна (не шире 1.6, иначе на широком экране
+     модель уезжает в точку). Та же формула, переведённая в параллельную
+     проекцию: половина кадра — половина самого длинного габарита с
+     полями. */
+  const jaw = new THREE.Box3();
+  meshRoot.traverse(o => {
+    const nm = o.name || "";
+    if (o.isMesh && (nm.startsWith("tooth_") || nm.startsWith("mandible")
+                     || nm.startsWith("maxilla"))) jaw.expandByObject(o);
+  });
+  if (jaw.isEmpty()) jaw.copy(box);
+  const js = jaw.getSize(new THREE.Vector3());
+  const asp = Math.min(($c("gl-wrap").clientWidth || 1)
+                       / ($c("gl-wrap").clientHeight || 1), 1.6);
+  const jawHalf = Math.max(js.x / asp, js.y, js.z) * 0.58;
   camera.zoom = homeZoom = 1;
   camera.near = -size * 4;        // параллельной проекции отрицательный near
   camera.far = size * 8;          // нужен: иначе отсекается ближняя половина
-  orthoFrame(size * 0.39);
+  orthoFrame(jawHalf);
 
   /* Отладочный замер перспективы — тот же, что на заставке. «Ближнее
      раздувается» зависит не от угла обзора самого по себе, а от того, во

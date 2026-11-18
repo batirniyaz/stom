@@ -36,11 +36,28 @@
         color: var(--muted, #8e99a8); text-decoration: none; font-size: 12.5px;
         border: 1px solid var(--line, #242b35); border-radius: 8px;
         padding: 4px 9px;
+        /* Не переносится и не сжимается: в одной строке с остальным
+           «← Карточка» ломалось на два слова и тянуло шапку вверх. */
+        white-space: nowrap; flex: none;
       }
       .pbar a.pb-back:hover { color: var(--text, #e6eaf0); }
-      .pbar .pb-name { font-weight: 600; white-space: nowrap; }
-      .pbar .pb-sub { color: var(--muted, #8e99a8); font-size: 12px; }
-      .pbar .pb-studies { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+      .pbar .pb-name { font-weight: 600; white-space: nowrap; flex: none; }
+      .pbar .pb-sub { color: var(--muted, #8e99a8); font-size: 12px;
+                      white-space: nowrap; flex: none; }
+      .pbar .pb-studies { display: flex; gap: 4px; flex: none; }
+      /* ЖАЛОБА ПАЦИЕНТА — то, с чего начинается приём.
+         Врач открывает снимок, уже зная, на что человек жалуется, и
+         смотрит в первую очередь туда. Без этой строки разбор начинался с
+         абстрактного «вот 30 зубов». Курсив и приглушённый цвет: это
+         слова пациента, а не наш вывод. */
+      .pbar .pb-cmp {
+        margin-left: auto; color: var(--muted, #8e99a8); font-style: italic;
+        font-size: 12.5px; white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis;
+        /* Сжимается первой: имя пациента и номер карты обрезать нельзя, а
+           жалобу можно — она целиком висит в подсказке. */
+        flex: 0 1 auto; min-width: 0;
+      }
       .pbar .pb-st {
         border: 1px solid var(--line, #242b35); border-radius: 8px;
         padding: 4px 11px; font-size: 12px; color: var(--muted, #8e99a8);
@@ -94,13 +111,18 @@
                 >${label}${busy ? " ·" : ""}</a>`;
     }).join("");
 
+    // Жалоба — к ЭТОМУ исследованию, не к последнему: врач может открыть
+    // прошлогодний снимок, и чужая жалоба над ним была бы враньём.
+    const cmp = String((data.study || {}).complaints || "").trim();
+
     const bar = document.createElement("div");
     bar.className = "pbar";
     bar.innerHTML = `
       <a class="pb-back" href="/patients/${p.id}">← Карточка</a>
       <span class="pb-name">${esc(p.display)}</span>
       <span class="pb-sub">${parts.join(" · ")}</span>
-      <span class="pb-studies">${chips}</span>`;
+      <span class="pb-studies">${chips}</span>
+      ${cmp ? `<span class="pb-cmp" title="Жалоба пациента">${esc(cmp)}</span>` : ""}`;
     target.prepend(bar);
     return bar;
   }
