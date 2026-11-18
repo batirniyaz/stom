@@ -1218,6 +1218,24 @@
     animation: scslide .25s both;
   }
   .scside[hidden] { display: none; }
+  .views { display: flex; gap: 5px; padding: 9px 13px;
+           border-bottom: 1px solid var(--line); }
+  .views button {
+    flex: 1 1 0; font: inherit; font-size: 12px; padding: 5px 0;
+    border-radius: 7px; border: 1px solid var(--line); background: none;
+    color: var(--muted); cursor: pointer;
+  }
+  .views button:hover { color: var(--text); border-color: var(--cyan); }
+
+  /* Номер зуба поверх сцены. Тень чёрным со всех сторон, а не подложка:
+     подложка закрывает соседний зуб, а цифра на светлой эмали без тени
+     не читается вовсе. */
+  #tooth-labels { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  #tooth-labels span {
+    position: absolute; transform: translate(-50%, -50%);
+    font: 600 10.5px var(--mono, monospace); color: #fff;
+    text-shadow: 0 0 3px #000, 0 0 6px #000; white-space: nowrap;
+  }
   @keyframes scslide { from { opacity: 0; transform: translateX(-14px); } }
   /* Пока панель открыта, колонка разбора отдаёт ей часть ширины — иначе
      сцена сжималась бы на 302 px и модель уезжала из центра. */
@@ -1541,7 +1559,21 @@
            сужается, чтобы 3D не терял ширину. -->
       <aside class="pnl scside" id="scene-pnl" hidden>
               <div class="ph"><b data-i18n>Сцена</b>
+                <span style="flex:1"></span>
+                <button class="btn-ghost sm" id="scene-reset"
+                        title="Вернуть вид и настройки сцены">Сбросить</button>
                 <button class="btn-ghost sm" id="scene-close" aria-label="Закрыть">✕</button></div>
+              <!-- СТАНДАРТНЫЕ ВИДЫ. Врач показывает пациенту «посмотрите
+                   слева» и крутит мышью, попадая не туда. Четыре кнопки
+                   дают тот же ракурс каждый раз — и на снимке, и на
+                   следующем приёме. Направление берётся ИЗ ДАННЫХ (резцы),
+                   а не по оси тома: у разных аппаратов она своя. -->
+              <div class="views" id="scene-views">
+                <button data-view="front">Спереди</button>
+                <button data-view="left">Слева</button>
+                <button data-view="right">Справа</button>
+                <button data-view="top">Сверху</button>
+              </div>
               <details open>
                 <summary data-i18n>Слои</summary>
                 <div>
@@ -1550,6 +1582,11 @@
                     <div><span data-i18n>Прозрачность кости и пазух</span><output id="opacity-out">22%</output></div>
                     <input type="range" id="opacity-slider" min="5" max="100" value="22">
                   </div>
+                  <!-- Каркас кости: сквозь сетку видно зубы целиком, а
+                       форма челюсти остаётся читаемой. Врач включает его,
+                       когда показывает корень в лунке. -->
+                  <label class="struct-row"><input type="checkbox" id="bone-wire">
+                    <span class="struct-dot" style="background:#8e99a8"></span>Каркас кости</label>
                   <div id="superimpose" style="display:none"></div>
                 </div>
               </details>
@@ -1564,12 +1601,18 @@
                     <div><span data-i18n>Блеск зубов</span><output id="teeth-gloss-out">65%</output></div>
                     <input type="range" id="teeth-gloss-slider" min="0" max="100" value="65">
                   </div>
+                  <label class="struct-row"><input type="checkbox" id="tooth-labels-on">
+                    <span class="struct-dot" style="background:#e6eaf0"></span>Номера зубов</label>
                 </div>
               </details>
       </aside>
         <div class="stage" id="cbct-stage">
           <div id="gl-wrap">
             <canvas id="gl-canvas"></canvas>
+            <!-- Номера зубов поверх сцены: врач называет зуб пациенту, а
+                 не тычет пальцем. По умолчанию выключены — тридцать цифр
+                 поверх модели мешают смотреть на саму модель. -->
+            <div id="tooth-labels"></div>
             <div id="gl-tip"></div>
             <div id="gl-loading"><span class="spinner"></span>Загрузка 3D-модели…</div>
           </div>
@@ -3744,6 +3787,7 @@ async function openToothCard(fdi) {
    Приём и числа взяты из прототипа (`site/index.html`, flyBox). */
 let camFly = null;
 let sceneCenter = null;     // центр челюсти: от него считается «наружу»
+let sceneFwd = null;        // направление «на лицо», найденное по резцам
 let homeCam = null;         // общий вид, к которому возвращает сброс
 let homeZoom = 1;           // и его масштаб: в параллельной проекции
                             // приближение живёт в zoom, а не в расстоянии
@@ -4126,6 +4170,7 @@ function initGL() {
     pulseSelected();
     controls.update();
     renderer.render(scene, camera);
+    placeToothLabels();
   })();
   window.addEventListener("resize", resizeGL);
   initPicking();
@@ -4153,6 +4198,52 @@ function resizeGL() {
   if (!w || !h) return;
   renderer.setSize(w, h, false);
   orthoFrame();
+}
+
+/* ПОДПИСИ ЗУБОВ НОМЕРАМИ.
+
+   Врач на приёме говорит пациенту «вот этот, сорок шестой» — и до сих пор
+   показывал пальцем в экран. Номер рисуется HTML-слоем поверх канваса, а
+   не в сцене: текст в three.js это либо спрайт с текстурой (мылится при
+   приближении), либо лишняя геометрия на каждый зуб.
+
+   Положение пересчитывается каждый кадр — модель вращается. Это 30
+   проекций точки на кадр, то есть ничего: дороже было бы прятать и
+   показывать элементы по одному. */
+let labelsOn = false;
+const labelEls = new Map();       // FDI -> span
+const _lblV = new THREE.Vector3();
+
+function buildToothLabels() {
+  const box = $c("tooth-labels");
+  if (!box) return;
+  box.innerHTML = "";
+  labelEls.clear();
+  for (const m of (groupMeshes.teeth || [])) {
+    const fdi = parseInt((m.name || "").split("_")[1], 10);
+    if (!fdi) continue;
+    const el = document.createElement("span");
+    el.textContent = fdiShown(fdi);
+    box.appendChild(el);
+    labelEls.set(m, el);
+  }
+  box.hidden = !labelsOn;
+}
+
+function placeToothLabels() {
+  if (!labelsOn || !labelEls.size || !camera) return;
+  const w = $c("gl-wrap").clientWidth, h = $c("gl-wrap").clientHeight;
+  for (const [mesh, el] of labelEls) {
+    // Невидимый зуб (погашен слоем или изоляцией) подписывать нечем.
+    if (!mesh.visible) { el.style.display = "none"; continue; }
+    mesh.geometry.computeBoundingSphere();
+    _lblV.copy(mesh.geometry.boundingSphere.center);
+    mesh.localToWorld(_lblV);
+    _lblV.project(camera);
+    el.style.display = "";
+    el.style.left = `${(_lblV.x * 0.5 + 0.5) * w}px`;
+    el.style.top = `${(-_lblV.y * 0.5 + 0.5) * h}px`;
+  }
 }
 
 function groupKeyOf(name) {
@@ -4621,6 +4712,7 @@ async function loadMesh(caseId) {
     // Пульпа должна встать в тон зубам сразу, а не после первого движения
     // ползунка: кейс мог открыться с уже приглушёнными зубами.
     syncPulpToTeeth(+$c("teeth-opacity-slider").value);
+    buildToothLabels();
     frameOnTeeth();
     buildStructPanel();
     loadSuperimpose(caseId);   // после панели: строка скана идёт под её списком
@@ -4660,6 +4752,7 @@ function frameOnTeeth() {
     if (fwd.lengthSq() < 1e-6) fwd = null; else fwd.normalize();
   }
   if (!fwd) fwd = new THREE.Vector3(0, 0, 1);
+  sceneFwd = fwd.clone();          // нужен стандартным видам
 
   controls.target.copy(center);
   sceneCenter = center.clone();     // нужен пролёту камеры: «наружу» от него
@@ -4962,6 +5055,75 @@ if (window.actinaAuth && actinaAuth.isGuest()) document.body.classList.add("gues
 /* Панель сцены. Закрыта по умолчанию: врач открывает её один раз в начале
    приёма, а дальше она закрывает снимок. */
 const scenePnl = $c("scene-pnl");
+/* СТАНДАРТНЫЕ ВИДЫ.
+
+   «Посмотрите слева» на приёме превращается в кручение мышью, пока не
+   попадёшь. Кнопка даёт один и тот же ракурс каждый раз — и на этом
+   снимке, и на следующем приёме, и у другого врача.
+
+   Направление «вперёд» берём из данных (резцы, `sceneFwd`), а не по оси
+   тома: ориентация у разных аппаратов разная, и жёсткая ось уже стоила
+   нам вида сбоку на заставке. */
+function viewTo(name) {
+  if (!camera || !controls || !homeCam || !sceneCenter) return;
+  const up = new THREE.Vector3(0, 1, 0);
+  const d = homeCam.distanceTo(sceneCenter);
+  const fwd = (sceneFwd || new THREE.Vector3(0, 0, 1)).clone();
+  let dir;
+  if (name === "top") dir = up.clone();
+  else {
+    const turn = { front: 0, left: -Math.PI / 2, right: Math.PI / 2 }[name] || 0;
+    dir = fwd.applyAxisAngle(up, turn);
+    // Небольшой подъём: строго горизонтальный вид прячет жевательную
+    // поверхность, а находки чаще всего именно на ней.
+    dir.add(up.clone().multiplyScalar(0.18)).normalize();
+  }
+  const p1 = sceneCenter.clone().addScaledVector(dir, d);
+  camFly = { t: 0, n: 45, p0: camera.position.clone(),
+             pm: camera.position.clone().lerp(p1, 0.5)
+                   .add(up.clone().multiplyScalar(d * 0.12)),
+             p1, z0: camera.zoom, z1: camera.zoom,
+             c0: controls.target.clone(), c1: sceneCenter.clone() };
+  autoRotateOn = false;
+  const cb = $c("auto-rot");
+  if (cb) cb.checked = false;        // иначе модель тут же уедет с вида
+}
+document.querySelectorAll("#scene-views button").forEach(b => {
+  b.onclick = () => viewTo(b.dataset.view);
+});
+
+/* Каркас кости: сквозь сетку виден зуб целиком, а форма челюсти остаётся
+   читаемой. Включают, когда показывают пациенту корень в лунке. */
+$c("tooth-labels-on").addEventListener("change", ev => {
+  labelsOn = ev.target.checked;
+  const box = $c("tooth-labels");
+  if (box) box.hidden = !labelsOn;
+});
+
+$c("bone-wire").addEventListener("change", ev => {
+  for (const key of TRANSLUCENT) {
+    (groupMats[key] || []).forEach(m => { m.wireframe = ev.target.checked; });
+  }
+});
+
+/* Сброс сцены. На приёме врач за минуту выключает половину структур,
+   уводит прозрачность и улетает к зубу — и дальше показывать следующему
+   пациенту нечего. Одна кнопка возвращает и вид, и настройки. */
+$c("scene-reset").onclick = () => {
+  isolateTooth(null);
+  $c("opacity-slider").value = 22;
+  $c("opacity-slider").dispatchEvent(new Event("input"));
+  $c("teeth-opacity-slider").value = 100;
+  $c("teeth-opacity-slider").dispatchEvent(new Event("input"));
+  $c("bone-wire").checked = false;
+  $c("bone-wire").dispatchEvent(new Event("change"));
+  $c("tooth-labels-on").checked = false;
+  $c("tooth-labels-on").dispatchEvent(new Event("change"));
+  buildStructPanel();                 // видимость групп — как при открытии
+  dimBone(false);
+  viewTo("front");
+};
+
 $c("scn-btn").onclick = () => {
   const open = scenePnl.hidden;              // станет открытой
   scenePnl.hidden = !open;
